@@ -26,6 +26,7 @@ import { generateStyledImage } from './services/geminiService';
 
 const App: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [originalFilename, setOriginalFilename] = useState<string>('image');
   
   const [selections, setSelections] = useState<UserSelections>({
     [StyleCategory.HAIR]: null,
@@ -162,9 +163,12 @@ const App: React.FC = () => {
 
   const handleDownload = () => {
     if (genState.resultImage) {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const filename = `${originalFilename}_styled_${timestamp}.jpg`;
+      
       const link = document.createElement('a');
       link.href = genState.resultImage;
-      link.download = 'style-mirror-ai.jpg';
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -204,8 +208,9 @@ const App: React.FC = () => {
               </h2>
               <ImageUploader 
                 selectedImage={selectedImage}
-                onImageSelected={(img) => {
+                onImageSelected={(img, filename) => {
                   setSelectedImage(img);
+                  setOriginalFilename(filename);
                   setGenState(prev => ({ ...prev, resultImage: null }));
                 }}
                 onClear={() => {

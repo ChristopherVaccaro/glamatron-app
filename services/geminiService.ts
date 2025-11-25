@@ -84,21 +84,48 @@ export const generateStyledImage = async (
 
     const candidates = response.candidates;
     if (!candidates || candidates.length === 0) {
-        throw new Error("No image generated.");
+      // Check if the response was blocked
+      const blockReason = response.promptFeedback?.blockReason;
+      if (blockReason) {
+        throw new Error(`Request blocked: ${blockReason}. Try a different photo.`);
+      }
+      throw new Error("No response from AI. Please try again.");
     }
 
-    const parts = candidates[0].content.parts;
+    const candidate = candidates[0];
+    
+    // Check for content filtering
+    if (candidate.finishReason === 'SAFETY') {
+      throw new Error("Image was filtered for safety. Try a different photo or fewer style options.");
+    }
+    
+    if (candidate.finishReason === 'RECITATION') {
+      throw new Error("Request could not be completed. Please try again.");
+    }
+
+    // Safely access content and parts
+    const content = candidate.content;
+    if (!content || !content.parts) {
+      throw new Error("AI returned an empty response. Please try again with a clearer photo.");
+    }
+
+    const parts = content.parts;
     let generatedImageBase64 = '';
 
     for (const part of parts) {
-        if (part.inlineData && part.inlineData.data) {
-            generatedImageBase64 = part.inlineData.data;
-            break; 
-        }
+      if (part.inlineData && part.inlineData.data) {
+        generatedImageBase64 = part.inlineData.data;
+        break; 
+      }
     }
 
     if (!generatedImageBase64) {
-        throw new Error("Model returned text but no image. Try a clearer photo or fewer options.");
+      // Check if there's a text response explaining why
+      const textPart = parts.find(p => p.text);
+      if (textPart?.text) {
+        console.log("AI text response:", textPart.text);
+      }
+      throw new Error("Model couldn't generate an image. Try a clearer photo or different options.");
     }
 
     return `data:image/jpeg;base64,${generatedImageBase64}`;

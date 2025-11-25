@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Upload, Image as ImageIcon, X } from 'lucide-react';
 
 interface ImageUploaderProps {
-  onImageSelected: (base64: string) => void;
+  onImageSelected: (base64: string, filename: string) => void;
   selectedImage: string | null;
   onClear: () => void;
 }
@@ -16,7 +16,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
-          onImageSelected(e.target.result as string);
+          // Extract filename without extension
+          const filename = file.name.replace(/\.[^/.]+$/, '') || 'image';
+          onImageSelected(e.target.result as string, filename);
         }
       };
       reader.readAsDataURL(file);
