@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleOption, StyleCategory, UserSelections } from '../types';
-import { Check } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 
 interface StyleSelectorProps {
   title: string;
@@ -19,6 +19,7 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({
   onSelect,
   multiSelect = false
 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const currentSelection = selections[category];
 
   const isSelected = (value: string) => {
@@ -32,46 +33,76 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({
     onSelect(category, value);
   };
 
+  // Show only first 6 options on mobile unless expanded
+  const INITIAL_SHOW = 6;
+  const showExpandButton = options.length > INITIAL_SHOW;
+  const displayedOptions = isExpanded ? options : options.slice(0, INITIAL_SHOW);
+
+  // Count selected in this category
+  const selectedCount = multiSelect 
+    ? (currentSelection as string[]).filter(v => options.some(o => o.value === v)).length
+    : (options.some(o => o.value === currentSelection) ? 1 : 0);
+
   return (
-    <div className="mb-6 last:mb-0">
-      <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center justify-between">
-        {title}
-        {((!multiSelect && currentSelection) || (multiSelect && (currentSelection as string[]).length > 0)) && (
+    <div className="mb-4 last:mb-0">
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
+        <span className="flex items-center gap-1.5">
+          {title}
+          {selectedCount > 0 && (
+            <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 rounded-full text-[10px] font-bold">
+              {selectedCount}
+            </span>
+          )}
+        </span>
+        {((!multiSelect && currentSelection && options.some(o => o.value === currentSelection)) || 
+          (multiSelect && selectedCount > 0)) && (
           <button 
             onClick={() => onSelect(category, multiSelect ? 'CLEAR_ALL' : '')}
-            className="text-xs text-rose-500 hover:text-rose-600 font-medium flex items-center gap-1 normal-case"
+            className="text-[10px] text-rose-500 hover:text-rose-600 font-medium normal-case px-2 py-1 -mr-2 rounded hover:bg-rose-50 transition-colors"
           >
             Reset
           </button>
         )}
-      </h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[320px] overflow-y-auto custom-scrollbar pr-1">
-        {options.map((option) => {
+      </h4>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {displayedOptions.map((option) => {
           const active = isSelected(option.value);
           return (
             <button
               key={option.id}
               onClick={() => handleSelect(option.value)}
               className={`
-                relative p-3 rounded-lg border text-left transition-all duration-200 group flex items-start
+                relative min-h-[44px] px-3 py-2.5 rounded-xl border text-left transition-all duration-150 
+                flex items-center active:scale-[0.97]
                 ${active 
-                  ? 'border-rose-500 bg-rose-50/50 ring-1 ring-rose-500 z-10' 
-                  : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+                  ? 'border-rose-500 bg-rose-50 ring-1 ring-rose-500 shadow-sm' 
+                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                 }
               `}
             >
-              <span className={`block text-xs font-medium leading-tight pr-4 ${active ? 'text-rose-700' : 'text-slate-700'}`}>
+              <span className={`block text-sm font-medium leading-snug pr-5 ${active ? 'text-rose-700' : 'text-slate-700'}`}>
                 {option.label}
               </span>
               {active && (
-                <div className="absolute top-2 right-2 text-rose-500">
-                  <Check size={14} />
+                <div className="absolute top-1/2 -translate-y-1/2 right-2.5 w-4 h-4 bg-rose-500 rounded-full flex items-center justify-center">
+                  <Check size={10} className="text-white" strokeWidth={3} />
                 </div>
               )}
             </button>
           );
         })}
       </div>
+      
+      {/* Show More/Less Button */}
+      {showExpandButton && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="mt-2 w-full py-2 text-xs font-medium text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1 hover:bg-slate-50 rounded-lg transition-colors"
+        >
+          {isExpanded ? 'Show Less' : `Show ${options.length - INITIAL_SHOW} More`}
+          <ChevronDown size={14} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+        </button>
+      )}
     </div>
   );
 };

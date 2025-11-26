@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices } from 'lucide-react';
+import React, { useState, useCallback, useMemo } from 'react';
+import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap } from 'lucide-react';
 import { 
   StyleCategory, 
   UserSelections, 
@@ -22,11 +22,111 @@ import {
 import StyleSelector from './components/StyleSelector';
 import ImageUploader from './components/ImageUploader';
 import ComparisonView from './components/ComparisonView';
+import ResultModal from './components/ResultModal';
 import { generateStyledImage } from './services/geminiService';
+
+// Quick preset definitions
+export const QUICK_PRESETS = [
+  {
+    id: 'natural',
+    name: 'Soft Natural',
+    emoji: '🌸',
+    selections: {
+      [StyleCategory.HAIR]: 'Long flowing wavy hair',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Warm honey blonde',
+      [StyleCategory.MAKEUP]: 'Minimal "clean girl" aesthetic makeup',
+      [StyleCategory.EXPRESSION]: 'Peaceful content expression',
+      [StyleCategory.EYES]: 'Natural lashes with mascara only',
+      [StyleCategory.LIPS]: 'High shine clear lip gloss',
+      [StyleCategory.ACCESSORIES]: [],
+    }
+  },
+  {
+    id: 'y2k',
+    name: 'Y2K Glam',
+    emoji: '💿',
+    selections: {
+      [StyleCategory.HAIR]: 'Hair with trendy curtain bangs',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Y2K chunky highlights',
+      [StyleCategory.MAKEUP]: 'Heavy bronzer sun-kissed look',
+      [StyleCategory.EXPRESSION]: 'Playful winking expression',
+      [StyleCategory.EYES]: 'Heavy gold glitter on lids',
+      [StyleCategory.LIPS]: '90s brown lip liner with lighter center',
+      [StyleCategory.ACCESSORIES]: ['90s butterfly hair clips'],
+    }
+  },
+  {
+    id: 'goth',
+    name: 'Dark Goth',
+    emoji: '🖤',
+    selections: {
+      [StyleCategory.HAIR]: 'Long sleek straight hair',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Jet black',
+      [StyleCategory.MAKEUP]: 'Dark pale goth makeup',
+      [StyleCategory.EXPRESSION]: 'Calm neutral expression',
+      [StyleCategory.EYES]: 'Black and grey smokey eye',
+      [StyleCategory.LIPS]: 'Jet black matte lipstick',
+      [StyleCategory.ACCESSORIES]: ['Black velvet choker necklace', 'Silver septum clicker ring'],
+    }
+  },
+  {
+    id: 'egirl',
+    name: 'E-Girl',
+    emoji: '🎮',
+    selections: {
+      [StyleCategory.HAIR]: 'Double space buns',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Split dyed half black half white',
+      [StyleCategory.MAKEUP]: 'E-girl style with heavy blush on nose',
+      [StyleCategory.EXPRESSION]: 'Sticking tongue out playfully',
+      [StyleCategory.EYES]: 'Sharp black winged eyeliner',
+      [StyleCategory.LIPS]: 'High shine clear lip gloss',
+      [StyleCategory.ACCESSORIES]: ['Gaming headphones with cat ears', 'Cute heart shaped faux freckles'],
+    }
+  },
+  {
+    id: 'glam',
+    name: 'Red Carpet',
+    emoji: '💎',
+    selections: {
+      [StyleCategory.HAIR]: 'Elegant formal updo',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.MAKEUP]: 'Heavy contour and highlight full glam',
+      [StyleCategory.EXPRESSION]: 'Confident asymmetrical smirk',
+      [StyleCategory.EYES]: 'Sharp cut crease eyeshadow',
+      [StyleCategory.LIPS]: 'Classic bright red lipstick',
+      [StyleCategory.ACCESSORIES]: ['Crystal chandelier earrings', 'Sparkling crystal tiara'],
+    }
+  },
+  {
+    id: 'cyber',
+    name: 'Cyberpunk',
+    emoji: '🤖',
+    selections: {
+      [StyleCategory.HAIR]: 'Edgy undercut hairstyle',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Vibrant electric blue',
+      [StyleCategory.MAKEUP]: 'Futuristic neon lines makeup',
+      [StyleCategory.EXPRESSION]: 'Serious intense expression',
+      [StyleCategory.EYES]: 'Geometric graphic eyeliner art',
+      [StyleCategory.LIPS]: null,
+      [StyleCategory.ACCESSORIES]: ['Futuristic Cyberpunk LED Visor', 'Futuristic cyberpunk face panel lines'],
+    }
+  },
+];
 
 const App: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [originalFilename, setOriginalFilename] = useState<string>('image');
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    hair: true,
+    face: true,
+    accessories: false,
+  });
   
   const [selections, setSelections] = useState<UserSelections>({
     [StyleCategory.HAIR]: null,
@@ -44,6 +144,8 @@ const App: React.FC = () => {
     error: null,
     resultImage: null,
   });
+
+  const [showResultModal, setShowResultModal] = useState(false);
 
   const handleSelection = useCallback((category: StyleCategory, value: string) => {
     setSelections(prev => {
@@ -91,6 +193,11 @@ const App: React.FC = () => {
     }
 
     setGenState({ isLoading: true, error: null, resultImage: null });
+    
+    // Show modal immediately on mobile for loading state
+    if (window.innerWidth < 1024) {
+      setShowResultModal(true);
+    }
 
     try {
       const result = await generateStyledImage(selectedImage, activeSelections);
@@ -101,6 +208,8 @@ const App: React.FC = () => {
         error: err.message || "Something went wrong. Please try again.", 
         resultImage: null 
       });
+      // Close modal on error so user sees the error state
+      setShowResultModal(false);
     }
   };
 
@@ -161,25 +270,179 @@ const App: React.FC = () => {
     executeGeneration(newSelections);
   };
 
-  const handleDownload = () => {
-    if (genState.resultImage) {
+  const handleDownload = async () => {
+    if (!genState.resultImage) return;
+    
+    try {
+      // Re-encode through canvas to create proper JPEG with headers
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = reject;
+        img.src = genState.resultImage!;
+      });
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas not supported');
+      
+      ctx.drawImage(img, 0, 0);
+      
+      // Convert to blob with proper JPEG encoding
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (b) => b ? resolve(b) : reject(new Error('Failed to create blob')),
+          'image/jpeg',
+          0.95 // High quality
+        );
+      });
+      
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
       const filename = `${originalFilename}_styled_${timestamp}.jpg`;
       
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = genState.resultImage;
+      link.href = url;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+      // Fallback to direct download
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const link = document.createElement('a');
+      link.href = genState.resultImage;
+      link.download = `${originalFilename}_styled_${timestamp}.jpg`;
+      link.click();
     }
   };
 
+  const handleShare = async () => {
+    if (!genState.resultImage) return;
+    try {
+      // Re-encode through canvas for proper JPEG
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = reject;
+        img.src = genState.resultImage!;
+      });
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas not supported');
+      ctx.drawImage(img, 0, 0);
+      
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (b) => b ? resolve(b) : reject(new Error('Failed')),
+          'image/jpeg',
+          0.95
+        );
+      });
+      
+      const file = new File([blob], 'stylemirror-result.jpg', { type: 'image/jpeg' });
+      
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'My StyleMirror Transformation',
+          text: 'Check out my AI-powered style transformation!',
+          files: [file],
+        });
+      } else {
+        handleDownload();
+      }
+    } catch (err) {
+      console.error('Share error:', err);
+      handleDownload();
+    }
+  };
+
+  const handleReset = () => {
+    setSelections({
+      [StyleCategory.HAIR]: null,
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.ACCESSORIES]: [],
+      [StyleCategory.MAKEUP]: null,
+      [StyleCategory.EXPRESSION]: null,
+      [StyleCategory.EYES]: null,
+      [StyleCategory.LIPS]: null,
+    });
+  };
+
+  const handlePresetSelect = (preset: typeof QUICK_PRESETS[0]) => {
+    setSelections(preset.selections as UserSelections);
+  };
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const selectionCount = useMemo(() => {
+    let count = 0;
+    if (selections[StyleCategory.HAIR]) count++;
+    if (selections[StyleCategory.HAIR_LENGTH]) count++;
+    if (selections[StyleCategory.HAIR_COLOR]) count++;
+    if (selections[StyleCategory.MAKEUP]) count++;
+    if (selections[StyleCategory.EXPRESSION]) count++;
+    if (selections[StyleCategory.EYES]) count++;
+    if (selections[StyleCategory.LIPS]) count++;
+    count += selections[StyleCategory.ACCESSORIES].length;
+    return count;
+  }, [selections]);
+
+  const activeSelections = useMemo(() => {
+    const items: { category: StyleCategory; value: string; label: string }[] = [];
+    const findLabel = (options: any[], value: string) => 
+      options.find(o => o.value === value)?.label || value.split(' ').slice(0, 3).join(' ');
+    
+    if (selections[StyleCategory.HAIR]) {
+      items.push({ category: StyleCategory.HAIR, value: selections[StyleCategory.HAIR], label: findLabel(HAIR_OPTIONS, selections[StyleCategory.HAIR]) });
+    }
+    if (selections[StyleCategory.HAIR_LENGTH]) {
+      items.push({ category: StyleCategory.HAIR_LENGTH, value: selections[StyleCategory.HAIR_LENGTH], label: findLabel(HAIR_LENGTH_OPTIONS, selections[StyleCategory.HAIR_LENGTH]) });
+    }
+    if (selections[StyleCategory.HAIR_COLOR]) {
+      items.push({ category: StyleCategory.HAIR_COLOR, value: selections[StyleCategory.HAIR_COLOR], label: findLabel(HAIR_COLOR_OPTIONS, selections[StyleCategory.HAIR_COLOR]) });
+    }
+    if (selections[StyleCategory.EXPRESSION]) {
+      items.push({ category: StyleCategory.EXPRESSION, value: selections[StyleCategory.EXPRESSION], label: findLabel(EXPRESSION_OPTIONS, selections[StyleCategory.EXPRESSION]) });
+    }
+    if (selections[StyleCategory.MAKEUP]) {
+      items.push({ category: StyleCategory.MAKEUP, value: selections[StyleCategory.MAKEUP], label: findLabel(MAKEUP_OPTIONS, selections[StyleCategory.MAKEUP]) });
+    }
+    if (selections[StyleCategory.EYES]) {
+      items.push({ category: StyleCategory.EYES, value: selections[StyleCategory.EYES], label: findLabel(EYE_OPTIONS, selections[StyleCategory.EYES]) });
+    }
+    if (selections[StyleCategory.LIPS]) {
+      items.push({ category: StyleCategory.LIPS, value: selections[StyleCategory.LIPS], label: findLabel(LIP_OPTIONS, selections[StyleCategory.LIPS]) });
+    }
+    const allAccessoryOptions = [...GLASSES_OPTIONS, ...PIERCING_OPTIONS, ...HEADWEAR_OPTIONS, ...JEWELRY_OPTIONS, ...FACE_EXTRAS_OPTIONS];
+    selections[StyleCategory.ACCESSORIES].forEach(acc => {
+      items.push({ category: StyleCategory.ACCESSORIES, value: acc, label: findLabel(allAccessoryOptions, acc) });
+    });
+    return items;
+  }, [selections]);
+
+  const removeSelection = (category: StyleCategory, value: string) => {
+    handleSelection(category, category === StyleCategory.ACCESSORIES ? value : '');
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
+    <div className="min-h-screen bg-slate-50 pb-36 lg:pb-20">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="bg-rose-500 p-2 rounded-lg text-white">
               <Sparkles size={20} />
@@ -237,136 +500,123 @@ const App: React.FC = () => {
                   <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-900 text-white text-xs">2</span>
                     Customize Look
+                    {selectionCount > 0 && (
+                      <span className="ml-1 px-2 py-0.5 bg-rose-100 text-rose-600 text-xs rounded-full font-medium">
+                        {selectionCount}
+                      </span>
+                    )}
                   </h2>
-                  <button
-                    onClick={handleRandomize}
-                    disabled={genState.isLoading}
-                    className={`
-                      text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition-colors
-                      ${genState.isLoading 
-                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-                        : 'bg-violet-100 text-violet-700 hover:bg-violet-200'
-                      }
-                    `}
-                  >
-                    <Dices size={14} />
-                    Surprise Me
-                  </button>
                 </div>
+
+                {/* Quick Presets */}
+                <div className="mb-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+                    <Zap size={12} />
+                    Quick Looks
+                  </h3>
+                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+                    {QUICK_PRESETS.map(preset => (
+                      <button
+                        key={preset.id}
+                        onClick={() => handlePresetSelect(preset)}
+                        disabled={genState.isLoading}
+                        className="flex-shrink-0 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-rose-300 hover:bg-rose-50 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                      >
+                        <span>{preset.emoji}</span>
+                        <span className="whitespace-nowrap">{preset.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Selection Summary Chips */}
+                {activeSelections.length > 0 && (
+                  <div className="mb-4 p-3 bg-white rounded-xl border border-slate-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Look</span>
+                      <button onClick={handleReset} className="text-xs text-slate-500 hover:text-rose-500 flex items-center gap-1">
+                        <RotateCcw size={10} />
+                        Clear All
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {activeSelections.map((item, idx) => (
+                        <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-rose-50 text-rose-700 text-xs rounded-full">
+                          {item.label}
+                          <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-rose-200 rounded-full p-0.5">
+                            <X size={10} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-8">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                   
-                  {/* Hair Section */}
-                  <div>
-                    <h3 className="text-md font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">Hair</h3>
-                    <StyleSelector 
-                      title="Hair Style" 
-                      category={StyleCategory.HAIR} 
-                      options={HAIR_OPTIONS} 
-                      selections={selections} 
-                      onSelect={handleSelection} 
-                    />
-                    <div className="h-4"></div>
-                    <StyleSelector 
-                      title="Hair Length" 
-                      category={StyleCategory.HAIR_LENGTH} 
-                      options={HAIR_LENGTH_OPTIONS} 
-                      selections={selections} 
-                      onSelect={handleSelection} 
-                    />
-                    <div className="h-4"></div>
-                    <StyleSelector 
-                      title="Hair Color" 
-                      category={StyleCategory.HAIR_COLOR} 
-                      options={HAIR_COLOR_OPTIONS} 
-                      selections={selections} 
-                      onSelect={handleSelection} 
-                    />
+                  {/* Hair Section - Collapsible */}
+                  <div className="border-b border-slate-100">
+                    <button onClick={() => toggleSection('hair')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
+                      <h3 className="text-md font-bold text-slate-900 flex items-center gap-2">
+                        Hair
+                        {(selections[StyleCategory.HAIR] || selections[StyleCategory.HAIR_LENGTH] || selections[StyleCategory.HAIR_COLOR]) && (
+                          <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
+                        )}
+                      </h3>
+                      <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.hair ? 'rotate-180' : ''}`} size={20} />
+                    </button>
+                    {expandedSections.hair && (
+                      <div className="px-4 sm:px-6 pb-6 space-y-4">
+                        <StyleSelector title="Hair Style" category={StyleCategory.HAIR} options={HAIR_OPTIONS} selections={selections} onSelect={handleSelection} />
+                        <StyleSelector title="Hair Length" category={StyleCategory.HAIR_LENGTH} options={HAIR_LENGTH_OPTIONS} selections={selections} onSelect={handleSelection} />
+                        <StyleSelector title="Hair Color" category={StyleCategory.HAIR_COLOR} options={HAIR_COLOR_OPTIONS} selections={selections} onSelect={handleSelection} />
+                      </div>
+                    )}
                   </div>
                   
-                  {/* Makeup Section */}
-                  <div>
-                    <h3 className="text-md font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">Face & Expression</h3>
-                    <StyleSelector 
-                      title="Expression" 
-                      category={StyleCategory.EXPRESSION} 
-                      options={EXPRESSION_OPTIONS} 
-                      selections={selections} 
-                      onSelect={handleSelection} 
-                    />
-                    <div className="h-4"></div>
-                    <StyleSelector 
-                      title="Makeup Base" 
-                      category={StyleCategory.MAKEUP} 
-                      options={MAKEUP_OPTIONS} 
-                      selections={selections} 
-                      onSelect={handleSelection} 
-                    />
-                    <div className="h-4"></div>
-                    <StyleSelector 
-                      title="Eyes & Contacts" 
-                      category={StyleCategory.EYES} 
-                      options={EYE_OPTIONS} 
-                      selections={selections} 
-                      onSelect={handleSelection} 
-                    />
-                    <div className="h-4"></div>
-                    <StyleSelector 
-                      title="Lips" 
-                      category={StyleCategory.LIPS} 
-                      options={LIP_OPTIONS} 
-                      selections={selections} 
-                      onSelect={handleSelection} 
-                    />
+                  {/* Face Section - Collapsible */}
+                  <div className="border-b border-slate-100">
+                    <button onClick={() => toggleSection('face')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
+                      <h3 className="text-md font-bold text-slate-900 flex items-center gap-2">
+                        Face & Expression
+                        {(selections[StyleCategory.EXPRESSION] || selections[StyleCategory.MAKEUP] || selections[StyleCategory.EYES] || selections[StyleCategory.LIPS]) && (
+                          <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
+                        )}
+                      </h3>
+                      <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.face ? 'rotate-180' : ''}`} size={20} />
+                    </button>
+                    {expandedSections.face && (
+                      <div className="px-4 sm:px-6 pb-6 space-y-4">
+                        <StyleSelector title="Expression" category={StyleCategory.EXPRESSION} options={EXPRESSION_OPTIONS} selections={selections} onSelect={handleSelection} />
+                        <StyleSelector title="Makeup Base" category={StyleCategory.MAKEUP} options={MAKEUP_OPTIONS} selections={selections} onSelect={handleSelection} />
+                        <StyleSelector title="Eyes & Contacts" category={StyleCategory.EYES} options={EYE_OPTIONS} selections={selections} onSelect={handleSelection} />
+                        <StyleSelector title="Lips" category={StyleCategory.LIPS} options={LIP_OPTIONS} selections={selections} onSelect={handleSelection} />
+                      </div>
+                    )}
                   </div>
 
-                  {/* Accessories Section */}
+                  {/* Accessories Section - Collapsible (collapsed by default) */}
                   <div>
-                    <h3 className="text-md font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">Accessories</h3>
-                    <StyleSelector 
-                      title="Eyewear" 
-                      category={StyleCategory.ACCESSORIES} 
-                      options={GLASSES_OPTIONS} 
-                      selections={selections} 
-                      onSelect={handleSelection}
-                      multiSelect 
-                    />
-                    <div className="h-4"></div>
-                    <StyleSelector 
-                      title="Piercings" 
-                      category={StyleCategory.ACCESSORIES} 
-                      options={PIERCING_OPTIONS} 
-                      selections={selections} 
-                      onSelect={handleSelection}
-                      multiSelect 
-                    />
-                    <div className="h-4"></div>
-                    <StyleSelector 
-                      title="Headwear" 
-                      category={StyleCategory.ACCESSORIES} 
-                      options={HEADWEAR_OPTIONS} 
-                      selections={selections} 
-                      onSelect={handleSelection}
-                      multiSelect 
-                    />
-                    <div className="h-4"></div>
-                    <StyleSelector 
-                      title="Jewelry & Neckwear" 
-                      category={StyleCategory.ACCESSORIES} 
-                      options={JEWELRY_OPTIONS} 
-                      selections={selections} 
-                      onSelect={handleSelection}
-                      multiSelect 
-                    />
-                    <div className="h-4"></div>
-                    <StyleSelector 
-                      title="Extras & Face Art" 
-                      category={StyleCategory.ACCESSORIES} 
-                      options={FACE_EXTRAS_OPTIONS} 
-                      selections={selections} 
-                      onSelect={handleSelection}
-                      multiSelect 
-                    />
+                    <button onClick={() => toggleSection('accessories')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
+                      <h3 className="text-md font-bold text-slate-900 flex items-center gap-2">
+                        Accessories
+                        {selections[StyleCategory.ACCESSORIES].length > 0 && (
+                          <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-xs rounded-full font-medium">
+                            {selections[StyleCategory.ACCESSORIES].length}
+                          </span>
+                        )}
+                      </h3>
+                      <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.accessories ? 'rotate-180' : ''}`} size={20} />
+                    </button>
+                    {expandedSections.accessories && (
+                      <div className="px-4 sm:px-6 pb-6 space-y-4">
+                        <StyleSelector title="Eyewear" category={StyleCategory.ACCESSORIES} options={GLASSES_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
+                        <StyleSelector title="Piercings" category={StyleCategory.ACCESSORIES} options={PIERCING_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
+                        <StyleSelector title="Headwear" category={StyleCategory.ACCESSORIES} options={HEADWEAR_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
+                        <StyleSelector title="Jewelry & Neckwear" category={StyleCategory.ACCESSORIES} options={JEWELRY_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
+                        <StyleSelector title="Extras & Face Art" category={StyleCategory.ACCESSORIES} options={FACE_EXTRAS_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
+                      </div>
+                    )}
                   </div>
 
                 </div>
@@ -378,23 +628,24 @@ const App: React.FC = () => {
           <div className="lg:col-span-7">
             <div className="sticky top-24 space-y-6">
               
-              {/* Result Area */}
+              {/* Result Area - Hidden on mobile when empty */}
               <div className={`
                 bg-slate-100 rounded-3xl overflow-hidden border border-slate-200 relative
-                ${!genState.resultImage ? 'min-h-[400px] flex items-center justify-center' : ''}
+                ${!genState.resultImage && !genState.isLoading && !genState.error ? 'hidden lg:flex min-h-[400px] items-center justify-center' : ''}
+                ${genState.isLoading || genState.error ? 'min-h-[300px]' : ''}
               `}>
                 
-                {/* Empty State */}
+                {/* Empty State - Desktop only */}
                 {!selectedImage && !genState.resultImage && (
-                  <div className="text-center p-8 text-slate-400">
+                  <div className="hidden lg:block text-center p-8 text-slate-400">
                     <Wand2 size={48} className="mx-auto mb-4 opacity-50" />
                     <p className="text-lg">Upload an image to start magic</p>
                   </div>
                 )}
 
-                {/* Loading State */}
+                {/* Loading State - Desktop only (mobile uses modal) */}
                 {genState.isLoading && (
-                  <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-md flex flex-col items-center justify-center">
+                  <div className="hidden lg:flex absolute inset-0 z-20 bg-white/80 backdrop-blur-md flex-col items-center justify-center">
                     <div className="relative">
                       <div className="w-16 h-16 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin"></div>
                       <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-rose-500" size={24} />
@@ -420,28 +671,39 @@ const App: React.FC = () => {
                    </div>
                 )}
 
-                {/* Comparison / Result View */}
+                {/* Comparison / Result View - Desktop */}
                 {genState.resultImage && !genState.isLoading && selectedImage && (
-                  <div className="bg-white p-4">
-                     <ComparisonView 
-                       originalImage={selectedImage} 
-                       generatedImage={genState.resultImage} 
-                     />
-                     <div className="mt-4 flex justify-end">
-                      <button 
-                        onClick={handleDownload}
-                        className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
-                      >
-                        <Download size={18} />
-                        Download Result
-                      </button>
-                     </div>
-                  </div>
+                  <>
+                    {/* Desktop: Inline view */}
+                    <div className="hidden lg:block bg-white p-4">
+                       <ComparisonView 
+                         originalImage={selectedImage} 
+                         generatedImage={genState.resultImage} 
+                       />
+                       <div className="mt-4 flex justify-end gap-2">
+                        <button 
+                          onClick={handleShare}
+                          className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors"
+                        >
+                          <Share2 size={18} />
+                          Share
+                        </button>
+                        <button 
+                          onClick={handleDownload}
+                          className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
+                        >
+                          <Download size={18} />
+                          Download
+                        </button>
+                       </div>
+                    </div>
+                    
+                  </>
                 )}
                 
-                {/* Preview Placeholder if image selected but not generated */}
+                {/* Preview Placeholder if image selected but not generated - Desktop only */}
                 {selectedImage && !genState.resultImage && !genState.isLoading && !genState.error && (
-                   <div className="relative w-full h-full flex flex-col items-center justify-center p-8">
+                   <div className="hidden lg:flex relative w-full h-full flex-col items-center justify-center p-8">
                      <img 
                        src={selectedImage} 
                        alt="Preview" 
@@ -458,14 +720,14 @@ const App: React.FC = () => {
                 )}
               </div>
 
-              {/* Primary Action Button */}
+              {/* Primary Action Button - Desktop only (mobile uses sticky bar) */}
               {selectedImage && (
                 <button
                   onClick={handleGenerateClick}
                   disabled={genState.isLoading}
                   className={`
-                    w-full py-4 rounded-xl font-bold text-lg shadow-xl shadow-rose-500/20 
-                    flex items-center justify-center gap-3 transition-all duration-300
+                    hidden lg:flex w-full py-4 rounded-xl font-bold text-lg shadow-xl shadow-rose-500/20 
+                    items-center justify-center gap-3 transition-all duration-300
                     ${genState.isLoading 
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
                       : 'bg-gradient-to-r from-rose-600 to-violet-600 text-white hover:shadow-rose-500/40 hover:-translate-y-1'
@@ -481,6 +743,101 @@ const App: React.FC = () => {
 
         </div>
       </main>
+
+      {/* Mobile Sticky Action Bar */}
+      {selectedImage && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 flex items-center gap-2 lg:hidden z-50 safe-area-pb">
+          {genState.resultImage && !genState.isLoading ? (
+            <>
+              {/* Result exists - show View Result + Regenerate */}
+              <button
+                onClick={handleGenerateClick}
+                className="p-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                aria-label="Regenerate"
+              >
+                <RefreshCw size={20} />
+              </button>
+              <button
+                onClick={() => setShowResultModal(true)}
+                className="flex-1 py-3 px-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 bg-gradient-to-r from-rose-600 to-violet-600 text-white active:scale-[0.98] transition-all"
+              >
+                View Result
+                <Sparkles size={18} />
+              </button>
+              <button
+                onClick={handleShare}
+                className="p-3 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                aria-label="Share"
+              >
+                <Share2 size={20} />
+              </button>
+            </>
+          ) : (
+            <>
+              {/* No result yet - show Generate controls */}
+              <button
+                onClick={handleReset}
+                disabled={genState.isLoading || selectionCount === 0}
+                className="p-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Reset selections"
+              >
+                <RotateCcw size={20} />
+              </button>
+              <button
+                onClick={handleRandomize}
+                disabled={genState.isLoading}
+                className="p-3 rounded-xl bg-violet-100 text-violet-700 hover:bg-violet-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Surprise me"
+              >
+                <Dices size={20} />
+              </button>
+              <button
+                onClick={handleGenerateClick}
+                disabled={genState.isLoading}
+                className={`
+                  flex-1 py-3 px-4 rounded-xl font-bold text-base
+                  flex items-center justify-center gap-2 transition-all
+                  ${genState.isLoading 
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-rose-600 to-violet-600 text-white active:scale-[0.98]'
+                  }
+                `}
+              >
+                {genState.isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Processing
+                  </>
+                ) : (
+                  <>
+                    Generate
+                    <Sparkles size={18} />
+                  </>
+                )}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Result Modal for Mobile */}
+      {selectedImage && (genState.resultImage || genState.isLoading) && (
+        <ResultModal
+          isOpen={showResultModal}
+          isLoading={genState.isLoading}
+          onClose={() => setShowResultModal(false)}
+          originalImage={selectedImage}
+          generatedImage={genState.resultImage}
+          onDownload={handleDownload}
+          onShare={handleShare}
+          onTryAgain={() => {
+            // Clear result so bar shows "Generate" again
+            setGenState(prev => ({ ...prev, resultImage: null }));
+            // Scroll to style options
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
+      )}
     </div>
   );
 };
