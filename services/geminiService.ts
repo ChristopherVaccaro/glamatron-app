@@ -49,10 +49,15 @@ const getSystemPrompt = (selections: UserSelections): string => {
   `;
 };
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const generateStyledImage = async (
   imageBase64: string,
-  selections: UserSelections
+  selections: UserSelections,
+  retryCount = 0
 ): Promise<string> => {
+  const MAX_RETRIES = 2;
+  
   if (!process.env.API_KEY) {
     throw new Error("API Key is missing. Please set process.env.API_KEY.");
   }
@@ -64,6 +69,7 @@ export const generateStyledImage = async (
 
   try {
     const prompt = getSystemPrompt(selections);
+    console.log("Attempt", retryCount + 1, "- Sending request to Gemini...");
     
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
@@ -74,12 +80,15 @@ export const generateStyledImage = async (
           },
           {
             inlineData: {
-              mimeType: 'image/jpeg', // Standardizing on jpeg for upload context
+              mimeType: 'image/jpeg',
               data: cleanBase64
             }
           }
         ]
       },
+      config: {
+        responseModalities: ['image', 'text'],
+      }
     });
 
     const candidates = response.candidates;
@@ -94,19 +103,36 @@ export const generateStyledImage = async (
 
     const candidate = candidates[0];
     
+    // Log finish reason for debugging
+    console.log("Finish reason:", candidate.finishReason);
+    console.log("Safety ratings:", candidate.safetyRatings);
+    
     // Check for content filtering
     if (candidate.finishReason === 'SAFETY') {
-      throw new Error("Image was filtered for safety. Try a different photo or fewer style options.");
+      const safetyInfo = candidate.safetyRatings?.map(r => `${r.category}: ${r.probability}`).join(', ');
+      throw new Error(`Image was filtered for safety (${safetyInfo || 'unknown reason'}). Try a different photo.`);
     }
     
     if (candidate.finishReason === 'RECITATION') {
       throw new Error("Request could not be completed. Please try again.");
     }
 
+    if (candidate.finishReason === 'OTHER' || candidate.finishReason === 'BLOCKLIST') {
+      throw new Error("Request was blocked. Try a different photo or simpler style options.");
+    }
+
     // Safely access content and parts
     const content = candidate.content;
     if (!content || !content.parts) {
-      throw new Error("AI returned an empty response. Please try again with a clearer photo.");
+      // More detailed error logging
+      console.log("Full candidate object:", JSON.stringify(candidate, null, 2));
+      
+      // Check if there's a specific reason
+      if (candidate.finishReason === 'MAX_TOKENS') {
+        throw new Error("Response was too large. Try fewer style options.");
+      }
+      
+      throw new Error("AI couldn't generate this transformation. Try: 1) A clearer front-facing photo, 2) Fewer style changes, or 3) Different options.");
     }
 
     const parts = content.parts;
@@ -130,8 +156,23 @@ export const generateStyledImage = async (
 
     return `data:image/jpeg;base64,${generatedImageBase64}`;
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini API Error:", error);
+    
+    // Retry on transient errors
+    const isRetryable = 
+      error.message?.includes("empty response") ||
+      error.message?.includes("couldn't generate") ||
+      error.message?.includes("503") ||
+      error.message?.includes("429") ||
+      error.message?.includes("RESOURCE_EXHAUSTED");
+    
+    if (isRetryable && retryCount < MAX_RETRIES) {
+      console.log(`Retrying in ${(retryCount + 1) * 1000}ms...`);
+      await delay((retryCount + 1) * 1000);
+      return generateStyledImage(imageBase64, selections, retryCount + 1);
+    }
+    
     throw error;
   }
 };
