@@ -53,8 +53,12 @@ const ResultModal: React.FC<ResultModalProps> = ({
     }, 300);
   };
 
-  // Touch handlers for swipe-to-dismiss
+  // Touch handlers for swipe-to-dismiss (only on drag handle)
   const handleTouchStart = (e: React.TouchEvent) => {
+    // Only start drag from the handle area
+    const target = e.target as HTMLElement;
+    if (!target.closest('[data-drag-handle]')) return;
+    
     startY.current = e.touches[0].clientY;
     setIsDragging(true);
   };
@@ -64,13 +68,18 @@ const ResultModal: React.FC<ResultModalProps> = ({
     const currentY = e.touches[0].clientY;
     const diff = currentY - startY.current;
     if (diff > 0) {
-      setDragY(diff);
+      // Add resistance - drag becomes harder the further you pull
+      const resistance = 0.5;
+      const dampedDiff = diff * resistance;
+      setDragY(dampedDiff);
     }
   };
 
   const handleTouchEnd = () => {
+    if (!isDragging) return;
     setIsDragging(false);
-    if (dragY > 150) {
+    // Require 120px of dampened drag (which means ~240px actual drag) to dismiss
+    if (dragY > 120) {
       handleClose();
     } else {
       setDragY(0);
@@ -100,9 +109,9 @@ const ResultModal: React.FC<ResultModalProps> = ({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Drag Handle */}
-        <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing">
-          <div className="w-10 h-1 bg-slate-300 rounded-full" />
+        {/* Drag Handle - Only swipe from here to dismiss */}
+        <div data-drag-handle className="flex justify-center pt-4 pb-3 cursor-grab active:cursor-grabbing">
+          <div className="w-12 h-1.5 bg-slate-300 rounded-full" />
         </div>
 
         {/* Header */}
