@@ -14,7 +14,8 @@ export enum StyleCategory {
   MAKEUP = 'MAKEUP',
   EXPRESSION = 'EXPRESSION',
   EYES = 'EYE_MAKEUP',
-  LIPS = 'LIP_MAKEUP'
+  LIPS = 'LIP_MAKEUP',
+  FACIAL_HAIR = 'FACIAL_HAIR'
 }
 
 export interface UserSelections {
@@ -26,6 +27,7 @@ export interface UserSelections {
   [StyleCategory.EXPRESSION]: string | null;
   [StyleCategory.EYES]: string | null;
   [StyleCategory.LIPS]: string | null;
+  [StyleCategory.FACIAL_HAIR]: string | null;
 }
 
 export interface GenerationState {

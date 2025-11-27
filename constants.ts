@@ -192,6 +192,14 @@ export const PIERCING_OPTIONS: StyleOption[] = [
   { id: 'a_gauges', label: 'Stretched Ears', value: 'Stretched ear gauges/plugs', category: StyleCategory.ACCESSORIES },
   { id: 'a_tragus', label: 'Tragus', value: 'Tragus ear piercing', category: StyleCategory.ACCESSORIES },
   { id: 'a_multiple_ear', label: 'Stacked Ear', value: 'Multiple stacked ear piercings', category: StyleCategory.ACCESSORIES },
+  // Ear Piercings & Earrings
+  { id: 'a_lobe_stud', label: 'Lobe Studs', value: 'Classic diamond stud earrings', category: StyleCategory.ACCESSORIES },
+  { id: 'a_lobe_hoop', label: 'Lobe Hoops', value: 'Gold hoop earrings', category: StyleCategory.ACCESSORIES },
+  { id: 'a_huggie', label: 'Huggie Hoops', value: 'Small huggie hoop earrings', category: StyleCategory.ACCESSORIES },
+  { id: 'a_ear_cuff', label: 'Ear Cuff', value: 'Trendy ear cuff jewelry', category: StyleCategory.ACCESSORIES },
+  { id: 'a_dangly', label: 'Dangly Earrings', value: 'Long dangly statement earrings', category: StyleCategory.ACCESSORIES },
+  { id: 'a_chandelier', label: 'Chandelier', value: 'Elegant chandelier drop earrings', category: StyleCategory.ACCESSORIES },
+  { id: 'a_pearl_ear', label: 'Pearl Studs', value: 'Classic pearl stud earrings', category: StyleCategory.ACCESSORIES },
 ];
 
 export const HEADWEAR_OPTIONS: StyleOption[] = [
@@ -333,4 +341,53 @@ export const EYE_OPTIONS: StyleOption[] = [
   { id: 'e_contacts_red', label: 'Red Contacts', value: 'Vampire red contact lenses', category: StyleCategory.EYES },
   { id: 'e_contacts_white', label: 'Whiteout Eyes', value: 'Spooky whiteout contact lenses', category: StyleCategory.EYES },
   { id: 'e_contacts_cat', label: 'Cat Eyes', value: 'Vertical slit cat eye contacts', category: StyleCategory.EYES },
+];
+
+// --- FACIAL HAIR (Fun for everyone!) ---
+export const FACIAL_HAIR_OPTIONS: StyleOption[] = [
+  // Clean
+  { id: 'fh_none', label: 'Clean Shaven', value: 'Completely clean shaven face', category: StyleCategory.FACIAL_HAIR },
+  
+  // Stubble
+  { id: 'fh_stubble_light', label: 'Light Stubble', value: '5 o\'clock shadow light stubble', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_stubble', label: 'Designer Stubble', value: 'Trimmed designer stubble beard', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_stubble_heavy', label: 'Heavy Stubble', value: 'Heavy 3-day stubble beard', category: StyleCategory.FACIAL_HAIR },
+  
+  // Mustaches
+  { id: 'fh_stache_thin', label: 'Pencil Stache', value: 'Thin pencil mustache', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_stache_chevron', label: 'Chevron', value: 'Thick chevron mustache like Tom Selleck', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_stache_handlebar', label: 'Handlebar', value: 'Curled handlebar mustache', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_stache_horseshoe', label: 'Horseshoe', value: 'Horseshoe biker mustache', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_stache_walrus', label: 'Walrus', value: 'Thick bushy walrus mustache', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_stache_fu', label: 'Fu Manchu', value: 'Long droopy Fu Manchu mustache', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_stache_dali', label: 'Dali', value: 'Thin waxed Salvador Dali mustache with curled tips', category: StyleCategory.FACIAL_HAIR },
+  
+  // Beards - Short/Medium
+  { id: 'fh_goatee', label: 'Goatee', value: 'Classic goatee beard', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_vandyke', label: 'Van Dyke', value: 'Van Dyke pointed goatee with separate mustache', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_anchor', label: 'Anchor', value: 'Anchor style pointed chin beard', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_circle', label: 'Circle Beard', value: 'Rounded circle beard goatee', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_chinstrap', label: 'Chinstrap', value: 'Thin chinstrap beard along jawline', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_short', label: 'Short Beard', value: 'Short trimmed full beard', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_boxed', label: 'Boxed Beard', value: 'Neatly shaped boxed beard', category: StyleCategory.FACIAL_HAIR },
+  
+  // Beards - Full/Long
+  { id: 'fh_full', label: 'Full Beard', value: 'Natural full grown beard', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_yeard', label: 'Yeard', value: 'Long year-length full beard', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_wizard', label: 'Wizard Beard', value: 'Very long flowing wizard beard', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_viking_beard', label: 'Viking Beard', value: 'Wild braided viking warrior beard', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_lumberjack', label: 'Lumberjack', value: 'Thick bushy lumberjack beard', category: StyleCategory.FACIAL_HAIR },
+  
+  // Sideburns
+  { id: 'fh_burns_mutton', label: 'Mutton Chops', value: 'Thick mutton chop sideburns', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_burns_lamb', label: 'Lamb Chops', value: 'Lamb chop sideburns without chin connection', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_burns_elvis', label: 'Elvis Burns', value: 'Classic Elvis style sideburns', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_burns_friendly', label: 'Friendly Chops', value: 'Friendly mutton chops connected to mustache', category: StyleCategory.FACIAL_HAIR },
+  
+  // Fun/Novelty
+  { id: 'fh_soul_patch', label: 'Soul Patch', value: 'Small soul patch below lip', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_balbo', label: 'Balbo', value: 'Balbo beard style like Tony Stark', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_verdi', label: 'Verdi', value: 'Rounded full beard with styled mustache', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_ducktail', label: 'Ducktail', value: 'Full beard shaped to a point like a ducktail', category: StyleCategory.FACIAL_HAIR },
+  { id: 'fh_santa', label: 'Santa Beard', value: 'Long fluffy white Santa Claus beard', category: StyleCategory.FACIAL_HAIR },
 ];
