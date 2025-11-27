@@ -24,6 +24,7 @@ const getSystemPrompt = (selections: UserSelections): string => {
   const eyes = selections[StyleCategory.EYES] || "Keep original eyes";
   const lips = selections[StyleCategory.LIPS] || "Keep original lip color";
   const expression = selections[StyleCategory.EXPRESSION] || "Keep original facial expression";
+  const facialHair = selections[StyleCategory.FACIAL_HAIR] || "Keep original facial hair";
 
   return `
     You are an expert photo editor and stylist.
@@ -40,6 +41,7 @@ const getSystemPrompt = (selections: UserSelections): string => {
        - It is required to change the facial structure to fit the expression, but the person must remain recognizable.
     3. HAIR & STYLING:
        - Hair: ${hairPrompt}
+       - Facial Hair: ${facialHair} (Apply this regardless of the person's apparent gender - it can be fun/artistic!)
        - Accessories: ${accessories} (Ensure glasses/hats fit the head shape and perspective correctly).
        - Makeup Base: ${makeup}
        - Eye Makeup: ${eyes}

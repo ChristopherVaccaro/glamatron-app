@@ -17,7 +17,8 @@ import {
   PIERCING_OPTIONS,
   HEADWEAR_OPTIONS,
   JEWELRY_OPTIONS,
-  FACE_EXTRAS_OPTIONS
+  FACE_EXTRAS_OPTIONS,
+  FACIAL_HAIR_OPTIONS
 } from './constants';
 import StyleSelector from './components/StyleSelector';
 import ImageUploader from './components/ImageUploader';
@@ -100,6 +101,7 @@ export const QUICK_PRESETS = [
       [StyleCategory.EYES]: 'Sharp cut crease eyeshadow',
       [StyleCategory.LIPS]: 'Classic bright red lipstick',
       [StyleCategory.ACCESSORIES]: ['Crystal chandelier earrings', 'Sparkling crystal tiara'],
+      [StyleCategory.FACIAL_HAIR]: null,
     }
   },
   {
@@ -115,6 +117,39 @@ export const QUICK_PRESETS = [
       [StyleCategory.EYES]: 'Geometric graphic eyeliner art',
       [StyleCategory.LIPS]: null,
       [StyleCategory.ACCESSORIES]: ['Futuristic Cyberpunk LED Visor', 'Futuristic cyberpunk face panel lines'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'lumberjack',
+    name: 'Lumberjack',
+    emoji: '🪓',
+    selections: {
+      [StyleCategory.HAIR]: 'Long flowing wavy hair',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Rich chestnut brown',
+      [StyleCategory.MAKEUP]: null,
+      [StyleCategory.EXPRESSION]: 'Confident asymmetrical smirk',
+      [StyleCategory.EYES]: null,
+      [StyleCategory.LIPS]: null,
+      [StyleCategory.ACCESSORIES]: [],
+      [StyleCategory.FACIAL_HAIR]: 'Thick bushy lumberjack beard',
+    }
+  },
+  {
+    id: 'dapper',
+    name: 'Dapper Dan',
+    emoji: '🎩',
+    selections: {
+      [StyleCategory.HAIR]: 'Voluminous classic pompadour',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Jet black',
+      [StyleCategory.MAKEUP]: null,
+      [StyleCategory.EXPRESSION]: 'Confident asymmetrical smirk',
+      [StyleCategory.EYES]: null,
+      [StyleCategory.LIPS]: null,
+      [StyleCategory.ACCESSORIES]: ['Antique gold monocle', 'Formal black bow tie'],
+      [StyleCategory.FACIAL_HAIR]: 'Curled handlebar mustache',
     }
   },
 ];
@@ -126,6 +161,7 @@ const App: React.FC = () => {
     hair: true,
     face: true,
     accessories: false,
+    extras: false,
   });
   
   const [selections, setSelections] = useState<UserSelections>({
@@ -137,6 +173,7 @@ const App: React.FC = () => {
     [StyleCategory.EXPRESSION]: null,
     [StyleCategory.EYES]: null,
     [StyleCategory.LIPS]: null,
+    [StyleCategory.FACIAL_HAIR]: null,
   });
 
   const [genState, setGenState] = useState<GenerationState>({
@@ -185,6 +222,7 @@ const App: React.FC = () => {
       activeSelections[StyleCategory.EXPRESSION] ||
       activeSelections[StyleCategory.EYES] || 
       activeSelections[StyleCategory.LIPS] ||
+      activeSelections[StyleCategory.FACIAL_HAIR] ||
       activeSelections[StyleCategory.ACCESSORIES].length > 0;
 
     if (!hasSelection) {
@@ -260,7 +298,8 @@ const App: React.FC = () => {
       [StyleCategory.EXPRESSION]: maybeGet(EXPRESSION_OPTIONS, 0.5),
       [StyleCategory.EYES]: maybeGet(EYE_OPTIONS, 0.5),
       [StyleCategory.LIPS]: maybeGet(LIP_OPTIONS, 0.5),
-      [StyleCategory.ACCESSORIES]: randomAccessories
+      [StyleCategory.ACCESSORIES]: randomAccessories,
+      [StyleCategory.FACIAL_HAIR]: maybeGet(FACIAL_HAIR_OPTIONS, 0.25),
     };
 
     // Update UI with new selections
@@ -377,11 +416,29 @@ const App: React.FC = () => {
       [StyleCategory.EXPRESSION]: null,
       [StyleCategory.EYES]: null,
       [StyleCategory.LIPS]: null,
+      [StyleCategory.FACIAL_HAIR]: null,
     });
   };
 
   const handlePresetSelect = (preset: typeof QUICK_PRESETS[0]) => {
     setSelections(preset.selections as UserSelections);
+  };
+
+  const handleStartOver = () => {
+    setSelectedImage(null);
+    setGenState({ isLoading: false, error: null, resultImage: null });
+    setSelections({
+      [StyleCategory.HAIR]: null,
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.ACCESSORIES]: [],
+      [StyleCategory.MAKEUP]: null,
+      [StyleCategory.EXPRESSION]: null,
+      [StyleCategory.EYES]: null,
+      [StyleCategory.LIPS]: null,
+      [StyleCategory.FACIAL_HAIR]: null,
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const toggleSection = (section: string) => {
@@ -397,6 +454,7 @@ const App: React.FC = () => {
     if (selections[StyleCategory.EXPRESSION]) count++;
     if (selections[StyleCategory.EYES]) count++;
     if (selections[StyleCategory.LIPS]) count++;
+    if (selections[StyleCategory.FACIAL_HAIR]) count++;
     count += selections[StyleCategory.ACCESSORIES].length;
     return count;
   }, [selections]);
@@ -431,6 +489,9 @@ const App: React.FC = () => {
     selections[StyleCategory.ACCESSORIES].forEach(acc => {
       items.push({ category: StyleCategory.ACCESSORIES, value: acc, label: findLabel(allAccessoryOptions, acc) });
     });
+    if (selections[StyleCategory.FACIAL_HAIR]) {
+      items.push({ category: StyleCategory.FACIAL_HAIR, value: selections[StyleCategory.FACIAL_HAIR], label: findLabel(FACIAL_HAIR_OPTIONS, selections[StyleCategory.FACIAL_HAIR]) });
+    }
     return items;
   }, [selections]);
 
@@ -488,6 +549,7 @@ const App: React.FC = () => {
                     [StyleCategory.EXPRESSION]: null,
                     [StyleCategory.EYES]: null,
                     [StyleCategory.LIPS]: null,
+                    [StyleCategory.FACIAL_HAIR]: null,
                   });
                 }}
               />
@@ -596,7 +658,7 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Accessories Section - Collapsible (collapsed by default) */}
-                  <div>
+                  <div className="border-b border-slate-100">
                     <button onClick={() => toggleSection('accessories')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
                       <h3 className="text-md font-bold text-slate-900 flex items-center gap-2">
                         Accessories
@@ -615,6 +677,26 @@ const App: React.FC = () => {
                         <StyleSelector title="Headwear" category={StyleCategory.ACCESSORIES} options={HEADWEAR_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
                         <StyleSelector title="Jewelry & Neckwear" category={StyleCategory.ACCESSORIES} options={JEWELRY_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
                         <StyleSelector title="Extras & Face Art" category={StyleCategory.ACCESSORIES} options={FACE_EXTRAS_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Fun Extras Section - Facial Hair (collapsed by default) */}
+                  <div>
+                    <button onClick={() => toggleSection('extras')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
+                      <h3 className="text-md font-bold text-slate-900 flex items-center gap-2">
+                        <span>Facial Hair</span>
+                        <span className="text-[10px] font-medium text-violet-600 bg-violet-100 px-1.5 py-0.5 rounded">Fun for all!</span>
+                        {selections[StyleCategory.FACIAL_HAIR] && (
+                          <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
+                        )}
+                      </h3>
+                      <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.extras ? 'rotate-180' : ''}`} size={20} />
+                    </button>
+                    {expandedSections.extras && (
+                      <div className="px-4 sm:px-6 pb-6 space-y-4">
+                        <p className="text-xs text-slate-500 -mt-2 mb-2">Beards, mustaches & more — try them on anyone for fun results!</p>
+                        <StyleSelector title="Facial Hair Style" category={StyleCategory.FACIAL_HAIR} options={FACIAL_HAIR_OPTIONS} selections={selections} onSelect={handleSelection} />
                       </div>
                     )}
                   </div>
@@ -680,21 +762,30 @@ const App: React.FC = () => {
                          originalImage={selectedImage} 
                          generatedImage={genState.resultImage} 
                        />
-                       <div className="mt-4 flex justify-end gap-2">
+                       <div className="mt-4 flex justify-between items-center gap-2">
                         <button 
-                          onClick={handleShare}
-                          className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors"
+                          onClick={handleStartOver}
+                          className="flex items-center gap-2 text-slate-500 hover:text-rose-600 px-3 py-2 rounded-lg hover:bg-rose-50 transition-colors text-sm"
                         >
-                          <Share2 size={18} />
-                          Share
+                          <RotateCcw size={16} />
+                          Try New Photo
                         </button>
-                        <button 
-                          onClick={handleDownload}
-                          className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
-                        >
-                          <Download size={18} />
-                          Download
-                        </button>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={handleShare}
+                            className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors"
+                          >
+                            <Share2 size={18} />
+                            Share
+                          </button>
+                          <button 
+                            onClick={handleDownload}
+                            className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
+                          >
+                            <Download size={18} />
+                            Download
+                          </button>
+                        </div>
                        </div>
                     </div>
                     
