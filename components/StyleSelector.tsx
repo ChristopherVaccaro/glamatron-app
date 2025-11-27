@@ -45,24 +45,8 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({
 
   return (
     <div className="mb-4 last:mb-0">
-      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
-        <span className="flex items-center gap-1.5">
-          {title}
-          {selectedCount > 0 && (
-            <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 rounded-full text-[10px] font-bold">
-              {selectedCount}
-            </span>
-          )}
-        </span>
-        {((!multiSelect && currentSelection && options.some(o => o.value === currentSelection)) || 
-          (multiSelect && selectedCount > 0)) && (
-          <button 
-            onClick={() => onSelect(category, multiSelect ? 'CLEAR_ALL' : '')}
-            className="text-[10px] text-rose-500 hover:text-rose-600 font-medium normal-case px-2 py-1 -mr-2 rounded hover:bg-rose-50 transition-colors"
-          >
-            Reset
-          </button>
-        )}
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+        {title}
       </h4>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {displayedOptions.map((option) => {
@@ -75,16 +59,16 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({
                 relative min-h-[44px] px-3 py-2.5 rounded-xl border text-left transition-all duration-150 
                 flex items-center active:scale-[0.97]
                 ${active 
-                  ? 'border-rose-500 bg-rose-50 ring-1 ring-rose-500 shadow-sm' 
+                  ? 'border-[#0F172A] bg-slate-50 ring-1 ring-[#0F172A]' 
                   : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                 }
               `}
             >
-              <span className={`block text-sm font-medium leading-snug pr-5 ${active ? 'text-rose-700' : 'text-slate-700'}`}>
+              <span className={`block text-sm font-medium leading-snug pr-5 ${active ? 'text-slate-900' : 'text-slate-700'}`}>
                 {option.label}
               </span>
               {active && (
-                <div className="absolute top-1/2 -translate-y-1/2 right-2.5 w-4 h-4 bg-rose-500 rounded-full flex items-center justify-center">
+                <div className="absolute top-1/2 -translate-y-1/2 right-2.5 w-4 h-4 bg-[#0F172A] rounded-full flex items-center justify-center">
                   <Check size={10} className="text-white" strokeWidth={3} />
                 </div>
               )}

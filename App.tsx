@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap } from 'lucide-react';
+import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import { 
   StyleCategory, 
   UserSelections, 
@@ -24,6 +24,11 @@ import StyleSelector from './components/StyleSelector';
 import ImageUploader from './components/ImageUploader';
 import ComparisonView from './components/ComparisonView';
 import ResultModal from './components/ResultModal';
+import Footer from './components/Footer';
+import LegalModal from './components/LegalModal';
+import PrivacyPolicyContent from './components/PrivacyPolicyContent';
+import TermsOfServiceContent from './components/TermsOfServiceContent';
+import ContactContent from './components/ContactContent';
 import { generateStyledImage } from './services/geminiService';
 
 // Quick preset definitions
@@ -152,6 +157,86 @@ export const QUICK_PRESETS = [
       [StyleCategory.FACIAL_HAIR]: 'Curled handlebar mustache',
     }
   },
+  {
+    id: 'boho',
+    name: 'Boho Chic',
+    emoji: '🌻',
+    selections: {
+      [StyleCategory.HAIR]: 'Long flowing wavy hair',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Warm honey blonde',
+      [StyleCategory.MAKEUP]: 'Minimal "clean girl" aesthetic makeup',
+      [StyleCategory.EXPRESSION]: 'Peaceful content expression',
+      [StyleCategory.EYES]: 'Natural lashes with mascara only',
+      [StyleCategory.LIPS]: 'Nude matte natural lipstick',
+      [StyleCategory.ACCESSORIES]: ['Bohemian flower crown', 'Layered gold chain necklaces'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'punk',
+    name: 'Punk Rock',
+    emoji: '🎸',
+    selections: {
+      [StyleCategory.HAIR]: 'Punk mohawk hairstyle',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Bright fire engine red',
+      [StyleCategory.MAKEUP]: 'Dark pale goth makeup',
+      [StyleCategory.EXPRESSION]: 'Serious intense expression',
+      [StyleCategory.EYES]: 'Sharp black winged eyeliner',
+      [StyleCategory.LIPS]: 'Jet black matte lipstick',
+      [StyleCategory.ACCESSORIES]: ['Multiple silver ear piercings', 'Spiked collar choker'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'vintage',
+    name: '50s Vintage',
+    emoji: '💋',
+    selections: {
+      [StyleCategory.HAIR]: 'Vintage 1920s finger waves',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Deep dark brown',
+      [StyleCategory.MAKEUP]: 'Vintage 1950s pinup makeup',
+      [StyleCategory.EXPRESSION]: 'Playful winking expression',
+      [StyleCategory.EYES]: 'Sharp black winged eyeliner',
+      [StyleCategory.LIPS]: 'Classic bright red lipstick',
+      [StyleCategory.ACCESSORIES]: ['Vintage cat-eye glasses'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'fairy',
+    name: 'Fairy Core',
+    emoji: '🧚',
+    selections: {
+      [StyleCategory.HAIR]: 'Long voluminous curly hair',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Soft pastel pink',
+      [StyleCategory.MAKEUP]: 'Ethereal fairy glow makeup',
+      [StyleCategory.EXPRESSION]: 'Dreamy distant gaze',
+      [StyleCategory.EYES]: 'Pastel shimmer eyeshadow',
+      [StyleCategory.LIPS]: 'High shine clear lip gloss',
+      [StyleCategory.ACCESSORIES]: ['Delicate elf ear tips', 'Cute heart shaped faux freckles'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'sporty',
+    name: 'Sporty Fresh',
+    emoji: '⚡',
+    selections: {
+      [StyleCategory.HAIR]: 'Sleek high ponytail',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.MAKEUP]: 'Minimal "clean girl" aesthetic makeup',
+      [StyleCategory.EXPRESSION]: 'Bright genuine smile',
+      [StyleCategory.EYES]: 'Natural lashes with mascara only',
+      [StyleCategory.LIPS]: 'High shine clear lip gloss',
+      [StyleCategory.ACCESSORIES]: ['Athletic sweatband headband'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
 ];
 
 const App: React.FC = () => {
@@ -183,6 +268,9 @@ const App: React.FC = () => {
   });
 
   const [showResultModal, setShowResultModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   const handleSelection = useCallback((category: StyleCategory, value: string) => {
     setSelections(prev => {
@@ -500,17 +588,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-36 lg:pb-20">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-rose-500 p-2 rounded-lg text-white">
-              <Sparkles size={20} />
-            </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-rose-600 to-violet-600 bg-clip-text text-transparent">
-              StyleMirror AI
-            </h1>
+          <div className="flex items-center">
+            <span className="text-lg sm:text-xl font-bold tracking-wide text-slate-900" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              GLAMATRON
+            </span>
           </div>
           <div className="text-sm text-slate-500 hidden sm:block">
             Powered by Gemini
@@ -518,7 +603,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           
           {/* LEFT COLUMN: Controls */}
@@ -554,7 +639,6 @@ const App: React.FC = () => {
                 }}
               />
             </section>
-
             {/* 2. Style Selectors */}
             {selectedImage && (
               <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -562,27 +646,46 @@ const App: React.FC = () => {
                   <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-900 text-white text-xs">2</span>
                     Customize Look
-                    {selectionCount > 0 && (
-                      <span className="ml-1 px-2 py-0.5 bg-rose-100 text-rose-600 text-xs rounded-full font-medium">
-                        {selectionCount}
-                      </span>
-                    )}
                   </h2>
                 </div>
 
                 {/* Quick Presets */}
                 <div className="mb-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
-                    <Zap size={12} />
-                    Quick Looks
-                  </h3>
-                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                      <Zap size={12} />
+                      Quick Looks
+                    </h3>
+                    <div className="hidden lg:flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          const container = document.getElementById('quick-looks-scroll');
+                          if (container) container.scrollBy({ left: -200, behavior: 'smooth' });
+                        }}
+                        className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                        aria-label="Scroll left"
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          const container = document.getElementById('quick-looks-scroll');
+                          if (container) container.scrollBy({ left: 200, behavior: 'smooth' });
+                        }}
+                        className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                        aria-label="Scroll right"
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </div>
+                  </div>
+                  <div id="quick-looks-scroll" className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
                     {QUICK_PRESETS.map(preset => (
                       <button
                         key={preset.id}
                         onClick={() => handlePresetSelect(preset)}
                         disabled={genState.isLoading}
-                        className="flex-shrink-0 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-rose-300 hover:bg-rose-50 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                        className="flex-shrink-0 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-rose-300 hover:bg-rose-50 transition-all flex items-center gap-1.5 shadow-sm"
                       >
                         <span>{preset.emoji}</span>
                         <span className="whitespace-nowrap">{preset.name}</span>
@@ -593,7 +696,7 @@ const App: React.FC = () => {
 
                 {/* Selection Summary Chips */}
                 {activeSelections.length > 0 && (
-                  <div className="mb-4 p-3 bg-white rounded-xl border border-slate-200">
+                  <div className="mb-4 p-3 bg-white rounded-xl border border-slate-200 lg:sticky lg:top-20 lg:z-40 lg:shadow-md">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Look</span>
                       <button onClick={handleReset} className="text-xs text-slate-500 hover:text-rose-500 flex items-center gap-1">
@@ -603,10 +706,10 @@ const App: React.FC = () => {
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {activeSelections.map((item, idx) => (
-                        <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-rose-50 text-rose-700 text-xs rounded-full">
+                        <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-[#0F172A] text-white text-xs rounded-full">
                           {item.label}
-                          <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-rose-200 rounded-full p-0.5">
-                            <X size={10} />
+                          <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-700 rounded-full p-0.5">
+                            <X size={10} className="text-white" />
                           </button>
                         </span>
                       ))}
@@ -619,11 +722,8 @@ const App: React.FC = () => {
                   {/* Hair Section - Collapsible */}
                   <div className="border-b border-slate-100">
                     <button onClick={() => toggleSection('hair')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
-                      <h3 className="text-md font-bold text-slate-900 flex items-center gap-2">
+                      <h3 className="text-md font-bold text-slate-900">
                         Hair
-                        {(selections[StyleCategory.HAIR] || selections[StyleCategory.HAIR_LENGTH] || selections[StyleCategory.HAIR_COLOR]) && (
-                          <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
-                        )}
                       </h3>
                       <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.hair ? 'rotate-180' : ''}`} size={20} />
                     </button>
@@ -639,11 +739,8 @@ const App: React.FC = () => {
                   {/* Face Section - Collapsible */}
                   <div className="border-b border-slate-100">
                     <button onClick={() => toggleSection('face')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
-                      <h3 className="text-md font-bold text-slate-900 flex items-center gap-2">
+                      <h3 className="text-md font-bold text-slate-900">
                         Face & Expression
-                        {(selections[StyleCategory.EXPRESSION] || selections[StyleCategory.MAKEUP] || selections[StyleCategory.EYES] || selections[StyleCategory.LIPS]) && (
-                          <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
-                        )}
                       </h3>
                       <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.face ? 'rotate-180' : ''}`} size={20} />
                     </button>
@@ -660,13 +757,8 @@ const App: React.FC = () => {
                   {/* Accessories Section - Collapsible (collapsed by default) */}
                   <div className="border-b border-slate-100">
                     <button onClick={() => toggleSection('accessories')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
-                      <h3 className="text-md font-bold text-slate-900 flex items-center gap-2">
+                      <h3 className="text-md font-bold text-slate-900">
                         Accessories
-                        {selections[StyleCategory.ACCESSORIES].length > 0 && (
-                          <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-xs rounded-full font-medium">
-                            {selections[StyleCategory.ACCESSORIES].length}
-                          </span>
-                        )}
                       </h3>
                       <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.accessories ? 'rotate-180' : ''}`} size={20} />
                     </button>
@@ -684,18 +776,13 @@ const App: React.FC = () => {
                   {/* Fun Extras Section - Facial Hair (collapsed by default) */}
                   <div>
                     <button onClick={() => toggleSection('extras')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
-                      <h3 className="text-md font-bold text-slate-900 flex items-center gap-2">
-                        <span>Facial Hair</span>
-                        <span className="text-[10px] font-medium text-violet-600 bg-violet-100 px-1.5 py-0.5 rounded">Fun for all!</span>
-                        {selections[StyleCategory.FACIAL_HAIR] && (
-                          <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
-                        )}
+                      <h3 className="text-md font-bold text-slate-900">
+                        Facial Hair
                       </h3>
                       <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.extras ? 'rotate-180' : ''}`} size={20} />
                     </button>
                     {expandedSections.extras && (
                       <div className="px-4 sm:px-6 pb-6 space-y-4">
-                        <p className="text-xs text-slate-500 -mt-2 mb-2">Beards, mustaches & more — try them on anyone for fun results!</p>
                         <StyleSelector title="Facial Hair Style" category={StyleCategory.FACIAL_HAIR} options={FACIAL_HAIR_OPTIONS} selections={selections} onSelect={handleSelection} />
                       </div>
                     )}
@@ -803,9 +890,8 @@ const App: React.FC = () => {
                      <div className="relative z-10 text-center max-w-md bg-white/80 p-6 rounded-2xl backdrop-blur-sm shadow-sm">
                         <h3 className="text-xl font-bold text-slate-800 mb-2">Ready to Transform?</h3>
                         <p className="text-slate-600 mb-6">
-                          Select your desired styles on the left or try the "Surprise Me" button, then click Generate.
+                          Select your desired styles or try the "Surprise Me" button, then click Generate.
                         </p>
-                        <ArrowRight className="mx-auto text-rose-400 animate-bounce" size={24} />
                      </div>
                    </div>
                 )}
@@ -818,10 +904,10 @@ const App: React.FC = () => {
                   disabled={genState.isLoading}
                   className={`
                     hidden lg:flex w-full py-4 rounded-xl font-bold text-lg shadow-xl shadow-rose-500/20 
-                    items-center justify-center gap-3 transition-all duration-300
+                    items-center justify-center gap-3 transition-colors
                     ${genState.isLoading 
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-rose-600 to-violet-600 text-white hover:shadow-rose-500/40 hover:-translate-y-1'
+                      : 'bg-gradient-to-r from-rose-600 to-violet-600 text-white hover:shadow-rose-500/40'
                     }
                   `}
                 >
@@ -834,6 +920,13 @@ const App: React.FC = () => {
 
         </div>
       </main>
+
+      {/* Footer */}
+      <Footer
+        onOpenPrivacy={() => setShowPrivacyModal(true)}
+        onOpenTerms={() => setShowTermsModal(true)}
+        onOpenContact={() => setShowContactModal(true)}
+      />
 
       {/* Mobile Sticky Action Bar */}
       {selectedImage && (
@@ -929,6 +1022,31 @@ const App: React.FC = () => {
           }}
         />
       )}
+
+      {/* Legal Modals */}
+      <LegalModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        title="Privacy Policy"
+      >
+        <PrivacyPolicyContent />
+      </LegalModal>
+
+      <LegalModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        title="Terms of Service"
+      >
+        <TermsOfServiceContent />
+      </LegalModal>
+
+      <LegalModal
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+        title="Contact Us"
+      >
+        <ContactContent />
+      </LegalModal>
     </div>
   );
 };
