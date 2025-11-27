@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import { 
   StyleCategory, 
   UserSelections, 
@@ -24,6 +24,7 @@ import StyleSelector from './components/StyleSelector';
 import ImageUploader from './components/ImageUploader';
 import ComparisonView from './components/ComparisonView';
 import ResultModal from './components/ResultModal';
+import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 import LegalModal from './components/LegalModal';
 import PrivacyPolicyContent from './components/PrivacyPolicyContent';
@@ -271,6 +272,7 @@ const App: React.FC = () => {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleSelection = useCallback((category: StyleCategory, value: string) => {
     setSelections(prev => {
@@ -597,8 +599,23 @@ const App: React.FC = () => {
               GLAMATRON
             </span>
           </div>
-          <div className="text-sm text-slate-500 hidden sm:block">
-            Powered by Gemini
+          <div className="flex items-center gap-4">
+            
+            {/* Mobile: Icon button */}
+            <button 
+              onClick={() => setShowAuthModal(true)}
+              className="sm:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              aria-label="Sign In"
+            >
+              <User size={20} />
+            </button>
+            {/* Desktop: Full button */}
+            <button 
+              onClick={() => setShowAuthModal(true)}
+              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              Sign In
+            </button>
           </div>
         </div>
       </header>
@@ -1047,6 +1064,12 @@ const App: React.FC = () => {
       >
         <ContactContent />
       </LegalModal>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   );
 };
