@@ -384,10 +384,226 @@ export const FACIAL_HAIR_OPTIONS: StyleOption[] = [
   { id: 'fh_burns_elvis', label: 'Elvis Burns', value: 'Classic Elvis style sideburns', category: StyleCategory.FACIAL_HAIR },
   { id: 'fh_burns_friendly', label: 'Friendly Chops', value: 'Friendly mutton chops connected to mustache', category: StyleCategory.FACIAL_HAIR },
   
-  // Fun/Novelty
   { id: 'fh_soul_patch', label: 'Soul Patch', value: 'Small soul patch below lip', category: StyleCategory.FACIAL_HAIR },
   { id: 'fh_balbo', label: 'Balbo', value: 'Balbo beard style like Tony Stark', category: StyleCategory.FACIAL_HAIR },
   { id: 'fh_verdi', label: 'Verdi', value: 'Rounded full beard with styled mustache', category: StyleCategory.FACIAL_HAIR },
   { id: 'fh_ducktail', label: 'Ducktail', value: 'Full beard shaped to a point like a ducktail', category: StyleCategory.FACIAL_HAIR },
   { id: 'fh_santa', label: 'Santa Beard', value: 'Long fluffy white Santa Claus beard', category: StyleCategory.FACIAL_HAIR },
+];
+
+// ============================================
+// BODY MODE OPTIONS
+// ============================================
+
+// --- CLOTHING TOPS ---
+export const CLOTHING_TOP_OPTIONS: StyleOption[] = [
+  // Casual
+  { id: 'ct_tshirt', label: 'Basic Tee', value: 'Plain white cotton t-shirt', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_tshirt_black', label: 'Black Tee', value: 'Classic black t-shirt', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_graphic', label: 'Graphic Tee', value: 'Vintage band graphic t-shirt', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_tank', label: 'Tank Top', value: 'Fitted ribbed tank top', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_crop', label: 'Crop Top', value: 'Cropped fitted top', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_hoodie', label: 'Hoodie', value: 'Oversized cotton hoodie', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_sweater', label: 'Knit Sweater', value: 'Cozy chunky knit sweater', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_cardigan', label: 'Cardigan', value: 'Oversized button cardigan', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_polo', label: 'Polo Shirt', value: 'Classic polo shirt', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_henley', label: 'Henley', value: 'Long sleeve henley shirt', category: StyleCategory.CLOTHING_TOP },
+  // Formal/Smart
+  { id: 'ct_buttonup', label: 'Button Up', value: 'Crisp white button-up shirt', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_oxford', label: 'Oxford Shirt', value: 'Light blue oxford shirt', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_blouse', label: 'Silk Blouse', value: 'Elegant silk blouse', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_turtleneck', label: 'Turtleneck', value: 'Black fitted turtleneck', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_vest', label: 'Sweater Vest', value: 'Preppy argyle sweater vest', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_suit_shirt', label: 'Dress Shirt', value: 'Formal white dress shirt with tie', category: StyleCategory.CLOTHING_TOP },
+  // Trendy
+  { id: 'ct_corset', label: 'Corset Top', value: 'Structured corset top', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_bustier', label: 'Bustier', value: 'Satin bustier top', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_tube', label: 'Tube Top', value: 'Strapless tube top', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_halter', label: 'Halter Top', value: 'Halter neck top', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_offsh', label: 'Off Shoulder', value: 'Off-the-shoulder top', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_mesh', label: 'Mesh Top', value: 'Sheer mesh long sleeve top', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_sequin', label: 'Sequin Top', value: 'Sparkly sequin party top', category: StyleCategory.CLOTHING_TOP },
+  // Athletic
+  { id: 'ct_sports', label: 'Sports Bra', value: 'Athletic sports bra', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_jersey', label: 'Jersey', value: 'Sports team jersey', category: StyleCategory.CLOTHING_TOP },
+  { id: 'ct_athletic', label: 'Athletic Top', value: 'Fitted athletic performance top', category: StyleCategory.CLOTHING_TOP },
+];
+
+// --- CLOTHING BOTTOMS ---
+export const CLOTHING_BOTTOM_OPTIONS: StyleOption[] = [
+  // Pants
+  { id: 'cb_jeans', label: 'Blue Jeans', value: 'Classic blue denim jeans', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_jeans_black', label: 'Black Jeans', value: 'Slim black jeans', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_jeans_ripped', label: 'Ripped Jeans', value: 'Distressed ripped jeans', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_baggy', label: 'Baggy Jeans', value: 'Y2K baggy wide leg jeans', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_cargo', label: 'Cargo Pants', value: 'Utility cargo pants', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_chinos', label: 'Chinos', value: 'Khaki chino pants', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_trousers', label: 'Dress Pants', value: 'Tailored dress trousers', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_leather', label: 'Leather Pants', value: 'Fitted black leather pants', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_joggers', label: 'Joggers', value: 'Comfortable jogger sweatpants', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_track', label: 'Track Pants', value: 'Athletic track pants with stripe', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_wideleg', label: 'Wide Leg', value: 'Flowy wide leg pants', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_flare', label: 'Flare Pants', value: '70s style flare pants', category: StyleCategory.CLOTHING_BOTTOM },
+  // Shorts
+  { id: 'cb_shorts', label: 'Denim Shorts', value: 'Casual denim shorts', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_shorts_cargo', label: 'Cargo Shorts', value: 'Knee-length cargo shorts', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_shorts_athletic', label: 'Athletic Shorts', value: 'Sport athletic shorts', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_shorts_biker', label: 'Biker Shorts', value: 'Fitted biker shorts', category: StyleCategory.CLOTHING_BOTTOM },
+  // Skirts
+  { id: 'cb_miniskirt', label: 'Mini Skirt', value: 'Short mini skirt', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_midi', label: 'Midi Skirt', value: 'Elegant midi skirt', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_maxi', label: 'Maxi Skirt', value: 'Long flowy maxi skirt', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_pleated', label: 'Pleated Skirt', value: 'Pleated tennis skirt', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_pencil', label: 'Pencil Skirt', value: 'Fitted pencil skirt', category: StyleCategory.CLOTHING_BOTTOM },
+  { id: 'cb_leather_skirt', label: 'Leather Skirt', value: 'Black leather mini skirt', category: StyleCategory.CLOTHING_BOTTOM },
+];
+
+// --- DRESSES / ONE-PIECE ---
+export const CLOTHING_DRESS_OPTIONS: StyleOption[] = [
+  { id: 'cd_casual', label: 'Casual Dress', value: 'Simple casual cotton dress', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_sundress', label: 'Sundress', value: 'Floral summer sundress', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_maxi', label: 'Maxi Dress', value: 'Long flowy maxi dress', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_mini', label: 'Mini Dress', value: 'Short fitted mini dress', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_bodycon', label: 'Bodycon', value: 'Tight fitted bodycon dress', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_slip', label: 'Slip Dress', value: 'Satin slip dress', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_wrap', label: 'Wrap Dress', value: 'Classic wrap dress', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_shirt', label: 'Shirt Dress', value: 'Button-up shirt dress', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_cocktail', label: 'Cocktail Dress', value: 'Elegant cocktail dress', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_evening', label: 'Evening Gown', value: 'Glamorous floor-length evening gown', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_sequin', label: 'Sequin Dress', value: 'Sparkly sequin party dress', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_lbd', label: 'Little Black Dress', value: 'Classic little black dress', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_wedding', label: 'White Gown', value: 'Elegant white wedding-style gown', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_jumpsuit', label: 'Jumpsuit', value: 'Sleek fitted jumpsuit', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_romper', label: 'Romper', value: 'Casual short romper', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_overalls', label: 'Overalls', value: 'Denim overalls', category: StyleCategory.CLOTHING_DRESS },
+  { id: 'cd_suit', label: 'Power Suit', value: 'Tailored matching blazer and pants suit', category: StyleCategory.CLOTHING_DRESS },
+];
+
+// --- OUTERWEAR ---
+export const CLOTHING_OUTERWEAR_OPTIONS: StyleOption[] = [
+  { id: 'co_blazer', label: 'Blazer', value: 'Tailored blazer jacket', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_leather', label: 'Leather Jacket', value: 'Classic black leather biker jacket', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_denim', label: 'Denim Jacket', value: 'Blue denim trucker jacket', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_bomber', label: 'Bomber Jacket', value: 'Satin bomber jacket', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_puffer', label: 'Puffer Jacket', value: 'Puffy down jacket', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_trench', label: 'Trench Coat', value: 'Classic beige trench coat', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_peacoat', label: 'Peacoat', value: 'Navy wool peacoat', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_overcoat', label: 'Overcoat', value: 'Long wool overcoat', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_fur', label: 'Faux Fur', value: 'Luxe faux fur coat', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_varsity', label: 'Varsity Jacket', value: 'Letterman varsity jacket', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_windbreaker', label: 'Windbreaker', value: 'Colorful 90s windbreaker', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_flannel', label: 'Flannel Shirt', value: 'Plaid flannel shirt worn open', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_kimono', label: 'Kimono', value: 'Flowy kimono jacket', category: StyleCategory.CLOTHING_OUTERWEAR },
+  { id: 'co_cape', label: 'Cape', value: 'Dramatic flowing cape', category: StyleCategory.CLOTHING_OUTERWEAR },
+];
+
+// --- FOOTWEAR ---
+export const FOOTWEAR_OPTIONS: StyleOption[] = [
+  // Casual
+  { id: 'fw_sneakers', label: 'White Sneakers', value: 'Clean white sneakers', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_sneakers_chunky', label: 'Chunky Sneakers', value: 'Chunky dad sneakers', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_converse', label: 'High Tops', value: 'Classic high top canvas sneakers', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_vans', label: 'Skate Shoes', value: 'Classic skate shoes', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_loafers', label: 'Loafers', value: 'Leather penny loafers', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_slides', label: 'Slides', value: 'Casual slide sandals', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_flipflops', label: 'Flip Flops', value: 'Beach flip flops', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_sandals', label: 'Strappy Sandals', value: 'Strappy flat sandals', category: StyleCategory.FOOTWEAR },
+  // Boots
+  { id: 'fw_boots_ankle', label: 'Ankle Boots', value: 'Leather ankle boots', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_boots_chelsea', label: 'Chelsea Boots', value: 'Black chelsea boots', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_boots_combat', label: 'Combat Boots', value: 'Chunky combat boots', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_boots_cowboy', label: 'Cowboy Boots', value: 'Western cowboy boots', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_boots_knee', label: 'Knee High Boots', value: 'Tall knee-high boots', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_boots_thigh', label: 'Thigh High Boots', value: 'Over-the-knee thigh high boots', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_uggs', label: 'Shearling Boots', value: 'Cozy shearling boots', category: StyleCategory.FOOTWEAR },
+  // Formal
+  { id: 'fw_oxfords', label: 'Oxford Shoes', value: 'Classic leather oxford shoes', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_heels', label: 'Stiletto Heels', value: 'High stiletto heels', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_pumps', label: 'Pumps', value: 'Classic pointed toe pumps', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_block', label: 'Block Heels', value: 'Chunky block heel shoes', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_platforms', label: 'Platforms', value: 'Platform high heels', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_flats', label: 'Ballet Flats', value: 'Elegant ballet flats', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_mules', label: 'Heeled Mules', value: 'Open-back heeled mules', category: StyleCategory.FOOTWEAR },
+  // Athletic
+  { id: 'fw_running', label: 'Running Shoes', value: 'Athletic running shoes', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_basketball', label: 'Basketball Shoes', value: 'High top basketball sneakers', category: StyleCategory.FOOTWEAR },
+  { id: 'fw_barefoot', label: 'Barefoot', value: 'No shoes barefoot', category: StyleCategory.FOOTWEAR },
+];
+
+// --- BODY ACCESSORIES ---
+export const BODY_ACCESSORIES_OPTIONS: StyleOption[] = [
+  // Bags
+  { id: 'ba_tote', label: 'Tote Bag', value: 'Large tote bag', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_crossbody', label: 'Crossbody Bag', value: 'Small crossbody bag', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_clutch', label: 'Clutch', value: 'Elegant evening clutch', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_backpack', label: 'Backpack', value: 'Casual backpack', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_fanny', label: 'Belt Bag', value: 'Trendy belt bag fanny pack', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_designer', label: 'Designer Bag', value: 'Luxury designer handbag', category: StyleCategory.BODY_ACCESSORIES },
+  // Accessories
+  { id: 'ba_watch', label: 'Watch', value: 'Elegant wrist watch', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_smartwatch', label: 'Smart Watch', value: 'Modern smart watch', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_bracelet', label: 'Bracelets', value: 'Stacked bracelets', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_belt', label: 'Statement Belt', value: 'Wide statement belt', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_belt_chain', label: 'Chain Belt', value: 'Gold chain belt', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_scarf', label: 'Scarf', value: 'Long knitted scarf', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_gloves', label: 'Gloves', value: 'Elegant leather gloves', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_umbrella', label: 'Umbrella', value: 'Stylish umbrella', category: StyleCategory.BODY_ACCESSORIES },
+  // Props
+  { id: 'ba_coffee', label: 'Coffee Cup', value: 'Holding coffee cup', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_phone', label: 'Phone', value: 'Holding smartphone', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_flowers', label: 'Bouquet', value: 'Holding flower bouquet', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_book', label: 'Book', value: 'Holding a book', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_guitar', label: 'Guitar', value: 'Holding acoustic guitar', category: StyleCategory.BODY_ACCESSORIES },
+  { id: 'ba_skateboard', label: 'Skateboard', value: 'Holding skateboard', category: StyleCategory.BODY_ACCESSORIES },
+];
+
+// --- POSES ---
+export const POSE_OPTIONS: StyleOption[] = [
+  { id: 'po_standing', label: 'Standing', value: 'Standing straight confident pose', category: StyleCategory.POSE },
+  { id: 'po_walking', label: 'Walking', value: 'Mid-stride walking pose', category: StyleCategory.POSE },
+  { id: 'po_sitting', label: 'Sitting', value: 'Relaxed sitting pose', category: StyleCategory.POSE },
+  { id: 'po_leaning', label: 'Leaning', value: 'Casually leaning against wall', category: StyleCategory.POSE },
+  { id: 'po_crossed', label: 'Arms Crossed', value: 'Standing with arms crossed', category: StyleCategory.POSE },
+  { id: 'po_hands_hips', label: 'Hands on Hips', value: 'Power pose with hands on hips', category: StyleCategory.POSE },
+  { id: 'po_hands_pocket', label: 'Hands in Pockets', value: 'Casual hands in pockets', category: StyleCategory.POSE },
+  { id: 'po_looking_back', label: 'Looking Back', value: 'Looking back over shoulder', category: StyleCategory.POSE },
+  { id: 'po_jumping', label: 'Jumping', value: 'Joyful jumping in air', category: StyleCategory.POSE },
+  { id: 'po_dancing', label: 'Dancing', value: 'Dynamic dancing pose', category: StyleCategory.POSE },
+  { id: 'po_crouching', label: 'Crouching', value: 'Low crouching pose', category: StyleCategory.POSE },
+  { id: 'po_running', label: 'Running', value: 'Athletic running pose', category: StyleCategory.POSE },
+  { id: 'po_yoga', label: 'Yoga Pose', value: 'Elegant yoga pose', category: StyleCategory.POSE },
+  { id: 'po_lounging', label: 'Lounging', value: 'Relaxed lounging pose', category: StyleCategory.POSE },
+  { id: 'po_model', label: 'Model Pose', value: 'High fashion editorial model pose', category: StyleCategory.POSE },
+];
+
+// --- BACKGROUNDS ---
+export const BACKGROUND_OPTIONS: StyleOption[] = [
+  // Studio
+  { id: 'bg_white', label: 'White Studio', value: 'Clean white studio background', category: StyleCategory.BACKGROUND },
+  { id: 'bg_black', label: 'Black Studio', value: 'Dark black studio background', category: StyleCategory.BACKGROUND },
+  { id: 'bg_gradient', label: 'Gradient', value: 'Smooth gradient background', category: StyleCategory.BACKGROUND },
+  { id: 'bg_neon', label: 'Neon Lights', value: 'Colorful neon lights background', category: StyleCategory.BACKGROUND },
+  // Urban
+  { id: 'bg_street', label: 'City Street', value: 'Urban city street background', category: StyleCategory.BACKGROUND },
+  { id: 'bg_alley', label: 'Graffiti Alley', value: 'Graffiti covered alley', category: StyleCategory.BACKGROUND },
+  { id: 'bg_rooftop', label: 'Rooftop', value: 'City rooftop with skyline view', category: StyleCategory.BACKGROUND },
+  { id: 'bg_subway', label: 'Subway', value: 'Underground subway station', category: StyleCategory.BACKGROUND },
+  { id: 'bg_cafe', label: 'Café', value: 'Cozy café interior', category: StyleCategory.BACKGROUND },
+  // Nature
+  { id: 'bg_beach', label: 'Beach', value: 'Sandy beach with ocean', category: StyleCategory.BACKGROUND },
+  { id: 'bg_forest', label: 'Forest', value: 'Lush green forest', category: StyleCategory.BACKGROUND },
+  { id: 'bg_mountain', label: 'Mountains', value: 'Scenic mountain landscape', category: StyleCategory.BACKGROUND },
+  { id: 'bg_garden', label: 'Garden', value: 'Beautiful flower garden', category: StyleCategory.BACKGROUND },
+  { id: 'bg_sunset', label: 'Golden Hour', value: 'Golden hour sunset lighting', category: StyleCategory.BACKGROUND },
+  { id: 'bg_rain', label: 'Rainy Day', value: 'Rainy city atmosphere', category: StyleCategory.BACKGROUND },
+  // Interior
+  { id: 'bg_living', label: 'Living Room', value: 'Modern living room interior', category: StyleCategory.BACKGROUND },
+  { id: 'bg_bedroom', label: 'Bedroom', value: 'Cozy bedroom setting', category: StyleCategory.BACKGROUND },
+  { id: 'bg_office', label: 'Office', value: 'Modern office space', category: StyleCategory.BACKGROUND },
+  { id: 'bg_gym', label: 'Gym', value: 'Fitness gym interior', category: StyleCategory.BACKGROUND },
+  { id: 'bg_club', label: 'Nightclub', value: 'Dark nightclub with lights', category: StyleCategory.BACKGROUND },
+  // Special
+  { id: 'bg_concert', label: 'Concert', value: 'Concert stage with crowd', category: StyleCategory.BACKGROUND },
+  { id: 'bg_red_carpet', label: 'Red Carpet', value: 'Red carpet event backdrop', category: StyleCategory.BACKGROUND },
+  { id: 'bg_runway', label: 'Runway', value: 'Fashion show runway', category: StyleCategory.BACKGROUND },
 ];

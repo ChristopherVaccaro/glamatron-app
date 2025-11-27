@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User, Smile, Shirt } from 'lucide-react';
 import { 
   StyleCategory, 
   UserSelections, 
-  GenerationState 
+  GenerationState,
+  ImageMode 
 } from './types';
 import { 
   HAIR_OPTIONS,
@@ -18,7 +19,16 @@ import {
   HEADWEAR_OPTIONS,
   JEWELRY_OPTIONS,
   FACE_EXTRAS_OPTIONS,
-  FACIAL_HAIR_OPTIONS
+  FACIAL_HAIR_OPTIONS,
+  // Body mode
+  CLOTHING_TOP_OPTIONS,
+  CLOTHING_BOTTOM_OPTIONS,
+  CLOTHING_DRESS_OPTIONS,
+  CLOTHING_OUTERWEAR_OPTIONS,
+  FOOTWEAR_OPTIONS,
+  BODY_ACCESSORIES_OPTIONS,
+  POSE_OPTIONS,
+  BACKGROUND_OPTIONS
 } from './constants';
 import StyleSelector from './components/StyleSelector';
 import ImageUploader from './components/ImageUploader';
@@ -244,13 +254,21 @@ const App: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [originalFilename, setOriginalFilename] = useState<string>('image');
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    // Face mode sections
     hair: true,
     face: true,
     accessories: false,
     extras: false,
+    // Body mode sections
+    clothing: true,
+    footwear: true,
+    scene: false,
   });
   
+  const [imageMode, setImageMode] = useState<ImageMode>('face');
+  
   const [selections, setSelections] = useState<UserSelections>({
+    // Face selections
     [StyleCategory.HAIR]: null,
     [StyleCategory.HAIR_LENGTH]: null,
     [StyleCategory.HAIR_COLOR]: null,
@@ -260,6 +278,15 @@ const App: React.FC = () => {
     [StyleCategory.EYES]: null,
     [StyleCategory.LIPS]: null,
     [StyleCategory.FACIAL_HAIR]: null,
+    // Body selections
+    [StyleCategory.CLOTHING_TOP]: null,
+    [StyleCategory.CLOTHING_BOTTOM]: null,
+    [StyleCategory.CLOTHING_DRESS]: null,
+    [StyleCategory.CLOTHING_OUTERWEAR]: null,
+    [StyleCategory.FOOTWEAR]: null,
+    [StyleCategory.BODY_ACCESSORIES]: [],
+    [StyleCategory.POSE]: null,
+    [StyleCategory.BACKGROUND]: null,
   });
 
   const [genState, setGenState] = useState<GenerationState>({
@@ -276,8 +303,8 @@ const App: React.FC = () => {
 
   const handleSelection = useCallback((category: StyleCategory, value: string) => {
     setSelections(prev => {
-      // Handle multi-select for accessories
-      if (category === StyleCategory.ACCESSORIES) {
+      // Handle multi-select for accessories (both face and body)
+      if (category === StyleCategory.ACCESSORIES || category === StyleCategory.BODY_ACCESSORIES) {
         if (value === 'CLEAR_ALL') return { ...prev, [category]: [] };
         
         const current = prev[category] as string[];
@@ -303,8 +330,8 @@ const App: React.FC = () => {
   const executeGeneration = async (activeSelections: UserSelections) => {
     if (!selectedImage) return;
 
-    // Check if at least one style is selected
-    const hasSelection = 
+    // Check if at least one style is selected based on mode
+    const hasFaceSelection = 
       activeSelections[StyleCategory.HAIR] || 
       activeSelections[StyleCategory.HAIR_LENGTH] ||
       activeSelections[StyleCategory.HAIR_COLOR] ||
@@ -314,6 +341,18 @@ const App: React.FC = () => {
       activeSelections[StyleCategory.LIPS] ||
       activeSelections[StyleCategory.FACIAL_HAIR] ||
       activeSelections[StyleCategory.ACCESSORIES].length > 0;
+
+    const hasBodySelection =
+      activeSelections[StyleCategory.CLOTHING_TOP] ||
+      activeSelections[StyleCategory.CLOTHING_BOTTOM] ||
+      activeSelections[StyleCategory.CLOTHING_DRESS] ||
+      activeSelections[StyleCategory.CLOTHING_OUTERWEAR] ||
+      activeSelections[StyleCategory.FOOTWEAR] ||
+      activeSelections[StyleCategory.POSE] ||
+      activeSelections[StyleCategory.BACKGROUND] ||
+      activeSelections[StyleCategory.BODY_ACCESSORIES]?.length > 0;
+
+    const hasSelection = imageMode === 'face' ? hasFaceSelection : hasBodySelection;
 
     if (!hasSelection) {
       setGenState(prev => ({ ...prev, error: "Please select at least one style option." }));
@@ -328,7 +367,7 @@ const App: React.FC = () => {
     }
 
     try {
-      const result = await generateStyledImage(selectedImage, activeSelections);
+      const result = await generateStyledImage(selectedImage, activeSelections, imageMode);
       setGenState({ isLoading: false, error: null, resultImage: result });
     } catch (err: any) {
       setGenState({ 
@@ -354,43 +393,64 @@ const App: React.FC = () => {
     // Helper to maybe get an item (X% chance)
     const maybeGet = <T extends { value: string }>(arr: T[], chance: number = 0.5) => Math.random() < chance ? getRandom(arr) : null;
 
-    // Collect all accessories
-    const allAccessories = [
-      ...GLASSES_OPTIONS,
-      ...PIERCING_OPTIONS,
-      ...HEADWEAR_OPTIONS,
-      ...JEWELRY_OPTIONS,
-      ...FACE_EXTRAS_OPTIONS
-    ];
-
-    // Pick 1 to 3 random accessories
-    const numAccessories = Math.floor(Math.random() * 3) + 1; // 1 to 3 items
-    const randomAccessories: string[] = [];
-    const usedIndices = new Set<number>();
-    
-    for (let i = 0; i < numAccessories; i++) {
+    // Helper to pick random items from array
+    const pickRandomItems = <T extends { value: string }>(arr: T[], min: number, max: number): string[] => {
+      const num = Math.floor(Math.random() * (max - min + 1)) + min;
+      const items: string[] = [];
+      const usedIndices = new Set<number>();
+      for (let i = 0; i < num && i < arr.length; i++) {
         let index;
         let attempts = 0;
         do {
-            index = Math.floor(Math.random() * allAccessories.length);
-            attempts++;
+          index = Math.floor(Math.random() * arr.length);
+          attempts++;
         } while (usedIndices.has(index) && attempts < 10);
-        
         usedIndices.add(index);
-        randomAccessories.push(allAccessories[index].value);
-    }
-
-    const newSelections: UserSelections = {
-      [StyleCategory.HAIR]: maybeGet(HAIR_OPTIONS, 0.7), 
-      [StyleCategory.HAIR_LENGTH]: maybeGet(HAIR_LENGTH_OPTIONS, 0.4),
-      [StyleCategory.HAIR_COLOR]: maybeGet(HAIR_COLOR_OPTIONS, 0.5),
-      [StyleCategory.MAKEUP]: maybeGet(MAKEUP_OPTIONS, 0.6),
-      [StyleCategory.EXPRESSION]: maybeGet(EXPRESSION_OPTIONS, 0.5),
-      [StyleCategory.EYES]: maybeGet(EYE_OPTIONS, 0.5),
-      [StyleCategory.LIPS]: maybeGet(LIP_OPTIONS, 0.5),
-      [StyleCategory.ACCESSORIES]: randomAccessories,
-      [StyleCategory.FACIAL_HAIR]: maybeGet(FACIAL_HAIR_OPTIONS, 0.25),
+        items.push(arr[index].value);
+      }
+      return items;
     };
+
+    let newSelections: UserSelections;
+
+    if (imageMode === 'face') {
+      // Face mode randomization
+      const allAccessories = [
+        ...GLASSES_OPTIONS,
+        ...PIERCING_OPTIONS,
+        ...HEADWEAR_OPTIONS,
+        ...JEWELRY_OPTIONS,
+        ...FACE_EXTRAS_OPTIONS
+      ];
+
+      newSelections = {
+        ...selections, // Keep body selections
+        [StyleCategory.HAIR]: maybeGet(HAIR_OPTIONS, 0.7), 
+        [StyleCategory.HAIR_LENGTH]: maybeGet(HAIR_LENGTH_OPTIONS, 0.4),
+        [StyleCategory.HAIR_COLOR]: maybeGet(HAIR_COLOR_OPTIONS, 0.5),
+        [StyleCategory.MAKEUP]: maybeGet(MAKEUP_OPTIONS, 0.6),
+        [StyleCategory.EXPRESSION]: maybeGet(EXPRESSION_OPTIONS, 0.5),
+        [StyleCategory.EYES]: maybeGet(EYE_OPTIONS, 0.5),
+        [StyleCategory.LIPS]: maybeGet(LIP_OPTIONS, 0.5),
+        [StyleCategory.ACCESSORIES]: pickRandomItems(allAccessories, 1, 3),
+        [StyleCategory.FACIAL_HAIR]: maybeGet(FACIAL_HAIR_OPTIONS, 0.25),
+      };
+    } else {
+      // Body mode randomization
+      const useDress = Math.random() < 0.3; // 30% chance of dress instead of top+bottom
+      
+      newSelections = {
+        ...selections, // Keep face selections
+        [StyleCategory.CLOTHING_TOP]: useDress ? null : getRandom(CLOTHING_TOP_OPTIONS),
+        [StyleCategory.CLOTHING_BOTTOM]: useDress ? null : getRandom(CLOTHING_BOTTOM_OPTIONS),
+        [StyleCategory.CLOTHING_DRESS]: useDress ? getRandom(CLOTHING_DRESS_OPTIONS) : null,
+        [StyleCategory.CLOTHING_OUTERWEAR]: maybeGet(CLOTHING_OUTERWEAR_OPTIONS, 0.4),
+        [StyleCategory.FOOTWEAR]: maybeGet(FOOTWEAR_OPTIONS, 0.7),
+        [StyleCategory.BODY_ACCESSORIES]: pickRandomItems(BODY_ACCESSORIES_OPTIONS, 0, 2),
+        [StyleCategory.POSE]: maybeGet(POSE_OPTIONS, 0.5),
+        [StyleCategory.BACKGROUND]: maybeGet(BACKGROUND_OPTIONS, 0.6),
+      };
+    }
 
     // Update UI with new selections
     setSelections(newSelections);
@@ -496,38 +556,43 @@ const App: React.FC = () => {
     }
   };
 
+  const getDefaultSelections = (): UserSelections => ({
+    [StyleCategory.HAIR]: null,
+    [StyleCategory.HAIR_LENGTH]: null,
+    [StyleCategory.HAIR_COLOR]: null,
+    [StyleCategory.ACCESSORIES]: [],
+    [StyleCategory.MAKEUP]: null,
+    [StyleCategory.EXPRESSION]: null,
+    [StyleCategory.EYES]: null,
+    [StyleCategory.LIPS]: null,
+    [StyleCategory.FACIAL_HAIR]: null,
+    [StyleCategory.CLOTHING_TOP]: null,
+    [StyleCategory.CLOTHING_BOTTOM]: null,
+    [StyleCategory.CLOTHING_DRESS]: null,
+    [StyleCategory.CLOTHING_OUTERWEAR]: null,
+    [StyleCategory.FOOTWEAR]: null,
+    [StyleCategory.BODY_ACCESSORIES]: [],
+    [StyleCategory.POSE]: null,
+    [StyleCategory.BACKGROUND]: null,
+  });
+
   const handleReset = () => {
-    setSelections({
-      [StyleCategory.HAIR]: null,
-      [StyleCategory.HAIR_LENGTH]: null,
-      [StyleCategory.HAIR_COLOR]: null,
-      [StyleCategory.ACCESSORIES]: [],
-      [StyleCategory.MAKEUP]: null,
-      [StyleCategory.EXPRESSION]: null,
-      [StyleCategory.EYES]: null,
-      [StyleCategory.LIPS]: null,
-      [StyleCategory.FACIAL_HAIR]: null,
-    });
+    setSelections(getDefaultSelections());
   };
 
   const handlePresetSelect = (preset: typeof QUICK_PRESETS[0]) => {
-    setSelections(preset.selections as UserSelections);
+    // Merge preset with default selections (presets only have face options)
+    setSelections({
+      ...getDefaultSelections(),
+      ...preset.selections,
+    });
   };
 
   const handleStartOver = () => {
     setSelectedImage(null);
     setGenState({ isLoading: false, error: null, resultImage: null });
-    setSelections({
-      [StyleCategory.HAIR]: null,
-      [StyleCategory.HAIR_LENGTH]: null,
-      [StyleCategory.HAIR_COLOR]: null,
-      [StyleCategory.ACCESSORIES]: [],
-      [StyleCategory.MAKEUP]: null,
-      [StyleCategory.EXPRESSION]: null,
-      [StyleCategory.EYES]: null,
-      [StyleCategory.LIPS]: null,
-      [StyleCategory.FACIAL_HAIR]: null,
-    });
+    setSelections(getDefaultSelections());
+    setImageMode('face');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -537,56 +602,95 @@ const App: React.FC = () => {
 
   const selectionCount = useMemo(() => {
     let count = 0;
-    if (selections[StyleCategory.HAIR]) count++;
-    if (selections[StyleCategory.HAIR_LENGTH]) count++;
-    if (selections[StyleCategory.HAIR_COLOR]) count++;
-    if (selections[StyleCategory.MAKEUP]) count++;
-    if (selections[StyleCategory.EXPRESSION]) count++;
-    if (selections[StyleCategory.EYES]) count++;
-    if (selections[StyleCategory.LIPS]) count++;
-    if (selections[StyleCategory.FACIAL_HAIR]) count++;
-    count += selections[StyleCategory.ACCESSORIES].length;
+    if (imageMode === 'face') {
+      if (selections[StyleCategory.HAIR]) count++;
+      if (selections[StyleCategory.HAIR_LENGTH]) count++;
+      if (selections[StyleCategory.HAIR_COLOR]) count++;
+      if (selections[StyleCategory.MAKEUP]) count++;
+      if (selections[StyleCategory.EXPRESSION]) count++;
+      if (selections[StyleCategory.EYES]) count++;
+      if (selections[StyleCategory.LIPS]) count++;
+      if (selections[StyleCategory.FACIAL_HAIR]) count++;
+      count += selections[StyleCategory.ACCESSORIES].length;
+    } else {
+      if (selections[StyleCategory.CLOTHING_TOP]) count++;
+      if (selections[StyleCategory.CLOTHING_BOTTOM]) count++;
+      if (selections[StyleCategory.CLOTHING_DRESS]) count++;
+      if (selections[StyleCategory.CLOTHING_OUTERWEAR]) count++;
+      if (selections[StyleCategory.FOOTWEAR]) count++;
+      if (selections[StyleCategory.POSE]) count++;
+      if (selections[StyleCategory.BACKGROUND]) count++;
+      count += selections[StyleCategory.BODY_ACCESSORIES]?.length || 0;
+    }
     return count;
-  }, [selections]);
+  }, [selections, imageMode]);
 
   const activeSelections = useMemo(() => {
     const items: { category: StyleCategory; value: string; label: string }[] = [];
     const findLabel = (options: any[], value: string) => 
       options.find(o => o.value === value)?.label || value.split(' ').slice(0, 3).join(' ');
     
-    if (selections[StyleCategory.HAIR]) {
-      items.push({ category: StyleCategory.HAIR, value: selections[StyleCategory.HAIR], label: findLabel(HAIR_OPTIONS, selections[StyleCategory.HAIR]) });
-    }
-    if (selections[StyleCategory.HAIR_LENGTH]) {
-      items.push({ category: StyleCategory.HAIR_LENGTH, value: selections[StyleCategory.HAIR_LENGTH], label: findLabel(HAIR_LENGTH_OPTIONS, selections[StyleCategory.HAIR_LENGTH]) });
-    }
-    if (selections[StyleCategory.HAIR_COLOR]) {
-      items.push({ category: StyleCategory.HAIR_COLOR, value: selections[StyleCategory.HAIR_COLOR], label: findLabel(HAIR_COLOR_OPTIONS, selections[StyleCategory.HAIR_COLOR]) });
-    }
-    if (selections[StyleCategory.EXPRESSION]) {
-      items.push({ category: StyleCategory.EXPRESSION, value: selections[StyleCategory.EXPRESSION], label: findLabel(EXPRESSION_OPTIONS, selections[StyleCategory.EXPRESSION]) });
-    }
-    if (selections[StyleCategory.MAKEUP]) {
-      items.push({ category: StyleCategory.MAKEUP, value: selections[StyleCategory.MAKEUP], label: findLabel(MAKEUP_OPTIONS, selections[StyleCategory.MAKEUP]) });
-    }
-    if (selections[StyleCategory.EYES]) {
-      items.push({ category: StyleCategory.EYES, value: selections[StyleCategory.EYES], label: findLabel(EYE_OPTIONS, selections[StyleCategory.EYES]) });
-    }
-    if (selections[StyleCategory.LIPS]) {
-      items.push({ category: StyleCategory.LIPS, value: selections[StyleCategory.LIPS], label: findLabel(LIP_OPTIONS, selections[StyleCategory.LIPS]) });
-    }
-    const allAccessoryOptions = [...GLASSES_OPTIONS, ...PIERCING_OPTIONS, ...HEADWEAR_OPTIONS, ...JEWELRY_OPTIONS, ...FACE_EXTRAS_OPTIONS];
-    selections[StyleCategory.ACCESSORIES].forEach(acc => {
-      items.push({ category: StyleCategory.ACCESSORIES, value: acc, label: findLabel(allAccessoryOptions, acc) });
-    });
-    if (selections[StyleCategory.FACIAL_HAIR]) {
-      items.push({ category: StyleCategory.FACIAL_HAIR, value: selections[StyleCategory.FACIAL_HAIR], label: findLabel(FACIAL_HAIR_OPTIONS, selections[StyleCategory.FACIAL_HAIR]) });
+    if (imageMode === 'face') {
+      if (selections[StyleCategory.HAIR]) {
+        items.push({ category: StyleCategory.HAIR, value: selections[StyleCategory.HAIR], label: findLabel(HAIR_OPTIONS, selections[StyleCategory.HAIR]) });
+      }
+      if (selections[StyleCategory.HAIR_LENGTH]) {
+        items.push({ category: StyleCategory.HAIR_LENGTH, value: selections[StyleCategory.HAIR_LENGTH], label: findLabel(HAIR_LENGTH_OPTIONS, selections[StyleCategory.HAIR_LENGTH]) });
+      }
+      if (selections[StyleCategory.HAIR_COLOR]) {
+        items.push({ category: StyleCategory.HAIR_COLOR, value: selections[StyleCategory.HAIR_COLOR], label: findLabel(HAIR_COLOR_OPTIONS, selections[StyleCategory.HAIR_COLOR]) });
+      }
+      if (selections[StyleCategory.EXPRESSION]) {
+        items.push({ category: StyleCategory.EXPRESSION, value: selections[StyleCategory.EXPRESSION], label: findLabel(EXPRESSION_OPTIONS, selections[StyleCategory.EXPRESSION]) });
+      }
+      if (selections[StyleCategory.MAKEUP]) {
+        items.push({ category: StyleCategory.MAKEUP, value: selections[StyleCategory.MAKEUP], label: findLabel(MAKEUP_OPTIONS, selections[StyleCategory.MAKEUP]) });
+      }
+      if (selections[StyleCategory.EYES]) {
+        items.push({ category: StyleCategory.EYES, value: selections[StyleCategory.EYES], label: findLabel(EYE_OPTIONS, selections[StyleCategory.EYES]) });
+      }
+      if (selections[StyleCategory.LIPS]) {
+        items.push({ category: StyleCategory.LIPS, value: selections[StyleCategory.LIPS], label: findLabel(LIP_OPTIONS, selections[StyleCategory.LIPS]) });
+      }
+      const allAccessoryOptions = [...GLASSES_OPTIONS, ...PIERCING_OPTIONS, ...HEADWEAR_OPTIONS, ...JEWELRY_OPTIONS, ...FACE_EXTRAS_OPTIONS];
+      selections[StyleCategory.ACCESSORIES].forEach(acc => {
+        items.push({ category: StyleCategory.ACCESSORIES, value: acc, label: findLabel(allAccessoryOptions, acc) });
+      });
+      if (selections[StyleCategory.FACIAL_HAIR]) {
+        items.push({ category: StyleCategory.FACIAL_HAIR, value: selections[StyleCategory.FACIAL_HAIR], label: findLabel(FACIAL_HAIR_OPTIONS, selections[StyleCategory.FACIAL_HAIR]) });
+      }
+    } else {
+      if (selections[StyleCategory.CLOTHING_TOP]) {
+        items.push({ category: StyleCategory.CLOTHING_TOP, value: selections[StyleCategory.CLOTHING_TOP], label: findLabel(CLOTHING_TOP_OPTIONS, selections[StyleCategory.CLOTHING_TOP]) });
+      }
+      if (selections[StyleCategory.CLOTHING_BOTTOM]) {
+        items.push({ category: StyleCategory.CLOTHING_BOTTOM, value: selections[StyleCategory.CLOTHING_BOTTOM], label: findLabel(CLOTHING_BOTTOM_OPTIONS, selections[StyleCategory.CLOTHING_BOTTOM]) });
+      }
+      if (selections[StyleCategory.CLOTHING_DRESS]) {
+        items.push({ category: StyleCategory.CLOTHING_DRESS, value: selections[StyleCategory.CLOTHING_DRESS], label: findLabel(CLOTHING_DRESS_OPTIONS, selections[StyleCategory.CLOTHING_DRESS]) });
+      }
+      if (selections[StyleCategory.CLOTHING_OUTERWEAR]) {
+        items.push({ category: StyleCategory.CLOTHING_OUTERWEAR, value: selections[StyleCategory.CLOTHING_OUTERWEAR], label: findLabel(CLOTHING_OUTERWEAR_OPTIONS, selections[StyleCategory.CLOTHING_OUTERWEAR]) });
+      }
+      if (selections[StyleCategory.FOOTWEAR]) {
+        items.push({ category: StyleCategory.FOOTWEAR, value: selections[StyleCategory.FOOTWEAR], label: findLabel(FOOTWEAR_OPTIONS, selections[StyleCategory.FOOTWEAR]) });
+      }
+      selections[StyleCategory.BODY_ACCESSORIES]?.forEach(acc => {
+        items.push({ category: StyleCategory.BODY_ACCESSORIES, value: acc, label: findLabel(BODY_ACCESSORIES_OPTIONS, acc) });
+      });
+      if (selections[StyleCategory.POSE]) {
+        items.push({ category: StyleCategory.POSE, value: selections[StyleCategory.POSE], label: findLabel(POSE_OPTIONS, selections[StyleCategory.POSE]) });
+      }
+      if (selections[StyleCategory.BACKGROUND]) {
+        items.push({ category: StyleCategory.BACKGROUND, value: selections[StyleCategory.BACKGROUND], label: findLabel(BACKGROUND_OPTIONS, selections[StyleCategory.BACKGROUND]) });
+      }
     }
     return items;
-  }, [selections]);
+  }, [selections, imageMode]);
 
   const removeSelection = (category: StyleCategory, value: string) => {
-    handleSelection(category, category === StyleCategory.ACCESSORIES ? value : '');
+    const isMultiSelect = category === StyleCategory.ACCESSORIES || category === StyleCategory.BODY_ACCESSORIES;
+    handleSelection(category, isMultiSelect ? value : '');
   };
 
   return (
@@ -642,31 +746,54 @@ const App: React.FC = () => {
                 onClear={() => {
                   setSelectedImage(null);
                   setGenState(prev => ({ ...prev, resultImage: null }));
-                  setSelections({
-                    [StyleCategory.HAIR]: null,
-                    [StyleCategory.HAIR_LENGTH]: null,
-                    [StyleCategory.HAIR_COLOR]: null,
-                    [StyleCategory.ACCESSORIES]: [],
-                    [StyleCategory.MAKEUP]: null,
-                    [StyleCategory.EXPRESSION]: null,
-                    [StyleCategory.EYES]: null,
-                    [StyleCategory.LIPS]: null,
-                    [StyleCategory.FACIAL_HAIR]: null,
-                  });
+                  setSelections(getDefaultSelections());
+                  setImageMode('face');
                 }}
               />
             </section>
+
+            {/* Mode Selector - shows after image upload */}
+            {selectedImage && (
+              <section className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl">
+                  <button
+                    onClick={() => setImageMode('face')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                      imageMode === 'face' 
+                        ? 'bg-white text-slate-900 shadow-sm' 
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    <Smile size={18} />
+                    Face & Makeup
+                  </button>
+                  <button
+                    onClick={() => setImageMode('body')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                      imageMode === 'body' 
+                        ? 'bg-white text-slate-900 shadow-sm' 
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    <Shirt size={18} />
+                    Outfit & Style
+                  </button>
+                </div>
+              </section>
+            )}
+
             {/* 2. Style Selectors */}
             {selectedImage && (
               <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-900 text-white text-xs">2</span>
-                    Customize Look
+                    {imageMode === 'face' ? 'Customize Look' : 'Style Outfit'}
                   </h2>
                 </div>
 
-                {/* Quick Presets */}
+                {/* Quick Presets - only show for face mode */}
+                {imageMode === 'face' && (
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
@@ -710,6 +837,7 @@ const App: React.FC = () => {
                     ))}
                   </div>
                 </div>
+                )}
 
                 {/* Selection Summary Chips */}
                 {activeSelections.length > 0 && (
@@ -734,6 +862,8 @@ const App: React.FC = () => {
                   </div>
                 )}
                 
+                {/* Face Mode Selectors */}
+                {imageMode === 'face' && (
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                   
                   {/* Hair Section - Collapsible */}
@@ -806,6 +936,64 @@ const App: React.FC = () => {
                   </div>
 
                 </div>
+                )}
+
+                {/* Body Mode Selectors */}
+                {imageMode === 'body' && (
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                  
+                  {/* Clothing Section */}
+                  <div className="border-b border-slate-100">
+                    <button onClick={() => toggleSection('clothing')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
+                      <h3 className="text-md font-bold text-slate-900">
+                        Clothing
+                      </h3>
+                      <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.clothing ? 'rotate-180' : ''}`} size={20} />
+                    </button>
+                    {expandedSections.clothing !== false && (
+                      <div className="px-4 sm:px-6 pb-6 space-y-4">
+                        <StyleSelector title="Top" category={StyleCategory.CLOTHING_TOP} options={CLOTHING_TOP_OPTIONS} selections={selections} onSelect={handleSelection} />
+                        <StyleSelector title="Bottom" category={StyleCategory.CLOTHING_BOTTOM} options={CLOTHING_BOTTOM_OPTIONS} selections={selections} onSelect={handleSelection} />
+                        <StyleSelector title="Dress / One-Piece" category={StyleCategory.CLOTHING_DRESS} options={CLOTHING_DRESS_OPTIONS} selections={selections} onSelect={handleSelection} />
+                        <StyleSelector title="Outerwear" category={StyleCategory.CLOTHING_OUTERWEAR} options={CLOTHING_OUTERWEAR_OPTIONS} selections={selections} onSelect={handleSelection} />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Footwear & Accessories Section */}
+                  <div className="border-b border-slate-100">
+                    <button onClick={() => toggleSection('footwear')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
+                      <h3 className="text-md font-bold text-slate-900">
+                        Footwear & Accessories
+                      </h3>
+                      <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.footwear ? 'rotate-180' : ''}`} size={20} />
+                    </button>
+                    {expandedSections.footwear !== false && (
+                      <div className="px-4 sm:px-6 pb-6 space-y-4">
+                        <StyleSelector title="Footwear" category={StyleCategory.FOOTWEAR} options={FOOTWEAR_OPTIONS} selections={selections} onSelect={handleSelection} />
+                        <StyleSelector title="Bags & Accessories" category={StyleCategory.BODY_ACCESSORIES} options={BODY_ACCESSORIES_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pose & Background Section */}
+                  <div>
+                    <button onClick={() => toggleSection('scene')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
+                      <h3 className="text-md font-bold text-slate-900">
+                        Pose & Background
+                      </h3>
+                      <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.scene ? 'rotate-180' : ''}`} size={20} />
+                    </button>
+                    {expandedSections.scene !== false && (
+                      <div className="px-4 sm:px-6 pb-6 space-y-4">
+                        <StyleSelector title="Pose" category={StyleCategory.POSE} options={POSE_OPTIONS} selections={selections} onSelect={handleSelection} />
+                        <StyleSelector title="Background" category={StyleCategory.BACKGROUND} options={BACKGROUND_OPTIONS} selections={selections} onSelect={handleSelection} />
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+                )}
               </section>
             )}
           </div>

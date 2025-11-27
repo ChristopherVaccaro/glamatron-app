@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
-import { UserSelections, StyleCategory } from "../types";
+import { UserSelections, StyleCategory, ImageMode } from "../types";
 
-const getSystemPrompt = (selections: UserSelections): string => {
+const getFacePrompt = (selections: UserSelections): string => {
   const hairStyle = selections[StyleCategory.HAIR];
   const hairColor = selections[StyleCategory.HAIR_COLOR];
   const hairLength = selections[StyleCategory.HAIR_LENGTH];
@@ -51,11 +51,58 @@ const getSystemPrompt = (selections: UserSelections): string => {
   `;
 };
 
+const getBodyPrompt = (selections: UserSelections): string => {
+  const top = selections[StyleCategory.CLOTHING_TOP] || "Keep original top";
+  const bottom = selections[StyleCategory.CLOTHING_BOTTOM] || "Keep original bottom";
+  const dress = selections[StyleCategory.CLOTHING_DRESS];
+  const outerwear = selections[StyleCategory.CLOTHING_OUTERWEAR];
+  const footwear = selections[StyleCategory.FOOTWEAR] || "Keep original footwear";
+  const bodyAccessories = selections[StyleCategory.BODY_ACCESSORIES]?.length > 0 
+    ? selections[StyleCategory.BODY_ACCESSORIES].join(", ") 
+    : "Keep original accessories";
+  const pose = selections[StyleCategory.POSE] || "Keep original pose";
+  const background = selections[StyleCategory.BACKGROUND] || "Keep original background";
+
+  // Build outfit description
+  let outfitDesc = "";
+  if (dress) {
+    outfitDesc = `Outfit: ${dress}`;
+  } else {
+    outfitDesc = `Top: ${top}\n       Bottom: ${bottom}`;
+  }
+  if (outerwear) {
+    outfitDesc += `\n       Outerwear: ${outerwear}`;
+  }
+
+  return `
+    You are an expert photo editor and fashion stylist.
+    The user has provided a full-body or partial-body image of a person.
+    
+    TASK:
+    Generate a photorealistic version of this person with the following outfit and style changes applied.
+    
+    CRITICAL CONSTRAINTS:
+    1. PRESERVE IDENTITY: You must retain the original person's face, body type, skin tone, and recognizable features.
+    2. OUTFIT CHANGES:
+       ${outfitDesc}
+       - Footwear: ${footwear}
+       - Accessories: ${bodyAccessories}
+    3. POSE: ${pose}
+       - Adjust the body position naturally while keeping the person recognizable.
+    4. BACKGROUND: ${background}
+       - Change the background/setting appropriately.
+    5. REALISM: The result must look like a real photograph. Clothes should drape naturally on the body.
+    6. LIGHTING: Adjust lighting to match the new background while keeping the subject well-lit.
+    7. If a category says "Keep original", do not modify that aspect.
+  `;
+};
+
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const generateStyledImage = async (
   imageBase64: string,
   selections: UserSelections,
+  mode: ImageMode = 'face',
   retryCount = 0
 ): Promise<string> => {
   const MAX_RETRIES = 2;
@@ -70,8 +117,8 @@ export const generateStyledImage = async (
   const cleanBase64 = imageBase64.split(',')[1] || imageBase64;
 
   try {
-    const prompt = getSystemPrompt(selections);
-    console.log("Attempt", retryCount + 1, "- Sending request to Gemini...");
+    const prompt = mode === 'face' ? getFacePrompt(selections) : getBodyPrompt(selections);
+    console.log("Attempt", retryCount + 1, `- Sending ${mode} mode request to Gemini...`);
     
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
@@ -172,7 +219,7 @@ export const generateStyledImage = async (
     if (isRetryable && retryCount < MAX_RETRIES) {
       console.log(`Retrying in ${(retryCount + 1) * 1000}ms...`);
       await delay((retryCount + 1) * 1000);
-      return generateStyledImage(imageBase64, selections, retryCount + 1);
+      return generateStyledImage(imageBase64, selections, mode, retryCount + 1);
     }
     
     throw error;
