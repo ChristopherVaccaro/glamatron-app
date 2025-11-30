@@ -8,46 +8,62 @@ export const HAIR_OPTIONS: StyleOption[] = [
   { id: 'h_crew', label: 'Crew Cut', value: 'Classic crew cut fade', category: StyleCategory.HAIR },
   { id: 'h_undercut', label: 'Undercut', value: 'Edgy undercut hairstyle', category: StyleCategory.HAIR },
   { id: 'h_bald', label: 'Bald', value: 'Completely bald head smooth', category: StyleCategory.HAIR },
-  { id: 'h_caesar', label: 'Caesar Cut', value: 'Short Caesar cut with bangs', category: StyleCategory.HAIR },
-  { id: 'h_fauxhawk', label: 'Faux Hawk', value: 'Spiky faux hawk hairstyle', category: StyleCategory.HAIR },
+  { id: 'h_fade', label: 'Fade', value: 'Clean skin fade haircut', category: StyleCategory.HAIR },
   { id: 'h_pompadour', label: 'Pompadour', value: 'Voluminous classic pompadour', category: StyleCategory.HAIR },
   { id: 'h_slickback', label: 'Slicked Back', value: 'Wet look slicked back hair', category: StyleCategory.HAIR },
+  
   // Medium / Bobs
   { id: 'h_bob', label: 'Classic Bob', value: 'Sleek chin-length bob cut', category: StyleCategory.HAIR },
+  { id: 'h_french_bob', label: 'French Bob', value: 'Chic short French bob with bangs', category: StyleCategory.HAIR },
   { id: 'h_messy_bob', label: 'Messy Bob', value: 'Textured messy bob with waves', category: StyleCategory.HAIR },
   { id: 'h_angled_bob', label: 'Angled Bob', value: 'Sharp angled A-line bob', category: StyleCategory.HAIR },
   { id: 'h_lob', label: 'Long Bob (Lob)', value: 'Shoulder-length long bob', category: StyleCategory.HAIR },
   { id: 'h_shag', label: 'Shag Cut', value: 'Messy layered 70s shag haircut', category: StyleCategory.HAIR },
-  { id: 'h_mullet', label: 'Modern Mullet', value: 'Modern mullet hairstyle', category: StyleCategory.HAIR },
+  { id: 'h_butterfly', label: 'Butterfly Cut', value: 'Trendy layered butterfly haircut', category: StyleCategory.HAIR },
   { id: 'h_wolf', label: 'Wolf Cut', value: 'Trendy wolf cut with layers', category: StyleCategory.HAIR },
+  { id: 'h_mullet', label: 'Modern Mullet', value: 'Modern mullet hairstyle', category: StyleCategory.HAIR },
   { id: 'h_afro_short', label: 'Short Afro', value: 'Short rounded afro', category: StyleCategory.HAIR },
-  { id: 'h_wetlook', label: 'Wet Look', value: 'Trendy wet look wavy hair', category: StyleCategory.HAIR },
-  { id: 'h_spiky', label: 'Spiky', value: 'Messy spiky anime style hair', category: StyleCategory.HAIR },
-  { id: 'h_rachel', label: 'The Rachel', value: '90s layered blowout hairstyle', category: StyleCategory.HAIR },
+  { id: 'h_blowout', label: 'Blowout', value: 'Voluminous salon blowout', category: StyleCategory.HAIR },
+  
   // Long
   { id: 'h_long_straight', label: 'Long Straight', value: 'Long sleek straight hair', category: StyleCategory.HAIR },
   { id: 'h_long_wavy', label: 'Long Wavy', value: 'Long flowing wavy hair', category: StyleCategory.HAIR },
   { id: 'h_long_curly', label: 'Long Curly', value: 'Long voluminous curly hair', category: StyleCategory.HAIR },
+  { id: 'h_beachwaves', label: 'Beach Waves', value: 'Loose beachy waves', category: StyleCategory.HAIR },
   { id: 'h_layers', label: 'Face Framing', value: 'Long hair with face-framing layers', category: StyleCategory.HAIR },
   { id: 'h_dreads', label: 'Dreadlocks', value: 'Long dreadlocks', category: StyleCategory.HAIR },
   { id: 'h_braids', label: 'Box Braids', value: 'Long box braids', category: StyleCategory.HAIR },
-  { id: 'h_hime', label: 'Hime Cut', value: 'Japanese Hime cut with sidelocks', category: StyleCategory.HAIR },
   { id: 'h_goddess', label: 'Goddess Locs', value: 'Faux locs with curly ends', category: StyleCategory.HAIR },
-  // Updos & Styles
+  
+  // Updos & Tied Styles
   { id: 'h_updo', label: 'Elegant Updo', value: 'Elegant formal updo', category: StyleCategory.HAIR },
   { id: 'h_messy_updo', label: 'Messy Updo', value: 'Casual messy textured updo with loose strands', category: StyleCategory.HAIR },
   { id: 'h_bun', label: 'Messy Bun', value: 'Casual high messy bun', category: StyleCategory.HAIR },
+  { id: 'h_low_bun', label: 'Low Bun', value: 'Sleek low bun at nape', category: StyleCategory.HAIR },
+  { id: 'h_slick_bun', label: 'Slick Back Bun', value: 'Slicked back tight bun', category: StyleCategory.HAIR },
+  { id: 'h_claw_clip', label: 'Claw Clip', value: 'Trendy claw clip updo', category: StyleCategory.HAIR },
   { id: 'h_pony', label: 'High Ponytail', value: 'Sleek high ponytail', category: StyleCategory.HAIR },
+  { id: 'h_low_pony', label: 'Low Ponytail', value: 'Elegant low ponytail', category: StyleCategory.HAIR },
+  { id: 'h_bubble_pony', label: 'Bubble Ponytail', value: 'Bubble ponytail with sections', category: StyleCategory.HAIR },
+  { id: 'h_halfup', label: 'Half Up Half Down', value: 'Half up half down hairstyle', category: StyleCategory.HAIR },
   { id: 'h_pigtails', label: 'Pigtails', value: 'Two braided pigtails', category: StyleCategory.HAIR },
   { id: 'h_spacebuns', label: 'Space Buns', value: 'Double space buns', category: StyleCategory.HAIR },
+  
+  // Braided Styles
   { id: 'h_cornrows', label: 'Cornrows', value: 'Tight cornrow braids', category: StyleCategory.HAIR },
-  { id: 'h_viking', label: 'Viking Braids', value: 'Intricate viking style braids', category: StyleCategory.HAIR },
+  { id: 'h_dutch', label: 'Dutch Braids', value: 'Two Dutch braids', category: StyleCategory.HAIR },
+  { id: 'h_french', label: 'French Braid', value: 'Classic French braid', category: StyleCategory.HAIR },
+  { id: 'h_fishtail', label: 'Fishtail Braid', value: 'Intricate fishtail braid', category: StyleCategory.HAIR },
+  { id: 'h_crown_braid', label: 'Crown Braid', value: 'Braided crown around head', category: StyleCategory.HAIR },
+  
+  // Edgy
   { id: 'h_mohawk', label: 'Mohawk', value: 'Punk mohawk hairstyle', category: StyleCategory.HAIR },
-  { id: 'h_liberty', label: 'Liberty Spikes', value: 'Tall punk liberty spikes', category: StyleCategory.HAIR },
-  { id: 'h_fingerwaves', label: 'Finger Waves', value: 'Vintage 1920s finger waves', category: StyleCategory.HAIR },
+  { id: 'h_spiky', label: 'Spiky', value: 'Messy spiky textured hair', category: StyleCategory.HAIR },
+  
+  // Bangs
   { id: 'h_bangs', label: 'Straight Bangs', value: 'Hair with straight blunt bangs', category: StyleCategory.HAIR },
   { id: 'h_curtain', label: 'Curtain Bangs', value: 'Hair with trendy curtain bangs', category: StyleCategory.HAIR },
-  { id: 'h_frosted', label: 'Frosted Tips', value: 'Y2K spiky frosted tips', category: StyleCategory.HAIR },
+  { id: 'h_wispy', label: 'Wispy Bangs', value: 'Soft wispy bangs', category: StyleCategory.HAIR },
 ];
 
 // --- HAIR LENGTH ---

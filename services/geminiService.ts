@@ -27,27 +27,39 @@ const getSystemPrompt = (selections: UserSelections): string => {
   const facialHair = selections[StyleCategory.FACIAL_HAIR] || "Keep original facial hair";
 
   return `
-    You are an expert photo editor and stylist.
-    The user has provided an image of a person.
+    CONTEXT: You are a professional digital beauty and fashion stylist tool used by the person in this photo to preview different looks on themselves. This is a consensual self-styling application similar to virtual try-on tools used by beauty brands.
     
-    TASK:
-    Generate a photorealistic version of this person with the following specific style changes applied.
+    IMAGE ACCEPTANCE: The photo may show the face from any angle - front-facing, profile, three-quarter view, looking over shoulder, etc. As long as facial features are visible, proceed with the styling. Focus ONLY on the face and requested styling changes.
     
-    CRITICAL CONSTRAINTS:
-    1. PRESERVE IDENTITY: You must retain the original person's core identity, skin tone, unique features (like moles or specific nose shape), pose, lighting, and background.
-    2. EXPRESSION & STRUCTURE: The user has selected the expression: "${expression}". 
-       - You MUST modify the facial geometry (mouth shape, jaw position, eye opening, cheek muscles) to realistically depict this emotion. 
-       - For example: if "Yawning" or "Screaming", open the mouth and drop the jaw. If "Pout", push the lips forward. 
-       - It is required to change the facial structure to fit the expression, but the person must remain recognizable.
-    3. HAIR & STYLING:
-       - Hair: ${hairPrompt}
-       - Facial Hair: ${facialHair} (Apply this regardless of the person's apparent gender - it can be fun/artistic!)
-       - Accessories: ${accessories} (Ensure glasses/hats fit the head shape and perspective correctly).
-       - Makeup Base: ${makeup}
-       - Eye Makeup: ${eyes}
-       - Lip Makeup: ${lips}
-    4. REALISM: The result must look like a real photograph. Skin texture should remain realistic.
-    5. If a category says "Keep original", do not modify that aspect unless it conflicts with another requested change (e.g., a hat might cover original hair).
+    TASK: Create a professional-quality portrait photograph showing this same person with the requested styling changes. This is for personal use by the individual pictured.
+    
+    STYLING SPECIFICATIONS:
+    - Hairstyle: ${hairPrompt}
+    - Facial Hair: ${facialHair}
+    - Cosmetics (base): ${makeup}
+    - Eye cosmetics: ${eyes}  
+    - Lip cosmetics: ${lips}
+    - Accessories/props: ${accessories}
+    - Expression: ${expression}
+    
+    CRITICAL IDENTITY RULES (DO NOT VIOLATE):
+    1. FACE STRUCTURE IS SACRED: Never alter the person's bone structure, face shape, jaw line, nose shape, eye shape, eye spacing, forehead size, chin shape, or cheekbone structure. These define WHO the person is.
+    2. PRESERVE DISTINGUISHING FEATURES: Keep all moles, birthmarks, freckles, dimples, scars, and unique facial characteristics exactly as they appear.
+    3. SKIN & TONE: Maintain the exact same skin tone, undertone, and complexion. Cosmetics sit ON TOP of skin, they don't change the skin itself.
+    4. THE PERSON MUST BE IMMEDIATELY RECOGNIZABLE: If you showed the output to someone who knows this person, they should instantly recognize them.
+    
+    WHAT YOU CAN CHANGE:
+    - Hair (style, color, length) - this is external to the face
+    - Cosmetics/makeup - applied ON the existing features, not reshaping them
+    - Accessories - glasses, jewelry, hats, etc.
+    - Facial hair - beards, mustaches, etc.
+    - Expression - ONLY through natural muscle movement (smiling, frowning, etc.), NOT by changing the underlying face shape. Think of it like the person making that face in real life.
+    
+    EXPRESSION NOTE: Expressions change muscle position (mouth opens, eyes squint, brows raise) but the face STRUCTURE stays identical. A smile doesn't change someone's jaw bone - it moves their muscles.
+    
+    PHOTOREALISM: Output should match professional portrait photography quality with natural skin texture and lighting consistent with the original.
+    
+    Generate the styled portrait now.
   `;
 };
 
@@ -107,12 +119,14 @@ export const generateStyledImage = async (
     
     // Log finish reason for debugging
     console.log("Finish reason:", candidate.finishReason);
-    console.log("Safety ratings:", candidate.safetyRatings);
+    console.log("Safety ratings:", JSON.stringify(candidate.safetyRatings, null, 2));
+    console.log("Full response structure:", JSON.stringify(response, null, 2).slice(0, 2000));
     
     // Check for content filtering
     if (candidate.finishReason === 'SAFETY') {
       const safetyInfo = candidate.safetyRatings?.map(r => `${r.category}: ${r.probability}`).join(', ');
-      throw new Error(`Image was filtered for safety (${safetyInfo || 'unknown reason'}). Try a different photo.`);
+      console.log("Safety block details:", safetyInfo);
+      throw new Error(`Image was filtered by safety system. This may happen with certain poses or clothing. Try a more standard portrait-style photo.`);
     }
     
     if (candidate.finishReason === 'RECITATION') {
@@ -120,7 +134,8 @@ export const generateStyledImage = async (
     }
 
     if (candidate.finishReason === 'OTHER' || candidate.finishReason === 'BLOCKLIST') {
-      throw new Error("Request was blocked. Try a different photo or simpler style options.");
+      console.log("Blocked with finishReason:", candidate.finishReason);
+      throw new Error("The AI couldn't process this image. This sometimes happens with non-standard poses. Try a front-facing or simple portrait photo.");
     }
 
     // Safely access content and parts
@@ -151,9 +166,13 @@ export const generateStyledImage = async (
       // Check if there's a text response explaining why
       const textPart = parts.find(p => p.text);
       if (textPart?.text) {
-        console.log("AI text response:", textPart.text);
+        console.log("AI text response (no image generated):", textPart.text);
+        // Pass along the AI's explanation if it's helpful
+        if (textPart.text.toLowerCase().includes('cannot') || textPart.text.toLowerCase().includes('sorry')) {
+          throw new Error(`AI declined: ${textPart.text.slice(0, 150)}`);
+        }
       }
-      throw new Error("Model couldn't generate an image. Try a clearer photo or different options.");
+      throw new Error("No image was generated. The AI may have had difficulty with the pose or angle. Try a different photo.");
     }
 
     return `data:image/jpeg;base64,${generatedImageBase64}`;

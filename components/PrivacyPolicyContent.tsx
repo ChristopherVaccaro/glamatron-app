@@ -10,7 +10,7 @@ const PrivacyPolicyContent: React.FC = () => {
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">Introduction</h3>
         <p>
-          Welcome to StyleMirror AI. We respect your privacy and are committed to protecting your personal data. 
+          Welcome to Glamatron. We respect your privacy and are committed to protecting your personal data. 
           This Privacy Policy explains how we collect, use, and safeguard your information when you use our 
           AI-powered image styling service.
         </p>
@@ -18,7 +18,7 @@ const PrivacyPolicyContent: React.FC = () => {
 
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">Information We Collect</h3>
-        <p className="mb-2">When you use StyleMirror AI, we may collect:</p>
+        <p className="mb-2">When you use Glamatron, we may collect:</p>
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li><strong>Images you upload:</strong> Photos you submit for AI styling are processed temporarily to generate your styled result.</li>
           <li><strong>Usage data:</strong> Anonymous information about how you interact with the service (e.g., features used, device type).</li>
@@ -38,7 +38,7 @@ const PrivacyPolicyContent: React.FC = () => {
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">Third-Party Services</h3>
         <p>
-          We use Google's Gemini AI API to process images. When you use StyleMirror AI, your images are 
+          We use Google's Gemini AI API to process images. When you use Glamatron, your images are 
           transmitted to Google's servers for AI processing. Please review{' '}
           <a 
             href="https://policies.google.com/privacy" 
@@ -63,7 +63,7 @@ const PrivacyPolicyContent: React.FC = () => {
 
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">Cookies & Local Storage</h3>
-        <p className="mb-2">StyleMirror AI may use:</p>
+        <p className="mb-2">Glamatron may use:</p>
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li><strong>Essential cookies:</strong> Required for basic site functionality.</li>
           <li><strong>Analytics cookies:</strong> Help us understand how visitors use the site (anonymous, aggregated data).</li>
@@ -92,7 +92,7 @@ const PrivacyPolicyContent: React.FC = () => {
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">Children's Privacy</h3>
         <p>
-          StyleMirror AI is not intended for children under 13. We do not knowingly collect personal 
+          Glamatron is not intended for children under 13. We do not knowingly collect personal 
           information from children. If you believe a child has provided us with personal data, please 
           contact us immediately.
         </p>
@@ -121,10 +121,10 @@ const PrivacyPolicyContent: React.FC = () => {
           If you have questions about this Privacy Policy, please contact us through the Contact page 
           or email us at{' '}
           <a 
-            href="mailto:privacy@stylemirror.ai" 
+            href="mailto:privacy@cognitav.com" 
             className="text-rose-600 hover:text-rose-700 underline"
           >
-            privacy@stylemirror.ai
+            privacy@cognitav.com
           </a>.
         </p>
       </section>

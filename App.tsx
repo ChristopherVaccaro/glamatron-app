@@ -479,14 +479,38 @@ const App: React.FC = () => {
         );
       });
       
-      const file = new File([blob], 'stylemirror-result.jpg', { type: 'image/jpeg' });
+      // Create file with explicit lastModified to ensure proper file metadata
+      const file = new File([blob], 'glamatron-result.jpg', { 
+        type: 'image/jpeg',
+        lastModified: Date.now()
+      });
       
-      if (navigator.share && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: 'My StyleMirror Transformation',
-          text: 'Check out my AI-powered style transformation!',
-          files: [file],
-        });
+      // Check if Web Share API with files is supported
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: 'My Glamatron Transformation',
+            text: 'Check out my AI-powered style transformation!',
+            files: [file],
+          });
+        } catch (shareErr: any) {
+          // User cancelled or share failed - fall back to text-only share or download
+          if (shareErr.name !== 'AbortError') {
+            // Try sharing without files (text only) for email clients that don't support file attachments
+            if (navigator.share) {
+              try {
+                await navigator.share({
+                  title: 'My Glamatron Transformation',
+                  text: 'Check out my AI-powered style transformation! Created with Glamatron.',
+                });
+              } catch {
+                handleDownload();
+              }
+            } else {
+              handleDownload();
+            }
+          }
+        }
       } else {
         handleDownload();
       }
@@ -594,29 +618,20 @@ const App: React.FC = () => {
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
-          <div className="flex items-center">
+          <button 
+            onClick={handleStartOver}
+            className="flex items-center hover:opacity-80 transition-opacity"
+          >
             <span className="text-lg sm:text-xl font-bold tracking-wide text-slate-900" style={{ fontFamily: "'Orbitron', sans-serif" }}>
               GLAMATRON
             </span>
-          </div>
-          <div className="flex items-center gap-4">
-            
-            {/* Mobile: Icon button */}
-            <button 
-              onClick={() => setShowAuthModal(true)}
-              className="sm:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-              aria-label="Sign In"
-            >
-              <User size={20} />
-            </button>
-            {/* Desktop: Full button */}
-            <button 
-              onClick={() => setShowAuthModal(true)}
-              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
-            >
-              Sign In
-            </button>
-          </div>
+          </button>
+          <button 
+            onClick={() => setShowAuthModal(true)}
+            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+          >
+            Sign In
+          </button>
         </div>
       </header>
 
@@ -711,28 +726,32 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Selection Summary Chips */}
-                {activeSelections.length > 0 && (
-                  <div className="mb-4 p-3 bg-white rounded-xl border border-slate-200 lg:sticky lg:top-20 lg:z-40 lg:shadow-md">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Look</span>
-                      <button onClick={handleReset} className="text-xs text-slate-500 hover:text-rose-500 flex items-center gap-1">
+                {/* Selection Summary Chips - Always visible, content animates in */}
+                <div className="mb-4 p-3 bg-white rounded-xl border border-slate-200 sticky top-16 sm:top-20 z-40 shadow-md">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Look</span>
+                    {activeSelections.length > 0 && (
+                      <button onClick={handleReset} className="text-xs text-slate-500 hover:text-rose-500 flex items-center gap-1 transition-opacity">
                         <RotateCcw size={10} />
                         Clear All
                       </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {activeSelections.map((item, idx) => (
-                        <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-[#0F172A] text-white text-xs rounded-full">
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 min-h-[28px]">
+                    {activeSelections.length > 0 ? (
+                      activeSelections.map((item, idx) => (
+                        <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-[#0F172A] text-white text-xs rounded-full animate-in fade-in zoom-in-95 duration-200">
                           {item.label}
                           <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-700 rounded-full p-0.5">
                             <X size={10} className="text-white" />
                           </button>
                         </span>
-                      ))}
-                    </div>
+                      ))
+                    ) : (
+                      <span className="text-xs text-slate-400 italic">Select styles below to build your look</span>
+                    )}
                   </div>
-                )}
+                </div>
                 
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                   
@@ -967,7 +986,7 @@ const App: React.FC = () => {
               </button>
               <button
                 onClick={handleShare}
-                className="p-3 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                className="p-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
                 aria-label="Share"
               >
                 <Share2 size={20} />

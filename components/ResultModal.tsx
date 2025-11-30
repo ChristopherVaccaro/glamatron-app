@@ -152,18 +152,13 @@ const ResultModal: React.FC<ResultModalProps> = ({
         {/* Comparison View - Only show when not loading and have result */}
         {!isLoading && generatedImage && (
           <>
-            <div className="flex-1 overflow-y-auto px-4">
-              <div className="bg-slate-100 rounded-2xl overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-4 pb-2">
+              <div className="rounded-2xl overflow-hidden">
                 <ComparisonView
                   originalImage={originalImage}
                   generatedImage={generatedImage}
                 />
               </div>
-              
-              {/* Hint */}
-              <p className="text-center text-xs text-slate-400 mt-2 mb-4">
-                Drag the slider to compare before & after
-              </p>
             </div>
 
             {/* Action Buttons */}

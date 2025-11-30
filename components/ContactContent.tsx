@@ -21,9 +21,9 @@ const ContactContent: React.FC = () => {
     e.preventDefault();
     // For now, create a mailto link as a simple solution
     // In production, you'd send this to a backend API
-    const subject = encodeURIComponent(`[StyleMirror AI] ${formData.subject}: ${formData.name}`);
+    const subject = encodeURIComponent(`[Glamatron] ${formData.subject}: ${formData.name}`);
     const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`);
-    window.location.href = `mailto:support@stylemirror.ai?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:support@cognitav.com?subject=${subject}&body=${body}`;
     setSubmitted(true);
   };
 
@@ -38,10 +38,10 @@ const ContactContent: React.FC = () => {
           Your email client should have opened with your message. If not, you can email us directly at:
         </p>
         <a 
-          href="mailto:support@stylemirror.ai"
+          href="mailto:support@cognitav.com"
           className="text-rose-600 hover:text-rose-700 font-medium underline"
         >
-          support@stylemirror.ai
+          support@cognitav.com
         </a>
         <button
           onClick={() => setSubmitted(false)}
@@ -68,10 +68,10 @@ const ContactContent: React.FC = () => {
           <div>
             <p className="text-sm text-slate-500">Email us directly</p>
             <a 
-              href="mailto:support@stylemirror.ai"
+              href="mailto:support@cognitav.com"
               className="text-rose-600 hover:text-rose-700 font-medium"
             >
-              support@stylemirror.ai
+              support@cognitav.com
             </a>
           </div>
         </div>

@@ -10,7 +10,7 @@ const TermsOfServiceContent: React.FC = () => {
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">1. Acceptance of Terms</h3>
         <p>
-          By accessing or using StyleMirror AI ("the Service"), you agree to be bound by these Terms of 
+          By accessing or using Glamatron ("the Service"), you agree to be bound by these Terms of 
           Service. If you do not agree to these terms, please do not use the Service.
         </p>
       </section>
@@ -18,7 +18,7 @@ const TermsOfServiceContent: React.FC = () => {
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">2. Description of Service</h3>
         <p>
-          StyleMirror AI is an AI-powered image styling tool that allows users to upload photos and 
+          Glamatron is an AI-powered image styling tool that allows users to upload photos and 
           apply virtual style transformations including hairstyles, makeup, accessories, and other 
           visual modifications. The Service uses Google's Gemini AI technology to generate styled images.
         </p>
@@ -26,7 +26,7 @@ const TermsOfServiceContent: React.FC = () => {
 
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">3. User Responsibilities</h3>
-        <p className="mb-2">By using StyleMirror AI, you agree to:</p>
+        <p className="mb-2">By using Glamatron, you agree to:</p>
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li><strong>Own or have rights to images:</strong> Only upload photos that you own or have explicit permission to use and modify.</li>
           <li><strong>Respect others' privacy:</strong> Do not upload photos of other people without their consent.</li>
@@ -37,7 +37,7 @@ const TermsOfServiceContent: React.FC = () => {
 
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">4. Prohibited Uses</h3>
-        <p className="mb-2">You may NOT use StyleMirror AI to:</p>
+        <p className="mb-2">You may NOT use Glamatron to:</p>
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li>Create deceptive or misleading content (e.g., fake identity documents)</li>
           <li>Generate content intended to harass, defame, or harm others</li>
@@ -59,7 +59,7 @@ const TermsOfServiceContent: React.FC = () => {
         </ul>
         <p className="mb-2"><strong>Our Content:</strong></p>
         <ul className="list-disc list-inside space-y-1 ml-2">
-          <li>The StyleMirror AI name, logo, and Service design are our property.</li>
+          <li>The Glamatron name, logo, and Service design are our property.</li>
           <li>The underlying AI technology and algorithms remain the property of their respective owners.</li>
         </ul>
       </section>
@@ -77,7 +77,7 @@ const TermsOfServiceContent: React.FC = () => {
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">7. Limitation of Liability</h3>
         <p>
-          TO THE MAXIMUM EXTENT PERMITTED BY LAW, STYLEMIRROR AI AND ITS OPERATORS SHALL NOT BE LIABLE 
+          TO THE MAXIMUM EXTENT PERMITTED BY LAW, GLAMATRON AND ITS OPERATORS SHALL NOT BE LIABLE 
           FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR 
           USE OF THE SERVICE. THIS INCLUDES, BUT IS NOT LIMITED TO, DAMAGES FOR LOSS OF PROFITS, DATA, 
           OR OTHER INTANGIBLE LOSSES.
@@ -91,7 +91,7 @@ const TermsOfServiceContent: React.FC = () => {
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">8. Indemnification</h3>
         <p>
-          You agree to indemnify and hold harmless StyleMirror AI and its operators from any claims, 
+          You agree to indemnify and hold harmless Glamatron and its operators from any claims, 
           damages, losses, or expenses arising from your use of the Service or violation of these Terms.
         </p>
       </section>
@@ -108,7 +108,7 @@ const TermsOfServiceContent: React.FC = () => {
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">10. Third-Party Services</h3>
         <p>
-          StyleMirror AI uses Google's Gemini AI API. By using our Service, you also agree to comply 
+          Glamatron uses Google's Gemini AI API. By using our Service, you also agree to comply 
           with Google's Terms of Service and Acceptable Use Policies. We are not responsible for 
           third-party services or their actions.
         </p>
@@ -117,7 +117,7 @@ const TermsOfServiceContent: React.FC = () => {
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">11. Age Requirement</h3>
         <p>
-          You must be at least 13 years old to use StyleMirror AI. If you are under 18, you should 
+          You must be at least 13 years old to use Glamatron. If you are under 18, you should 
           have parental or guardian consent. We reserve the right to terminate accounts that violate 
           this requirement.
         </p>
@@ -152,10 +152,10 @@ const TermsOfServiceContent: React.FC = () => {
         <p>
           For questions about these Terms of Service, please contact us at{' '}
           <a 
-            href="mailto:legal@stylemirror.ai" 
+            href="mailto:legal@cognitav.com" 
             className="text-rose-600 hover:text-rose-700 underline"
           >
-            legal@stylemirror.ai
+            legal@cognitav.com
           </a>.
         </p>
       </section>
