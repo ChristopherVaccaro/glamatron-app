@@ -97,7 +97,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ originalImage, generate
         </div>
       </div>
       
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-slate-500 bg-white">
         Drag the slider to compare original vs generated
       </p>
     </div>
