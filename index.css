@@ -128,3 +128,52 @@ button {
     scrollbar-width: none;
   }
 }
+
+/* Sidebar slide animations */
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutToLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.3s ease-out forwards;
+}
+
+.animate-slide-out-left {
+  animation: slideOutToLeft 0.3s ease-out forwards;
+}
+
+/* Sidebar panel custom scrollbar */
+.sidebar-panel-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-panel-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-panel-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.sidebar-panel-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

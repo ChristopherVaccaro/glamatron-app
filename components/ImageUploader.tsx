@@ -1,11 +1,14 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Image as ImageIcon, X } from 'lucide-react';
+import { Upload, X, Replace } from 'lucide-react';
 
 interface ImageUploaderProps {
   onImageSelected: (base64: string, filename: string) => void;
   selectedImage: string | null;
   onClear: () => void;
 }
+
+// Fixed height for consistent container sizing
+const CONTAINER_HEIGHT = 'h-[350px] sm:h-[400px] md:h-[60vh] md:max-h-[600px]';
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selectedImage, onClear }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,21 +48,51 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
 
   if (selectedImage) {
     return (
-      <div className="relative group rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-white">
+      <div 
+        className={`relative group rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-slate-50 ${CONTAINER_HEIGHT} ${isDragging ? 'ring-2 ring-rose-500 ring-offset-2' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+          accept="image/*"
+          className="hidden"
+        />
         <img 
           src={selectedImage} 
           alt="Original Upload" 
-          className="w-full h-auto max-h-[500px] object-cover"
+          className="w-full h-full object-contain"
         />
+        {/* Drag overlay */}
+        {isDragging && (
+          <div className="absolute inset-0 bg-rose-500/20 backdrop-blur-sm flex items-center justify-center z-20">
+            <div className="bg-white rounded-xl p-4 shadow-lg text-center">
+              <Replace size={32} className="mx-auto text-rose-500 mb-2" />
+              <p className="font-medium text-slate-700">Drop to replace image</p>
+            </div>
+          </div>
+        )}
         <button
           onClick={onClear}
-          className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-colors"
+          className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-colors z-10"
+          title="Remove image"
         >
           <X size={20} />
         </button>
         <div className="absolute bottom-3 left-3 bg-black/50 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
           Original Image
         </div>
+        {/* Replace hint on hover */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="absolute bottom-3 right-3 px-3 py-1.5 bg-black/50 hover:bg-black/70 text-white text-xs rounded backdrop-blur-sm transition-colors flex items-center gap-1.5 opacity-0 group-hover:opacity-100"
+        >
+          <Replace size={14} />
+          Replace
+        </button>
       </div>
     );
   }
@@ -71,11 +104,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`
-        relative flex flex-col items-center justify-center p-12 text-center 
+        relative flex flex-col items-center justify-center text-center p-8
         rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300
+        shadow-lg border-slate-200 bg-slate-50
+        ${CONTAINER_HEIGHT}
         ${isDragging 
           ? 'border-rose-500 bg-rose-50 scale-[1.02]' 
-          : 'border-slate-300 bg-slate-50 hover:bg-white hover:border-slate-400'
+          : 'hover:bg-white hover:border-slate-400'
         }
       `}
     >
