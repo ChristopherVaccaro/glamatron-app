@@ -21,9 +21,9 @@ import {
   FACIAL_HAIR_OPTIONS
 } from './constants';
 import StyleSelector from './components/StyleSelector';
+import SidebarNav from './components/SidebarNav';
 import ImageUploader from './components/ImageUploader';
 import ComparisonView from './components/ComparisonView';
-import ResultModal from './components/ResultModal';
 import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
 import LegalModal from './components/LegalModal';
@@ -268,7 +268,6 @@ const App: React.FC = () => {
     resultImage: null,
   });
 
-  const [showResultModal, setShowResultModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -303,29 +302,7 @@ const App: React.FC = () => {
   const executeGeneration = async (activeSelections: UserSelections) => {
     if (!selectedImage) return;
 
-    // Check if at least one style is selected
-    const hasSelection = 
-      activeSelections[StyleCategory.HAIR] || 
-      activeSelections[StyleCategory.HAIR_LENGTH] ||
-      activeSelections[StyleCategory.HAIR_COLOR] ||
-      activeSelections[StyleCategory.MAKEUP] || 
-      activeSelections[StyleCategory.EXPRESSION] ||
-      activeSelections[StyleCategory.EYES] || 
-      activeSelections[StyleCategory.LIPS] ||
-      activeSelections[StyleCategory.FACIAL_HAIR] ||
-      activeSelections[StyleCategory.ACCESSORIES].length > 0;
-
-    if (!hasSelection) {
-      setGenState(prev => ({ ...prev, error: "Please select at least one style option." }));
-      return;
-    }
-
     setGenState({ isLoading: true, error: null, resultImage: null });
-    
-    // Show modal immediately on mobile for loading state
-    if (window.innerWidth < 1024) {
-      setShowResultModal(true);
-    }
 
     try {
       const result = await generateStyledImage(selectedImage, activeSelections);
@@ -336,8 +313,6 @@ const App: React.FC = () => {
         error: err.message || "Something went wrong. Please try again.", 
         resultImage: null 
       });
-      // Close modal on error so user sees the error state
-      setShowResultModal(false);
     }
   };
 
@@ -613,6 +588,23 @@ const App: React.FC = () => {
     handleSelection(category, category === StyleCategory.ACCESSORIES ? value : '');
   };
 
+  // Options map for SidebarNav
+  const optionsMap = useMemo(() => ({
+    HAIR: HAIR_OPTIONS,
+    HAIR_LENGTH: HAIR_LENGTH_OPTIONS,
+    HAIR_COLOR: HAIR_COLOR_OPTIONS,
+    EXPRESSION: EXPRESSION_OPTIONS,
+    MAKEUP: MAKEUP_OPTIONS,
+    EYES: EYE_OPTIONS,
+    LIPS: LIP_OPTIONS,
+    GLASSES: GLASSES_OPTIONS,
+    PIERCINGS: PIERCING_OPTIONS,
+    HEADWEAR: HEADWEAR_OPTIONS,
+    JEWELRY: JEWELRY_OPTIONS,
+    FACE_EXTRAS: FACE_EXTRAS_OPTIONS,
+    FACIAL_HAIR: FACIAL_HAIR_OPTIONS,
+  }), []);
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
@@ -635,52 +627,108 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-          
-          {/* LEFT COLUMN: Controls */}
-          <div className="lg:col-span-5 space-y-8">
+      {/* Desktop Sidebar Navigation - Always visible, disabled when no image */}
+      <SidebarNav 
+        selections={selections}
+        onSelect={handleSelection}
+        optionsMap={optionsMap}
+        disabled={!selectedImage}
+      />
+
+      <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 sm:pl-20 py-8 flex-grow">
+        <div className="space-y-8">
             
-            {/* 1. Upload Section */}
+            {/* Upload/Result Section - Same on all screen sizes */}
             <section>
-              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-900 text-white text-xs">1</span>
-                Upload Photo
-              </h2>
-              <ImageUploader 
-                selectedImage={selectedImage}
-                onImageSelected={(img, filename) => {
-                  setSelectedImage(img);
-                  setOriginalFilename(filename);
-                  setGenState(prev => ({ ...prev, resultImage: null }));
-                }}
-                onClear={() => {
-                  setSelectedImage(null);
-                  setGenState(prev => ({ ...prev, resultImage: null }));
-                  setSelections({
-                    [StyleCategory.HAIR]: null,
-                    [StyleCategory.HAIR_LENGTH]: null,
-                    [StyleCategory.HAIR_COLOR]: null,
-                    [StyleCategory.ACCESSORIES]: [],
-                    [StyleCategory.MAKEUP]: null,
-                    [StyleCategory.EXPRESSION]: null,
-                    [StyleCategory.EYES]: null,
-                    [StyleCategory.LIPS]: null,
-                    [StyleCategory.FACIAL_HAIR]: null,
-                  });
-                }}
-              />
+              {/* Show result with comparison slider when available */}
+              {genState.resultImage && !genState.isLoading ? (
+                <div className="space-y-4">
+                  {/* Comparison Slider */}
+                  <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200 h-[350px] sm:h-[400px] md:h-[60vh] md:max-h-[600px]">
+                    <ComparisonView 
+                      originalImage={selectedImage!} 
+                      generatedImage={genState.resultImage} 
+                    />
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    <button
+                      onClick={() => setGenState(prev => ({ ...prev, resultImage: null }))}
+                      className="flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors"
+                    >
+                      <RotateCcw size={18} />
+                      Edit & Regenerate
+                    </button>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <button 
+                        onClick={handleShare}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors"
+                      >
+                        <Share2 size={18} />
+                        Share
+                      </button>
+                      <button 
+                        onClick={handleDownload}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-[#0F172A] text-white rounded-xl hover:bg-slate-800 transition-colors font-medium shadow-lg"
+                      >
+                        <Download size={18} />
+                        Download
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Loading state */}
+                  {genState.isLoading && selectedImage && (
+                    <div className="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-white h-[350px] sm:h-[400px] md:h-[60vh] md:max-h-[600px] flex items-center justify-center">
+                      <img 
+                        src={selectedImage} 
+                        alt="Processing" 
+                        className="absolute inset-0 w-full h-full object-contain opacity-20 blur-sm"
+                      />
+                      <div className="relative z-10 text-center">
+                        <div className="relative mb-4">
+                          <div className="w-16 h-16 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin mx-auto"></div>
+                          <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-rose-500" size={24} />
+                        </div>
+                        <p className="text-slate-600 font-medium animate-pulse">Creating your new look...</p>
+                      </div>
+                    </div>
+                  )}
+                  {/* Normal upload */}
+                  {!genState.isLoading && (
+                    <ImageUploader 
+                      selectedImage={selectedImage}
+                      onImageSelected={(img, filename) => {
+                        setSelectedImage(img);
+                        setOriginalFilename(filename);
+                        setGenState(prev => ({ ...prev, resultImage: null }));
+                      }}
+                      onClear={() => {
+                        setSelectedImage(null);
+                        setGenState(prev => ({ ...prev, resultImage: null }));
+                        setSelections({
+                          [StyleCategory.HAIR]: null,
+                          [StyleCategory.HAIR_LENGTH]: null,
+                          [StyleCategory.HAIR_COLOR]: null,
+                          [StyleCategory.ACCESSORIES]: [],
+                          [StyleCategory.MAKEUP]: null,
+                          [StyleCategory.EXPRESSION]: null,
+                          [StyleCategory.EYES]: null,
+                          [StyleCategory.LIPS]: null,
+                          [StyleCategory.FACIAL_HAIR]: null,
+                        });
+                      }}
+                    />
+                  )}
+                </>
+              )}
             </section>
-            {/* 2. Style Selectors */}
+            {/* Style Selectors */}
             {selectedImage && (
               <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-900 text-white text-xs">2</span>
-                    Customize Look
-                  </h2>
-                </div>
-
                 {/* Quick Presets */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
@@ -748,212 +796,65 @@ const App: React.FC = () => {
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs text-slate-400 italic">Select styles below to build your look</span>
+                      <span className="text-xs text-slate-400 italic">
+                        Click sidebar icons to select styles
+                      </span>
                     )}
                   </div>
                 </div>
-                
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                  
-                  {/* Hair Section - Collapsible */}
-                  <div className="border-b border-slate-100">
-                    <button onClick={() => toggleSection('hair')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
-                      <h3 className="text-md font-bold text-slate-900">
-                        Hair
-                      </h3>
-                      <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.hair ? 'rotate-180' : ''}`} size={20} />
-                    </button>
-                    {expandedSections.hair && (
-                      <div className="px-4 sm:px-6 pb-6 space-y-4">
-                        <StyleSelector title="Hair Style" category={StyleCategory.HAIR} options={HAIR_OPTIONS} selections={selections} onSelect={handleSelection} />
-                        <StyleSelector title="Hair Length" category={StyleCategory.HAIR_LENGTH} options={HAIR_LENGTH_OPTIONS} selections={selections} onSelect={handleSelection} />
-                        <StyleSelector title="Hair Color" category={StyleCategory.HAIR_COLOR} options={HAIR_COLOR_OPTIONS} selections={selections} onSelect={handleSelection} />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Face Section - Collapsible */}
-                  <div className="border-b border-slate-100">
-                    <button onClick={() => toggleSection('face')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
-                      <h3 className="text-md font-bold text-slate-900">
-                        Face & Expression
-                      </h3>
-                      <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.face ? 'rotate-180' : ''}`} size={20} />
-                    </button>
-                    {expandedSections.face && (
-                      <div className="px-4 sm:px-6 pb-6 space-y-4">
-                        <StyleSelector title="Expression" category={StyleCategory.EXPRESSION} options={EXPRESSION_OPTIONS} selections={selections} onSelect={handleSelection} />
-                        <StyleSelector title="Makeup Base" category={StyleCategory.MAKEUP} options={MAKEUP_OPTIONS} selections={selections} onSelect={handleSelection} />
-                        <StyleSelector title="Eyes & Contacts" category={StyleCategory.EYES} options={EYE_OPTIONS} selections={selections} onSelect={handleSelection} />
-                        <StyleSelector title="Lips" category={StyleCategory.LIPS} options={LIP_OPTIONS} selections={selections} onSelect={handleSelection} />
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Accessories Section - Collapsible (collapsed by default) */}
-                  <div className="border-b border-slate-100">
-                    <button onClick={() => toggleSection('accessories')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
-                      <h3 className="text-md font-bold text-slate-900">
-                        Accessories
-                      </h3>
-                      <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.accessories ? 'rotate-180' : ''}`} size={20} />
-                    </button>
-                    {expandedSections.accessories && (
-                      <div className="px-4 sm:px-6 pb-6 space-y-4">
-                        <StyleSelector title="Eyewear" category={StyleCategory.ACCESSORIES} options={GLASSES_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
-                        <StyleSelector title="Piercings" category={StyleCategory.ACCESSORIES} options={PIERCING_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
-                        <StyleSelector title="Headwear" category={StyleCategory.ACCESSORIES} options={HEADWEAR_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
-                        <StyleSelector title="Jewelry & Neckwear" category={StyleCategory.ACCESSORIES} options={JEWELRY_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
-                        <StyleSelector title="Extras & Face Art" category={StyleCategory.ACCESSORIES} options={FACE_EXTRAS_OPTIONS} selections={selections} onSelect={handleSelection} multiSelect />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Fun Extras Section - Facial Hair (collapsed by default) */}
-                  <div>
-                    <button onClick={() => toggleSection('extras')} className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
-                      <h3 className="text-md font-bold text-slate-900">
-                        Facial Hair
-                      </h3>
-                      <ChevronDown className={`text-slate-400 transition-transform ${expandedSections.extras ? 'rotate-180' : ''}`} size={20} />
-                    </button>
-                    {expandedSections.extras && (
-                      <div className="px-4 sm:px-6 pb-6 space-y-4">
-                        <StyleSelector title="Facial Hair Style" category={StyleCategory.FACIAL_HAIR} options={FACIAL_HAIR_OPTIONS} selections={selections} onSelect={handleSelection} />
-                      </div>
-                    )}
-                  </div>
-
-                </div>
               </section>
             )}
-          </div>
 
-          {/* RIGHT COLUMN: Results & Actions */}
-          <div className="lg:col-span-7">
-            <div className="sticky top-24 space-y-6">
-              
-              {/* Result Area - Hidden on mobile when empty */}
-              <div className={`
-                bg-slate-100 rounded-3xl overflow-hidden border border-slate-200 relative
-                ${!genState.resultImage && !genState.isLoading && !genState.error ? 'hidden lg:flex min-h-[400px] items-center justify-center' : ''}
-                ${genState.isLoading || genState.error ? 'min-h-[300px]' : ''}
-              `}>
-                
-                {/* Empty State - Desktop only */}
-                {!selectedImage && !genState.resultImage && (
-                  <div className="hidden lg:block text-center p-8 text-slate-400">
-                    <Wand2 size={48} className="mx-auto mb-4 opacity-50" />
-                    <p className="text-lg">Upload an image to start magic</p>
+            {/* Action Buttons - Visible on all screen sizes when image is selected */}
+            {selectedImage && (
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* Clear All Selections Button with Tooltip */}
+                <div className="relative group">
+                  <button
+                    onClick={handleReset}
+                    disabled={genState.isLoading || selectionCount === 0}
+                    className="p-2.5 sm:p-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <RotateCcw size={18} className="sm:w-5 sm:h-5" />
+                  </button>
+                  <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0F172A] text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    Clear all selections
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#0F172A]" />
                   </div>
-                )}
-
-                {/* Loading State - Desktop only (mobile uses modal) */}
-                {genState.isLoading && (
-                  <div className="hidden lg:flex absolute inset-0 z-20 bg-white/80 backdrop-blur-md flex-col items-center justify-center">
-                    <div className="relative">
-                      <div className="w-16 h-16 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin"></div>
-                      <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-rose-500" size={24} />
-                    </div>
-                    <p className="mt-4 text-slate-600 font-medium animate-pulse">Applying styles...</p>
-                  </div>
-                )}
-
-                {/* Error State */}
-                {genState.error && (
-                   <div className="absolute inset-0 z-20 bg-white/95 flex flex-col items-center justify-center p-6 text-center">
-                     <div className="bg-red-50 text-red-500 p-4 rounded-full mb-4">
-                       <RefreshCw size={32} />
-                     </div>
-                     <p className="text-red-600 font-medium mb-2">Oops!</p>
-                     <p className="text-slate-600 text-sm max-w-sm mb-6">{genState.error}</p>
-                     <button 
-                      onClick={() => setGenState(prev => ({...prev, error: null}))}
-                      className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm hover:bg-slate-800"
-                     >
-                       Try Again
-                     </button>
-                   </div>
-                )}
-
-                {/* Comparison / Result View - Desktop */}
-                {genState.resultImage && !genState.isLoading && selectedImage && (
-                  <>
-                    {/* Desktop: Inline view */}
-                    <div className="hidden lg:block bg-white p-4">
-                       <ComparisonView 
-                         originalImage={selectedImage} 
-                         generatedImage={genState.resultImage} 
-                       />
-                       <div className="mt-4 flex justify-between items-center gap-2">
-                        <button 
-                          onClick={handleStartOver}
-                          className="flex items-center gap-2 text-slate-500 hover:text-rose-600 px-3 py-2 rounded-lg hover:bg-rose-50 transition-colors text-sm"
-                        >
-                          <RotateCcw size={16} />
-                          Try New Photo
-                        </button>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={handleShare}
-                            className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors"
-                          >
-                            <Share2 size={18} />
-                            Share
-                          </button>
-                          <button 
-                            onClick={handleDownload}
-                            className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
-                          >
-                            <Download size={18} />
-                            Download
-                          </button>
-                        </div>
-                       </div>
-                    </div>
-                    
-                  </>
-                )}
+                </div>
                 
-                {/* Preview Placeholder if image selected but not generated - Desktop only */}
-                {selectedImage && !genState.resultImage && !genState.isLoading && !genState.error && (
-                   <div className="hidden lg:flex relative w-full h-full flex-col items-center justify-center p-8">
-                     <img 
-                       src={selectedImage} 
-                       alt="Preview" 
-                       className="absolute inset-0 w-full h-full object-cover opacity-10 blur-xl scale-110" 
-                     />
-                     <div className="relative z-10 text-center max-w-md bg-white/80 p-6 rounded-2xl backdrop-blur-sm shadow-sm">
-                        <h3 className="text-xl font-bold text-slate-800 mb-2">Ready to Transform?</h3>
-                        <p className="text-slate-600 mb-6">
-                          Select your desired styles or try the "Surprise Me" button, then click Generate.
-                        </p>
-                     </div>
-                   </div>
-                )}
-              </div>
-
-              {/* Primary Action Button - Desktop only (mobile uses sticky bar) */}
-              {selectedImage && (
+                {/* Surprise Me Button with Tooltip */}
+                <div className="relative group">
+                  <button
+                    onClick={handleRandomize}
+                    disabled={genState.isLoading}
+                    className="p-2.5 sm:p-3 rounded-xl bg-violet-100 text-violet-700 hover:bg-violet-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Dices size={18} className="sm:w-5 sm:h-5" />
+                  </button>
+                  <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0F172A] text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    Surprise me
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#0F172A]" />
+                  </div>
+                </div>
                 <button
                   onClick={handleGenerateClick}
-                  disabled={genState.isLoading}
+                  disabled={genState.isLoading || selectionCount === 0}
                   className={`
-                    hidden lg:flex w-full py-4 rounded-xl font-bold text-lg shadow-xl shadow-rose-500/20 
-                    items-center justify-center gap-3 transition-colors
-                    ${genState.isLoading 
+                    flex-1 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-xl shadow-rose-500/20 
+                    flex items-center justify-center gap-2 sm:gap-3 transition-colors
+                    ${genState.isLoading || selectionCount === 0
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
                       : 'bg-gradient-to-r from-rose-600 to-violet-600 text-white hover:shadow-rose-500/40'
                     }
                   `}
                 >
                   {genState.isLoading ? 'Processing...' : 'Generate New Look'}
-                  {!genState.isLoading && <Sparkles size={20} />}
+                  {!genState.isLoading && <Sparkles size={18} className="sm:w-5 sm:h-5" />}
                 </button>
-              )}
-            </div>
-          </div>
-
+              </div>
+            )}
         </div>
       </main>
 
@@ -964,100 +865,7 @@ const App: React.FC = () => {
         onOpenContact={() => setShowContactModal(true)}
       />
 
-      {/* Mobile Sticky Action Bar */}
-      {selectedImage && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 flex items-center gap-2 lg:hidden z-50 safe-area-pb">
-          {genState.resultImage && !genState.isLoading ? (
-            <>
-              {/* Result exists - show View Result + Regenerate */}
-              <button
-                onClick={handleGenerateClick}
-                className="p-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-                aria-label="Regenerate"
-              >
-                <RefreshCw size={20} />
-              </button>
-              <button
-                onClick={() => setShowResultModal(true)}
-                className="flex-1 py-3 px-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 bg-gradient-to-r from-rose-600 to-violet-600 text-white active:scale-[0.98] transition-all"
-              >
-                View Result
-                <Sparkles size={18} />
-              </button>
-              <button
-                onClick={handleShare}
-                className="p-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-                aria-label="Share"
-              >
-                <Share2 size={20} />
-              </button>
-            </>
-          ) : (
-            <>
-              {/* No result yet - show Generate controls */}
-              <button
-                onClick={handleReset}
-                disabled={genState.isLoading || selectionCount === 0}
-                className="p-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                aria-label="Reset selections"
-              >
-                <RotateCcw size={20} />
-              </button>
-              <button
-                onClick={handleRandomize}
-                disabled={genState.isLoading}
-                className="p-3 rounded-xl bg-violet-100 text-violet-700 hover:bg-violet-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                aria-label="Surprise me"
-              >
-                <Dices size={20} />
-              </button>
-              <button
-                onClick={handleGenerateClick}
-                disabled={genState.isLoading}
-                className={`
-                  flex-1 py-3 px-4 rounded-xl font-bold text-base
-                  flex items-center justify-center gap-2 transition-all
-                  ${genState.isLoading 
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-rose-600 to-violet-600 text-white active:scale-[0.98]'
-                  }
-                `}
-              >
-                {genState.isLoading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Processing
-                  </>
-                ) : (
-                  <>
-                    Generate
-                    <Sparkles size={18} />
-                  </>
-                )}
-              </button>
-            </>
-          )}
-        </div>
-      )}
 
-      {/* Result Modal for Mobile */}
-      {selectedImage && (genState.resultImage || genState.isLoading) && (
-        <ResultModal
-          isOpen={showResultModal}
-          isLoading={genState.isLoading}
-          onClose={() => setShowResultModal(false)}
-          originalImage={selectedImage}
-          generatedImage={genState.resultImage}
-          onDownload={handleDownload}
-          onShare={handleShare}
-          onTryAgain={() => {
-            // Clear result so bar shows "Generate" again
-            setGenState(prev => ({ ...prev, resultImage: null }));
-            // Scroll to style options
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        />
-      )}
 
       {/* Legal Modals */}
       <LegalModal
