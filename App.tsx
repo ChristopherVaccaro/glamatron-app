@@ -35,6 +35,7 @@ import PrivacyPolicyContent from './components/PrivacyPolicyContent';
 import TermsOfServiceContent from './components/TermsOfServiceContent';
 import ContactContent from './components/ContactContent';
 import LandingPage from './components/LandingPage';
+import PasswordGate from './components/PasswordGate';
 import PurchaseModal from './components/PurchaseModal';
 import GlamCoinDisplay from './components/GlamCoinDisplay';
 import DevToolbar from './components/DevToolbar';
@@ -252,6 +253,10 @@ const App: React.FC = () => {
   // User context for GlamCoins and subscription
   const { user: contextUser, features, canGenerate, deductCoin, signOut } = useUser();
   
+  // Check if user has already unlocked the site this session
+  const [isUnlocked, setIsUnlocked] = useState(() => {
+    return sessionStorage.getItem('glamatron_access') === 'granted';
+  });
   const [showLanding, setShowLanding] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [originalFilename, setOriginalFilename] = useState<string>('image');
@@ -671,6 +676,11 @@ const App: React.FC = () => {
   [hasFullAccess]);
 
   // Show landing page
+  // Show password gate if not unlocked
+  if (!isUnlocked) {
+    return <PasswordGate onUnlock={() => setIsUnlocked(true)} />;
+  }
+
   if (showLanding) {
     return (
       <LandingPage 

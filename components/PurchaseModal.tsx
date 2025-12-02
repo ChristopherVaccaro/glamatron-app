@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Coins, Crown, Sparkles, Check, Zap } from 'lucide-react';
+import { X, Coins } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 interface PurchaseModalProps {
@@ -14,7 +14,7 @@ const COIN_PACKAGES = [
 ];
 
 const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
-  const { user, isTestUser, simulatePurchase, simulateSubscribe } = useUser();
+  const { user, isTestUser, simulatePurchase } = useUser();
 
   if (!isOpen) return null;
 
@@ -25,18 +25,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
     } else {
       // TODO: Integrate with Stripe or payment provider
       console.log('Purchase flow for', coins, 'coins');
-      alert('Payment integration coming soon! For now, sign in as testuser@glamatron.app to simulate purchases.');
-    }
-  };
-
-  const handleSubscribe = () => {
-    if (isTestUser) {
-      simulateSubscribe();
-      onClose();
-    } else {
-      // TODO: Integrate with Stripe subscription
-      console.log('Subscribe flow');
-      alert('Subscription integration coming soon! For now, sign in as testuser@glamatron.app to simulate subscriptions.');
+      alert('Payment integration coming soon!');
     }
   };
 
@@ -45,7 +34,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
       />
       
       {/* Modal */}
@@ -88,63 +80,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="px-8 pb-8">
-          {/* Subscription Option */}
-          <div className="mb-6">
-            <button
-              onClick={handleSubscribe}
-              className="w-full p-4 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl text-white hover:shadow-lg hover:shadow-violet-500/30 transition-all group"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                    <Crown size={20} />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold flex items-center gap-2">
-                      Glamatron Pro
-                      <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs">BEST VALUE</span>
-                    </div>
-                    <div className="text-sm text-white/80">Unlimited generations + all styles</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-lg">$9.99</div>
-                  <div className="text-xs text-white/70">/month</div>
-                </div>
-              </div>
-              <div className="mt-3 pt-3 border-t border-white/20">
-                <div className="grid grid-cols-2 gap-2 text-sm text-left">
-                  <div className="flex items-center gap-2">
-                    <Check size={14} className="text-green-300" />
-                    <span>Unlimited generations</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check size={14} className="text-green-300" />
-                    <span>All style options</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check size={14} className="text-green-300" />
-                    <span>Priority processing</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check size={14} className="text-green-300" />
-                    <span>Early access features</span>
-                  </div>
-                </div>
-              </div>
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-slate-400">or buy coin packs</span>
-            </div>
-          </div>
-
           {/* Coin Packages */}
           <div className="grid grid-cols-3 gap-3">
             {COIN_PACKAGES.map((pkg) => (

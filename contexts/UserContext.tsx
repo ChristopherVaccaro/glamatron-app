@@ -36,8 +36,8 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | null>(null);
 
 // Check if we're in development mode
-// Using process.env.NODE_ENV for compatibility, Vite replaces this at build time
-const isDevelopment = process.env.NODE_ENV === 'development';
+// Vite sets import.meta.env.PROD to true in production builds
+const isDevelopment = !import.meta.env.PROD;
 
 // Helper to determine role from email
 // SECURITY: Admin and test roles only work in development environment
