@@ -88,3 +88,16 @@ export const SUBSCRIPTION_TIERS: Record<'free' | 'subscribed' | 'admin', Subscri
     priorityProcessing: true,
   },
 };
+
+// Gallery/History types
+export interface GalleryItem {
+  id: string;
+  userId: string;
+  originalImage: string;  // Base64 or URL of the uploaded image
+  resultImage: string;    // Base64 or URL of the generated image
+  selections: UserSelections;
+  createdAt: Date;
+  // Optional metadata for future features
+  isFavorite?: boolean;
+  title?: string;
+}

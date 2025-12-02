@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { UserProvider } from './contexts/UserContext';
+import { GalleryProvider } from './contexts/GalleryContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -12,7 +13,9 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <UserProvider>
-      <App />
+      <GalleryProvider>
+        <App />
+      </GalleryProvider>
     </UserProvider>
   </React.StrictMode>
 );

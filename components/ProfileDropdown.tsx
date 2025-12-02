@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { User, LogOut, ChevronDown, ImageIcon } from 'lucide-react';
 import { UserData } from './AuthModal';
 
 interface ProfileDropdownProps {
   user: UserData;
   onSignOut: () => void;
   onOpenProfile: () => void;
+  onOpenGallery: () => void;
 }
 
-const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onSignOut, onOpenProfile }) => {
+const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onSignOut, onOpenProfile, onOpenGallery }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -102,6 +103,17 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onSignOut, onOp
             >
               <User size={18} className="text-slate-400" />
               <span className="font-medium">Profile</span>
+            </button>
+            
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                onOpenGallery();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              <ImageIcon size={18} className="text-slate-400" />
+              <span className="font-medium">History</span>
             </button>
             
             <div className="my-1 border-t border-slate-100" />
