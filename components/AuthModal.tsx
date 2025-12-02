@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { X, Mail, Lock, User, ArrowRight, Coins, FlaskConical, Shield } from 'lucide-react';
+import { useUser } from '../contexts/UserContext';
+import { SPECIAL_EMAILS, UserProfile } from '../types';
 
+// Legacy export for backwards compatibility
 export interface UserData {
   email: string;
   name: string;
@@ -16,6 +19,7 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaultMode = 'signin' }) => {
+  const { signIn } = useUser();
   const [mode, setMode] = useState<'signin' | 'signup'>(defaultMode);
 
   // Update mode when defaultMode prop changes
@@ -28,14 +32,39 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
 
+  // Quick access buttons for dev emails
+  const quickAccessEmails = [
+    { email: SPECIAL_EMAILS.TEST_USER, label: 'Test User', icon: FlaskConical, color: 'violet' },
+    { email: SPECIAL_EMAILS.ADMIN, label: 'Admin', icon: Shield, color: 'red' },
+  ];
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Sign in with any email/password combo
+    const userEmail = email || 'user@example.com';
+    const userName = name || email.split('@')[0] || 'User';
+    
+    // Sign in through UserContext
+    const userProfile = signIn(userEmail, userName);
+    
+    // Also call legacy onSignIn for backwards compatibility
     const userData: UserData = {
-      email: email || 'user@example.com',
-      name: name || email.split('@')[0] || 'User',
+      email: userProfile.email,
+      name: userProfile.name,
+      provider: 'email',
+    };
+    onSignIn?.(userData);
+    onClose();
+  };
+
+  const handleQuickAccess = (quickEmail: string) => {
+    const userName = quickEmail.split('@')[0];
+    const userProfile = signIn(quickEmail, userName);
+    
+    const userData: UserData = {
+      email: userProfile.email,
+      name: userProfile.name,
       provider: 'email',
     };
     onSignIn?.(userData);
@@ -43,10 +72,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
   };
 
   const handleSocialSignIn = (provider: 'google' | 'apple') => {
-    // Sign in with social provider
+    const userEmail = provider === 'google' ? 'user@gmail.com' : 'user@icloud.com';
+    const userName = provider === 'google' ? 'Google User' : 'Apple User';
+    
+    const userProfile = signIn(userEmail, userName);
+    
     const userData: UserData = {
-      email: provider === 'google' ? 'user@gmail.com' : 'user@icloud.com',
-      name: provider === 'google' ? 'Google User' : 'Apple User',
+      email: userProfile.email,
+      name: userProfile.name,
       provider,
     };
     onSignIn?.(userData);
@@ -80,8 +113,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
           <p className="text-slate-500 mt-1">
             {mode === 'signin' 
               ? 'Sign in and glam up!' 
-              : 'Join and share your Glamatrons'}
+              : 'Join and get 5 free GlamCoins!'}
           </p>
+          {mode === 'signup' && (
+            <div className="flex items-center justify-center gap-1 mt-2 text-amber-600">
+              <Coins size={16} />
+              <span className="text-sm font-medium">Join and get 5 free GlamCoins to start</span>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -186,6 +225,27 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
               {mode === 'signin' ? 'Sign up' : 'Sign in'}
             </button>
           </p>
+
+          {/* Developer Quick Access */}
+          <div className="mt-6 pt-4 border-t border-slate-200">
+            <p className="text-xs text-slate-400 mb-3 text-center">Developer Quick Access</p>
+            <div className="flex gap-2">
+              {quickAccessEmails.map(({ email: qEmail, label, icon: Icon, color }) => (
+                <button
+                  key={qEmail}
+                  onClick={() => handleQuickAccess(qEmail)}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    color === 'violet' 
+                      ? 'bg-violet-100 text-violet-700 hover:bg-violet-200' 
+                      : 'bg-red-100 text-red-700 hover:bg-red-200'
+                  }`}
+                >
+                  <Icon size={14} />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

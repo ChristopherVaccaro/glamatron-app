@@ -35,3 +35,56 @@ export interface GenerationState {
   error: string | null;
   resultImage: string | null;
 }
+
+// User Role System
+export type UserRole = 'admin' | 'test' | 'user';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  role: UserRole;
+  glamCoins: number;
+  isSubscribed: boolean;
+  createdAt: Date;
+  // For test user only - stores the initial state to reset to
+  _testUserDefaults?: {
+    glamCoins: number;
+    isSubscribed: boolean;
+  };
+}
+
+// Special email patterns for role detection
+export const SPECIAL_EMAILS = {
+  ADMIN: 'admin@glamatron.app',
+  TEST_USER: 'testuser@glamatron.app',
+} as const;
+
+// Default glamcoins for new users
+export const DEFAULT_GLAMCOINS = 5;
+
+// Subscription tier feature flags
+export interface SubscriptionFeatures {
+  unlimitedGenerations: boolean;
+  fullStyleLibrary: boolean;
+  priorityProcessing: boolean;
+}
+
+export const SUBSCRIPTION_TIERS: Record<'free' | 'subscribed' | 'admin', SubscriptionFeatures> = {
+  free: {
+    unlimitedGenerations: false,
+    fullStyleLibrary: false,
+    priorityProcessing: false,
+  },
+  subscribed: {
+    unlimitedGenerations: true,
+    fullStyleLibrary: true,
+    priorityProcessing: true,
+  },
+  admin: {
+    unlimitedGenerations: true,
+    fullStyleLibrary: true,
+    priorityProcessing: true,
+  },
+};

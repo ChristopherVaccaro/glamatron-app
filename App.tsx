@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User, Coins, Lock } from 'lucide-react';
 import { 
   StyleCategory, 
   UserSelections, 
   GenerationState 
 } from './types';
+import { useUser } from './contexts/UserContext';
+import { filterStyleOptions, getAvailablePresets } from './utils/styleAccess';
 import { 
   HAIR_OPTIONS,
   HAIR_LENGTH_OPTIONS,
@@ -33,6 +35,9 @@ import PrivacyPolicyContent from './components/PrivacyPolicyContent';
 import TermsOfServiceContent from './components/TermsOfServiceContent';
 import ContactContent from './components/ContactContent';
 import LandingPage from './components/LandingPage';
+import PurchaseModal from './components/PurchaseModal';
+import GlamCoinDisplay from './components/GlamCoinDisplay';
+import DevToolbar from './components/DevToolbar';
 import { generateStyledImage } from './services/geminiService';
 
 // Quick preset definitions
@@ -244,6 +249,9 @@ export const QUICK_PRESETS = [
 ];
 
 const App: React.FC = () => {
+  // User context for GlamCoins and subscription
+  const { user: contextUser, features, canGenerate, deductCoin, signOut } = useUser();
+  
   const [showLanding, setShowLanding] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [originalFilename, setOriginalFilename] = useState<string>('image');
@@ -253,6 +261,7 @@ const App: React.FC = () => {
     accessories: false,
     extras: false,
   });
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   
   const [selections, setSelections] = useState<UserSelections>({
     [StyleCategory.HAIR]: null,
@@ -309,13 +318,28 @@ const App: React.FC = () => {
   const executeGeneration = async (activeSelections: UserSelections) => {
     if (!selectedImage) return;
 
+    // Check if user can generate (has coins or unlimited access)
+    if (!canGenerate) {
+      setShowPurchaseModal(true);
+      return;
+    }
+
     // Keep the existing resultImage during loading so buttons stay visible
     setGenState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
       const result = await generateStyledImage(selectedImage, activeSelections);
+      
+      // Deduct coin on successful generation
+      const coinDeducted = deductCoin();
+      if (!coinDeducted && !features.unlimitedGenerations) {
+        // This shouldn't happen if canGenerate was true, but handle edge case
+        console.warn('Failed to deduct coin after generation');
+      }
+      
       setGenState({ isLoading: false, error: null, resultImage: result });
     } catch (err: any) {
+      // Don't deduct coin on failed generation
       setGenState(prev => ({ 
         ...prev,
         isLoading: false, 
@@ -325,11 +349,22 @@ const App: React.FC = () => {
   };
 
   const handleGenerateClick = () => {
+    // Check coins before starting generation
+    if (!canGenerate) {
+      setShowPurchaseModal(true);
+      return;
+    }
     executeGeneration(selections);
   };
 
   const handleRandomize = () => {
     if (!selectedImage) return;
+
+    // Check coins before randomizing (since it triggers generation)
+    if (!canGenerate) {
+      setShowPurchaseModal(true);
+      return;
+    }
 
     // Helper to get random item from array
     const getRandom = <T extends { value: string }>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)].value;
@@ -337,13 +372,23 @@ const App: React.FC = () => {
     // Helper to maybe get an item (X% chance)
     const maybeGet = <T extends { value: string }>(arr: T[], chance: number = 0.5) => Math.random() < chance ? getRandom(arr) : null;
 
-    // Collect all accessories
+    // Use filtered options based on subscription
+    const filteredHair = filterStyleOptions(HAIR_OPTIONS, features.fullStyleLibrary);
+    const filteredHairLength = filterStyleOptions(HAIR_LENGTH_OPTIONS, features.fullStyleLibrary);
+    const filteredHairColor = filterStyleOptions(HAIR_COLOR_OPTIONS, features.fullStyleLibrary);
+    const filteredMakeup = filterStyleOptions(MAKEUP_OPTIONS, features.fullStyleLibrary);
+    const filteredExpression = filterStyleOptions(EXPRESSION_OPTIONS, features.fullStyleLibrary);
+    const filteredEyes = filterStyleOptions(EYE_OPTIONS, features.fullStyleLibrary);
+    const filteredLips = filterStyleOptions(LIP_OPTIONS, features.fullStyleLibrary);
+    const filteredFacialHair = filterStyleOptions(FACIAL_HAIR_OPTIONS, features.fullStyleLibrary);
+
+    // Collect all filtered accessories
     const allAccessories = [
-      ...GLASSES_OPTIONS,
-      ...PIERCING_OPTIONS,
-      ...HEADWEAR_OPTIONS,
-      ...JEWELRY_OPTIONS,
-      ...FACE_EXTRAS_OPTIONS
+      ...filterStyleOptions(GLASSES_OPTIONS, features.fullStyleLibrary),
+      ...filterStyleOptions(PIERCING_OPTIONS, features.fullStyleLibrary),
+      ...filterStyleOptions(HEADWEAR_OPTIONS, features.fullStyleLibrary),
+      ...filterStyleOptions(JEWELRY_OPTIONS, features.fullStyleLibrary),
+      ...filterStyleOptions(FACE_EXTRAS_OPTIONS, features.fullStyleLibrary)
     ];
 
     // Pick 1 to 3 random accessories
@@ -364,15 +409,15 @@ const App: React.FC = () => {
     }
 
     const newSelections: UserSelections = {
-      [StyleCategory.HAIR]: maybeGet(HAIR_OPTIONS, 0.7), 
-      [StyleCategory.HAIR_LENGTH]: maybeGet(HAIR_LENGTH_OPTIONS, 0.4),
-      [StyleCategory.HAIR_COLOR]: maybeGet(HAIR_COLOR_OPTIONS, 0.5),
-      [StyleCategory.MAKEUP]: maybeGet(MAKEUP_OPTIONS, 0.6),
-      [StyleCategory.EXPRESSION]: maybeGet(EXPRESSION_OPTIONS, 0.5),
-      [StyleCategory.EYES]: maybeGet(EYE_OPTIONS, 0.5),
-      [StyleCategory.LIPS]: maybeGet(LIP_OPTIONS, 0.5),
+      [StyleCategory.HAIR]: maybeGet(filteredHair, 0.7), 
+      [StyleCategory.HAIR_LENGTH]: maybeGet(filteredHairLength, 0.4),
+      [StyleCategory.HAIR_COLOR]: maybeGet(filteredHairColor, 0.5),
+      [StyleCategory.MAKEUP]: maybeGet(filteredMakeup, 0.6),
+      [StyleCategory.EXPRESSION]: maybeGet(filteredExpression, 0.5),
+      [StyleCategory.EYES]: maybeGet(filteredEyes, 0.5),
+      [StyleCategory.LIPS]: maybeGet(filteredLips, 0.5),
       [StyleCategory.ACCESSORIES]: randomAccessories,
-      [StyleCategory.FACIAL_HAIR]: maybeGet(FACIAL_HAIR_OPTIONS, 0.25),
+      [StyleCategory.FACIAL_HAIR]: maybeGet(filteredFacialHair, 0.25),
     };
 
     // Update UI with new selections
@@ -601,22 +646,29 @@ const App: React.FC = () => {
     handleSelection(category, category === StyleCategory.ACCESSORIES ? value : '');
   };
 
-  // Options map for SidebarNav
+  // Options map for SidebarNav - filtered based on subscription
+  const hasFullAccess = features.fullStyleLibrary;
+  
   const optionsMap = useMemo(() => ({
-    HAIR: HAIR_OPTIONS,
-    HAIR_LENGTH: HAIR_LENGTH_OPTIONS,
-    HAIR_COLOR: HAIR_COLOR_OPTIONS,
-    EXPRESSION: EXPRESSION_OPTIONS,
-    MAKEUP: MAKEUP_OPTIONS,
-    EYES: EYE_OPTIONS,
-    LIPS: LIP_OPTIONS,
-    GLASSES: GLASSES_OPTIONS,
-    PIERCINGS: PIERCING_OPTIONS,
-    HEADWEAR: HEADWEAR_OPTIONS,
-    JEWELRY: JEWELRY_OPTIONS,
-    FACE_EXTRAS: FACE_EXTRAS_OPTIONS,
-    FACIAL_HAIR: FACIAL_HAIR_OPTIONS,
-  }), []);
+    HAIR: filterStyleOptions(HAIR_OPTIONS, hasFullAccess),
+    HAIR_LENGTH: filterStyleOptions(HAIR_LENGTH_OPTIONS, hasFullAccess),
+    HAIR_COLOR: filterStyleOptions(HAIR_COLOR_OPTIONS, hasFullAccess),
+    EXPRESSION: filterStyleOptions(EXPRESSION_OPTIONS, hasFullAccess),
+    MAKEUP: filterStyleOptions(MAKEUP_OPTIONS, hasFullAccess),
+    EYES: filterStyleOptions(EYE_OPTIONS, hasFullAccess),
+    LIPS: filterStyleOptions(LIP_OPTIONS, hasFullAccess),
+    GLASSES: filterStyleOptions(GLASSES_OPTIONS, hasFullAccess),
+    PIERCINGS: filterStyleOptions(PIERCING_OPTIONS, hasFullAccess),
+    HEADWEAR: filterStyleOptions(HEADWEAR_OPTIONS, hasFullAccess),
+    JEWELRY: filterStyleOptions(JEWELRY_OPTIONS, hasFullAccess),
+    FACE_EXTRAS: filterStyleOptions(FACE_EXTRAS_OPTIONS, hasFullAccess),
+    FACIAL_HAIR: filterStyleOptions(FACIAL_HAIR_OPTIONS, hasFullAccess),
+  }), [hasFullAccess]);
+
+  // Quick presets with premium flags
+  const availablePresets = useMemo(() => 
+    getAvailablePresets(QUICK_PRESETS, hasFullAccess),
+  [hasFullAccess]);
 
   // Show landing page
   if (showLanding) {
@@ -642,26 +694,36 @@ const App: React.FC = () => {
               GLAMATRON
             </span>
           </button>
-          {user ? (
-            <ProfileDropdown 
-              user={user}
-              onSignOut={() => {
-                setUser(null);
-                handleStartOver();
-              }}
-              onOpenProfile={() => setShowProfileModal(true)}
-            />
-          ) : (
-            <button 
-              onClick={() => {
-                setAuthModalMode('signin');
-                setShowAuthModal(true);
-              }}
-              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
-            >
-              Sign In
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {/* GlamCoin Display - only show when user is signed in */}
+            {user && (
+              <GlamCoinDisplay onClick={() => setShowPurchaseModal(true)} />
+            )}
+            
+            {user ? (
+              <ProfileDropdown 
+                user={user}
+                onSignOut={() => {
+                  signOut(); // Sign out from context (resets test user)
+                  setUser(null);
+                  setShowLanding(true);
+                  setSelectedImage(null);
+                  setGenState({ isLoading: false, error: null, resultImage: null });
+                }}
+                onOpenProfile={() => setShowProfileModal(true)}
+              />
+            ) : (
+              <button 
+                onClick={() => {
+                  setAuthModalMode('signin');
+                  setShowAuthModal(true);
+                }}
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                Sign In
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -671,6 +733,7 @@ const App: React.FC = () => {
         onSelect={handleSelection}
         optionsMap={optionsMap}
         disabled={!selectedImage}
+        onPremiumClick={() => setShowPurchaseModal(true)}
       />
 
       <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 sm:pl-20 lg:pl-24 py-6 flex-grow">
@@ -707,8 +770,8 @@ const App: React.FC = () => {
                       <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-40">
                         <div className="text-center">
                           <div className="relative mb-4">
-                            <div className="w-16 h-16 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mx-auto"></div>
-                            <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-900" size={24} />
+                            <div className="w-16 h-16 border-4 border-slate-200 border-t-slate-900 rounded-full spinner-ring mx-auto"></div>
+                            <span className="absolute top-1/2 left-1/2 text-slate-900 font-bold text-lg spinner-g" style={{ fontFamily: "'Orbitron', sans-serif" }}>G</span>
                           </div>
                           <p className="text-slate-600 font-medium animate-pulse">Creating your new look...</p>
                         </div>
@@ -758,8 +821,8 @@ const App: React.FC = () => {
                       />
                       <div className="relative z-10 text-center">
                         <div className="relative mb-4">
-                          <div className="w-16 h-16 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin mx-auto"></div>
-                          <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-rose-500" size={24} />
+                          <div className="w-16 h-16 border-4 border-slate-200 border-t-slate-900 rounded-full spinner-ring mx-auto"></div>
+                          <span className="absolute top-1/2 left-1/2 text-slate-900 font-bold text-lg spinner-g" style={{ fontFamily: "'Orbitron', sans-serif" }}>G</span>
                         </div>
                         <p className="text-slate-600 font-medium animate-pulse">Creating your new look...</p>
                       </div>
@@ -828,15 +891,32 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div id="quick-looks-scroll" className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-                    {QUICK_PRESETS.map(preset => (
+                    {availablePresets.map(preset => (
                       <button
                         key={preset.id}
-                        onClick={() => handlePresetSelect(preset)}
+                        onClick={() => {
+                          if (preset.isLocked) {
+                            setShowPurchaseModal(true);
+                          } else {
+                            handlePresetSelect(preset);
+                          }
+                        }}
                         disabled={genState.isLoading}
-                        className="flex-shrink-0 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:border-rose-300 hover:bg-rose-50 transition-all flex items-center gap-1.5 shadow-sm"
+                        className={`
+                          flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 shadow-sm relative
+                          ${preset.isLocked 
+                            ? 'bg-slate-50 border border-slate-200 text-slate-400 hover:border-amber-300 hover:bg-amber-50' 
+                            : 'bg-white border border-slate-200 text-slate-700 hover:border-rose-300 hover:bg-rose-50'
+                          }
+                        `}
                       >
                         <span>{preset.emoji}</span>
                         <span className="whitespace-nowrap">{preset.name}</span>
+                        {preset.isLocked && (
+                          <span className="ml-1 text-slate-400">
+                            <Lock size={12} />
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -983,6 +1063,15 @@ const App: React.FC = () => {
           onUpdateUser={(updatedUser) => setUser(updatedUser)}
         />
       )}
+
+      {/* Purchase Modal - shown when out of coins or when clicking coin display */}
+      <PurchaseModal
+        isOpen={showPurchaseModal}
+        onClose={() => setShowPurchaseModal(false)}
+      />
+
+      {/* Developer Toolbar - only visible for test user and admin */}
+      <DevToolbar />
     </div>
   );
 };

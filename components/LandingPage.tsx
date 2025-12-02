@@ -5,8 +5,6 @@ import {
   Wand2, 
   Palette, 
   Users, 
-  Camera, 
-  Zap,
   Instagram,
   Briefcase,
   Star,
@@ -46,9 +44,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
         
-        {/* Animated gradient orbs - using slate/rose only, no purple */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-slate-600/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-rose-500/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        {/* Gradient orbs - static, no animation */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-slate-600/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-rose-500/15 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-slate-700/20 rounded-full blur-3xl" />
 
         {/* Header with Sign In */}
@@ -76,16 +74,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-32">
           {/* Hero Title */}
-          <div className="text-center mb-4">
-            <p className="text-slate-400 text-sm">AI-Powered Style Transformation</p>
-          </div>
+          
 
           {/* Hero Content */}
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/80 text-sm mb-8">
-              <Sparkles size={16} className="text-amber-400" />
-              <span>Powered by Advanced AI Technology</span>
-            </div>
+            
             
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
               Transform Your Look
@@ -130,17 +123,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
                   {/* Before */}
                   <div className="relative">
                     <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-600/50 rounded-full mx-auto mb-4 flex items-center justify-center">
-                            <Camera size={32} className="text-slate-400" />
-                          </div>
-                          <p className="text-slate-400 text-sm sm:text-base font-medium">Your Photo</p>
-                          <p className="text-slate-500 text-xs sm:text-sm mt-1">Upload any portrait</p>
-                        </div>
-                      </div>
+                      <img 
+                        src="/images/hero-before.png" 
+                        alt="Before transformation" 
+                        className="w-full h-full object-cover"
+                      />
                       {/* Decorative elements */}
-                      <div className="absolute top-4 left-4 px-2 py-1 bg-slate-900/60 backdrop-blur-sm rounded text-xs text-slate-400">
+                      <div className="absolute top-4 left-4 px-3 py-1.5 bg-slate-900/70 backdrop-blur-sm rounded-lg text-xs font-medium text-slate-300">
                         Before
                       </div>
                     </div>
@@ -149,21 +138,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
                   {/* After */}
                   <div className="relative">
                     <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-slate-700 to-rose-900/30 overflow-hidden border border-rose-500/20">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-slate-600/50 to-rose-500/30 rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
-                            <Wand2 size={32} className="text-rose-300" />
-                          </div>
-                          <p className="text-white text-sm sm:text-base font-medium">AI Transformed</p>
-                          <p className="text-slate-400 text-xs sm:text-sm mt-1">New look, same you</p>
-                        </div>
-                      </div>
+                      <img 
+                        src="/images/hero-after.jpg" 
+                        alt="After AI transformation" 
+                        className="w-full h-full object-cover"
+                      />
                       {/* Sparkle decorations */}
-                      <Sparkles className="absolute top-6 right-6 text-amber-400/60 animate-pulse" size={20} />
-                      <Sparkles className="absolute bottom-10 left-6 text-slate-400/60 animate-pulse" size={16} style={{ animationDelay: '0.5s' }} />
-                      <Sparkles className="absolute top-1/3 right-10 text-rose-400/60 animate-pulse" size={14} style={{ animationDelay: '1s' }} />
+                      <Sparkles className="absolute top-6 right-6 text-amber-400 animate-pulse" size={20} />
+                      <Sparkles className="absolute bottom-10 left-6 text-white/60 animate-pulse" size={16} style={{ animationDelay: '0.5s' }} />
+                      <Sparkles className="absolute top-1/3 right-10 text-rose-300 animate-pulse" size={14} style={{ animationDelay: '1s' }} />
                       {/* Decorative elements */}
-                      <div className="absolute top-4 left-4 px-2 py-1 bg-rose-500/30 backdrop-blur-sm rounded text-xs text-rose-200">
+                      <div className="absolute top-4 left-4 px-3 py-1.5 bg-rose-500/70 backdrop-blur-sm rounded-lg text-xs font-medium text-white">
                         After
                       </div>
                     </div>
@@ -251,7 +236,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Content Side */}
             <div className="order-2 lg:order-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-rose-100 rounded-full text-rose-600 text-sm mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full text-slate-600 text-sm mb-6">
                 <Palette size={14} />
                 Makeup & Beauty
               </div>
@@ -264,7 +249,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
               <ul className="space-y-4">
                 {['Natural glow to bold glamour', 'Lip colors and eye makeup', 'Contour and highlight effects'].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-3 text-slate-700">
-                    <div className="w-6 h-6 rounded-full bg-rose-500 flex items-center justify-center flex-shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-slate-900 flex items-center justify-center flex-shrink-0">
                       <Check size={14} className="text-white" />
                     </div>
                     {item}
@@ -324,7 +309,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
             
             {/* Content Side */}
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 rounded-full text-amber-700 text-sm mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full text-slate-600 text-sm mb-6">
                 <Star size={14} />
                 Accessories & More
               </div>
@@ -337,7 +322,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
               <ul className="space-y-4">
                 {['Eyewear and sunglasses', 'Earrings, necklaces, and jewelry', 'Piercings and facial accessories'].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-3 text-slate-700">
-                    <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-slate-900 flex items-center justify-center flex-shrink-0">
                       <Check size={14} className="text-white" />
                     </div>
                     {item}
@@ -430,10 +415,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
       {/* CTA Section */}
       <section className="py-20 sm:py-28 bg-slate-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/80 text-sm mb-8">
-            <Sparkles size={16} className="text-amber-400" />
-            <span>Join thousands of users</span>
-          </div>
+          
           
           <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
             Ready to Discover
@@ -473,7 +455,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
               GLAMATRON
             </div>
             <p className="text-slate-500 text-sm">
-              © {new Date().getFullYear()} Glamatron. Powered by AI.
+              © {new Date().getFullYear()} Glamatron by Cognitav
             </p>
           </div>
         </div>
