@@ -39,6 +39,8 @@ import PasswordGate from './components/PasswordGate';
 import PurchaseModal from './components/PurchaseModal';
 import GlamCoinDisplay from './components/GlamCoinDisplay';
 import DevToolbar from './components/DevToolbar';
+import GalleryModal from './components/GalleryModal';
+import { useGallery } from './contexts/GalleryContext';
 import { generateStyledImage } from './services/geminiService';
 
 // Quick preset definitions
@@ -253,6 +255,9 @@ const App: React.FC = () => {
   // User context for GlamCoins and subscription
   const { user: contextUser, features, canGenerate, deductCoin, signOut } = useUser();
   
+  // Gallery context for saving images
+  const { addItem: addToGallery } = useGallery();
+  
   // Check if user has already unlocked the site this session
   const [isUnlocked, setIsUnlocked] = useState(() => {
     return sessionStorage.getItem('glamatron_access') === 'granted';
@@ -267,6 +272,7 @@ const App: React.FC = () => {
     extras: false,
   });
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [showGalleryModal, setShowGalleryModal] = useState(false);
   
   const [selections, setSelections] = useState<UserSelections>({
     [StyleCategory.HAIR]: null,
@@ -340,6 +346,16 @@ const App: React.FC = () => {
       if (!coinDeducted && !features.unlimitedGenerations) {
         // This shouldn't happen if canGenerate was true, but handle edge case
         console.warn('Failed to deduct coin after generation');
+      }
+      
+      // Save to gallery if user is signed in
+      if (user?.id) {
+        addToGallery({
+          userId: user.id,
+          originalImage: selectedImage,
+          resultImage: result,
+          selections: activeSelections,
+        });
       }
       
       setGenState({ isLoading: false, error: null, resultImage: result });
@@ -721,6 +737,7 @@ const App: React.FC = () => {
                   setGenState({ isLoading: false, error: null, resultImage: null });
                 }}
                 onOpenProfile={() => setShowProfileModal(true)}
+                onOpenGallery={() => setShowGalleryModal(true)}
               />
             ) : (
               <button 
@@ -1079,6 +1096,15 @@ const App: React.FC = () => {
         isOpen={showPurchaseModal}
         onClose={() => setShowPurchaseModal(false)}
       />
+
+      {/* Gallery Modal - user's saved creations */}
+      {user && (
+        <GalleryModal
+          isOpen={showGalleryModal}
+          onClose={() => setShowGalleryModal(false)}
+          userId={user.id}
+        />
+      )}
 
       {/* Developer Toolbar - only visible for test user and admin */}
       <DevToolbar />

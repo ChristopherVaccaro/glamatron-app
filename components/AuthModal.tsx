@@ -5,6 +5,7 @@ import { SPECIAL_EMAILS, UserProfile } from '../types';
 
 // Legacy export for backwards compatibility
 export interface UserData {
+  id: string;
   email: string;
   name: string;
   avatar?: string;
@@ -50,6 +51,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
     
     // Also call legacy onSignIn for backwards compatibility
     const userData: UserData = {
+      id: userProfile.id,
       email: userProfile.email,
       name: userProfile.name,
       provider: 'email',
@@ -63,6 +65,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
     const userProfile = signIn(quickEmail, userName);
     
     const userData: UserData = {
+      id: userProfile.id,
       email: userProfile.email,
       name: userProfile.name,
       provider: 'email',
@@ -78,6 +81,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
     const userProfile = signIn(userEmail, userName);
     
     const userData: UserData = {
+      id: userProfile.id,
       email: userProfile.email,
       name: userProfile.name,
       provider,
