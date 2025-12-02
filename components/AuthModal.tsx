@@ -1,13 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, User, ArrowRight } from 'lucide-react';
+
+export interface UserData {
+  email: string;
+  name: string;
+  avatar?: string;
+  provider?: 'email' | 'google' | 'apple';
+}
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSignIn?: (user: UserData) => void;
+  defaultMode?: 'signin' | 'signup';
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaultMode = 'signin' }) => {
+  const [mode, setMode] = useState<'signin' | 'signup'>(defaultMode);
+
+  // Update mode when defaultMode prop changes
+  useEffect(() => {
+    if (isOpen) {
+      setMode(defaultMode);
+    }
+  }, [isOpen, defaultMode]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -16,13 +32,25 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual authentication
-    console.log(mode === 'signin' ? 'Signing in...' : 'Signing up...', { email, password, name });
+    // Sign in with any email/password combo
+    const userData: UserData = {
+      email: email || 'user@example.com',
+      name: name || email.split('@')[0] || 'User',
+      provider: 'email',
+    };
+    onSignIn?.(userData);
+    onClose();
   };
 
-  const handleSocialSignIn = (provider: string) => {
-    // TODO: Implement social authentication
-    console.log(`Signing in with ${provider}...`);
+  const handleSocialSignIn = (provider: 'google' | 'apple') => {
+    // Sign in with social provider
+    const userData: UserData = {
+      email: provider === 'google' ? 'user@gmail.com' : 'user@icloud.com',
+      name: provider === 'google' ? 'Google User' : 'Apple User',
+      provider,
+    };
+    onSignIn?.(userData);
+    onClose();
   };
 
   return (
