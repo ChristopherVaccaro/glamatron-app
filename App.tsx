@@ -24,12 +24,15 @@ import StyleSelector from './components/StyleSelector';
 import SidebarNav from './components/SidebarNav';
 import ImageUploader from './components/ImageUploader';
 import ComparisonView from './components/ComparisonView';
-import AuthModal from './components/AuthModal';
+import AuthModal, { UserData } from './components/AuthModal';
+import ProfileDropdown from './components/ProfileDropdown';
+import ProfileModal from './components/ProfileModal';
 import Footer from './components/Footer';
 import LegalModal from './components/LegalModal';
 import PrivacyPolicyContent from './components/PrivacyPolicyContent';
 import TermsOfServiceContent from './components/TermsOfServiceContent';
 import ContactContent from './components/ContactContent';
+import LandingPage from './components/LandingPage';
 import { generateStyledImage } from './services/geminiService';
 
 // Quick preset definitions
@@ -241,6 +244,7 @@ export const QUICK_PRESETS = [
 ];
 
 const App: React.FC = () => {
+  const [showLanding, setShowLanding] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [originalFilename, setOriginalFilename] = useState<string>('image');
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -272,6 +276,9 @@ const App: React.FC = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [user, setUser] = useState<UserData | null>(null);
 
   const handleSelection = useCallback((category: StyleCategory, value: string) => {
     setSelections(prev => {
@@ -302,17 +309,18 @@ const App: React.FC = () => {
   const executeGeneration = async (activeSelections: UserSelections) => {
     if (!selectedImage) return;
 
-    setGenState({ isLoading: true, error: null, resultImage: null });
+    // Keep the existing resultImage during loading so buttons stay visible
+    setGenState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
       const result = await generateStyledImage(selectedImage, activeSelections);
       setGenState({ isLoading: false, error: null, resultImage: result });
     } catch (err: any) {
-      setGenState({ 
+      setGenState(prev => ({ 
+        ...prev,
         isLoading: false, 
         error: err.message || "Something went wrong. Please try again.", 
-        resultImage: null 
-      });
+      }));
     }
   };
 
@@ -514,6 +522,11 @@ const App: React.FC = () => {
   };
 
   const handleStartOver = () => {
+    // If user is logged in, just reset the tool state (don't go to landing page)
+    // If not logged in, go to landing page
+    if (!user) {
+      setShowLanding(true);
+    }
     setSelectedImage(null);
     setGenState({ isLoading: false, error: null, resultImage: null });
     setSelections({
@@ -605,6 +618,17 @@ const App: React.FC = () => {
     FACIAL_HAIR: FACIAL_HAIR_OPTIONS,
   }), []);
 
+  // Show landing page
+  if (showLanding) {
+    return (
+      <LandingPage 
+        onGetStarted={() => setShowLanding(false)} 
+        onSignIn={(userData) => setUser(userData)}
+        user={user}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
@@ -618,12 +642,26 @@ const App: React.FC = () => {
               GLAMATRON
             </span>
           </button>
-          <button 
-            onClick={() => setShowAuthModal(true)}
-            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
-          >
-            Sign In
-          </button>
+          {user ? (
+            <ProfileDropdown 
+              user={user}
+              onSignOut={() => {
+                setUser(null);
+                handleStartOver();
+              }}
+              onOpenProfile={() => setShowProfileModal(true)}
+            />
+          ) : (
+            <button 
+              onClick={() => {
+                setAuthModalMode('signin');
+                setShowAuthModal(true);
+              }}
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </header>
 
@@ -635,27 +673,55 @@ const App: React.FC = () => {
         disabled={!selectedImage}
       />
 
-      <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 sm:pl-20 py-8 flex-grow">
-        <div className="space-y-8">
+      <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 sm:pl-20 lg:pl-24 py-6 flex-grow">
+        <div className="space-y-6">
             
             {/* Upload/Result Section - Same on all screen sizes */}
             <section>
               {/* Show result with comparison slider when available */}
-              {genState.resultImage && !genState.isLoading ? (
+              {genState.resultImage ? (
                 <div className="space-y-4">
-                  {/* Comparison Slider */}
-                  <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200 h-[350px] sm:h-[400px] md:h-[60vh] md:max-h-[600px]">
+                  {/* Comparison Slider with loading overlay */}
+                  <div className="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 h-[400px] sm:h-[500px] md:h-[65vh] lg:h-[70vh] md:max-h-[750px]">
                     <ComparisonView 
                       originalImage={selectedImage!} 
-                      generatedImage={genState.resultImage} 
+                      generatedImage={genState.resultImage}
+                      onClear={() => {
+                        setSelectedImage(null);
+                        setGenState(prev => ({ ...prev, resultImage: null }));
+                        setSelections({
+                          [StyleCategory.HAIR]: null,
+                          [StyleCategory.HAIR_LENGTH]: null,
+                          [StyleCategory.HAIR_COLOR]: null,
+                          [StyleCategory.ACCESSORIES]: [],
+                          [StyleCategory.MAKEUP]: null,
+                          [StyleCategory.EXPRESSION]: null,
+                          [StyleCategory.EYES]: null,
+                          [StyleCategory.LIPS]: null,
+                          [StyleCategory.FACIAL_HAIR]: null,
+                        });
+                      }}
                     />
+                    {/* Loading overlay when regenerating */}
+                    {genState.isLoading && (
+                      <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-40">
+                        <div className="text-center">
+                          <div className="relative mb-4">
+                            <div className="w-16 h-16 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mx-auto"></div>
+                            <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-900" size={24} />
+                          </div>
+                          <p className="text-slate-600 font-medium animate-pulse">Creating your new look...</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
-                  {/* Action Buttons */}
+                  {/* Action Buttons - disabled during loading */}
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                     <button
                       onClick={() => setGenState(prev => ({ ...prev, resultImage: null }))}
-                      className="flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors"
+                      disabled={genState.isLoading}
+                      className="flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <RotateCcw size={18} />
                       Edit & Regenerate
@@ -663,14 +729,16 @@ const App: React.FC = () => {
                     <div className="flex items-center gap-2 sm:gap-3">
                       <button 
                         onClick={handleShare}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors"
+                        disabled={genState.isLoading}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Share2 size={18} />
                         Share
                       </button>
                       <button 
                         onClick={handleDownload}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-[#0F172A] text-white rounded-xl hover:bg-slate-800 transition-colors font-medium shadow-lg"
+                        disabled={genState.isLoading}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-[#0F172A] text-white rounded-xl hover:bg-slate-800 transition-colors font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Download size={18} />
                         Download
@@ -682,7 +750,7 @@ const App: React.FC = () => {
                 <>
                   {/* Loading state */}
                   {genState.isLoading && selectedImage && (
-                    <div className="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-white h-[350px] sm:h-[400px] md:h-[60vh] md:max-h-[600px] flex items-center justify-center">
+                    <div className="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-white h-[400px] sm:h-[500px] md:h-[65vh] lg:h-[70vh] md:max-h-[750px] flex items-center justify-center">
                       <img 
                         src={selectedImage} 
                         alt="Processing" 
@@ -842,16 +910,22 @@ const App: React.FC = () => {
                   onClick={handleGenerateClick}
                   disabled={genState.isLoading || selectionCount === 0}
                   className={`
-                    flex-1 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-xl shadow-rose-500/20 
-                    flex items-center justify-center gap-2 sm:gap-3 transition-colors
+                    group relative flex-1 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg
+                    flex items-center justify-center gap-2 sm:gap-3 transition-all duration-300 overflow-hidden
                     ${genState.isLoading || selectionCount === 0
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-rose-600 to-violet-600 text-white hover:shadow-rose-500/40'
+                      : 'bg-[#0F172A] text-white hover:shadow-2xl hover:shadow-slate-900/30 hover:scale-[1.02]'
                     }
                   `}
                 >
-                  {genState.isLoading ? 'Processing...' : 'Generate New Look'}
-                  {!genState.isLoading && <Sparkles size={18} className="sm:w-5 sm:h-5" />}
+                  {/* Subtle shimmer effect */}
+                  {!genState.isLoading && selectionCount > 0 && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
+                  )}
+                  <span className="relative z-10 flex items-center gap-2 sm:gap-3">
+                    {genState.isLoading ? 'Processing...' : 'Generate New Look'}
+                    {!genState.isLoading && <Sparkles size={18} className="sm:w-5 sm:h-5 group-hover:animate-pulse" />}
+                  </span>
                 </button>
               </div>
             )}
@@ -896,7 +970,19 @@ const App: React.FC = () => {
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
+        onSignIn={(userData) => setUser(userData)}
+        defaultMode={authModalMode}
       />
+
+      {/* Profile Modal */}
+      {user && (
+        <ProfileModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          user={user}
+          onUpdateUser={(updatedUser) => setUser(updatedUser)}
+        />
+      )}
     </div>
   );
 };

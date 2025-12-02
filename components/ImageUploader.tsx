@@ -7,8 +7,8 @@ interface ImageUploaderProps {
   onClear: () => void;
 }
 
-// Fixed height for consistent container sizing
-const CONTAINER_HEIGHT = 'h-[350px] sm:h-[400px] md:h-[60vh] md:max-h-[600px]';
+// Fixed height for consistent container sizing - taller for professional look
+const CONTAINER_HEIGHT = 'h-[400px] sm:h-[500px] md:h-[65vh] lg:h-[70vh] md:max-h-[750px]';
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selectedImage, onClear }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);

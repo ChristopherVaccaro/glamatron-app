@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronsLeftRight } from 'lucide-react';
+import { ChevronsLeftRight, X } from 'lucide-react';
 
 interface ComparisonViewProps {
   originalImage: string;
   generatedImage: string;
+  onClear?: () => void;
 }
 
-const ComparisonView: React.FC<ComparisonViewProps> = ({ originalImage, generatedImage }) => {
+const ComparisonView: React.FC<ComparisonViewProps> = ({ originalImage, generatedImage, onClear }) => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -83,6 +84,20 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ originalImage, generate
           <ChevronsLeftRight size={18} />
         </div>
       </div>
+
+      {/* X button to upload new image */}
+      {onClear && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClear();
+          }}
+          className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-colors z-30 cursor-pointer"
+          title="Upload new image"
+        >
+          <X size={20} />
+        </button>
+      )}
 
       {/* Labels */}
       <div className="absolute bottom-4 left-4 bg-black/60 text-white px-2 py-1 rounded text-xs pointer-events-none backdrop-blur-sm z-20">

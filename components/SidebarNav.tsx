@@ -173,9 +173,10 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
   return (
     <>
       {/* Sidebar Icons - Clean strip on mobile, buttons on desktop */}
+      {/* On xl+ screens, align with max-w-6xl container start instead of viewport edge */}
       <div 
         ref={sidebarRef}
-        className="fixed left-0 top-20 z-40 flex flex-col gap-0 sm:gap-1 bg-white border border-slate-200 border-l-0 rounded-r-2xl shadow-lg py-2 sm:py-3 px-1 sm:px-2"
+        className="fixed left-0 xl:left-[max(0px,calc((100vw-72rem)/2))] top-20 z-40 flex flex-col gap-0 sm:gap-1 bg-white border border-slate-200 xl:border-l xl:rounded-l-2xl rounded-r-2xl shadow-lg py-2 sm:py-3 px-1 sm:px-2"
       >
         {CATEGORY_CONFIG.map((config) => {
           const Icon = config.icon;
@@ -229,7 +230,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
       <div 
         ref={panelRef}
         className={`
-          fixed left-[48px] sm:left-[60px] top-20 bottom-4 z-30 w-[calc(100vw-64px)] sm:w-80
+          fixed left-[48px] sm:left-[60px] xl:left-[calc(max(48px,calc((100vw-72rem)/2+60px)))] top-20 bottom-4 z-30 w-[calc(100vw-64px)] sm:w-80
           bg-white border border-slate-200 rounded-2xl shadow-xl
           transition-all duration-300 ease-out overflow-hidden
           ${activeCategory ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}
@@ -276,7 +277,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
       {/* Backdrop when panel is open - works on all screen sizes */}
       {activeCategory && (
         <div 
-          className="fixed inset-0 top-16 bg-black/10 z-20"
+          className="fixed inset-0 top-16 backdrop-blur-sm bg-white/30 z-20"
           onClick={() => setActiveCategory(null)}
         />
       )}
