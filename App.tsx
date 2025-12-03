@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User, Coins, Lock } from 'lucide-react';
+import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User, Coins, Lock, Heart } from 'lucide-react';
 import { 
   StyleCategory, 
   UserSelections, 
@@ -256,7 +256,10 @@ const App: React.FC = () => {
   const { user: contextUser, features, canGenerate, deductCoin, signOut } = useUser();
   
   // Gallery context for saving images
-  const { addItem: addToGallery } = useGallery();
+  const { addItem: addToGallery, items: galleryItems, toggleFavorite, getUserItems } = useGallery();
+  
+  // Track the current gallery item ID for the generated result
+  const [currentGalleryItemId, setCurrentGalleryItemId] = useState<string | null>(null);
   
   // Check if user has already unlocked the site this session
   const [isUnlocked, setIsUnlocked] = useState(() => {
@@ -350,12 +353,15 @@ const App: React.FC = () => {
       
       // Save to gallery if user is signed in
       if (user?.id) {
-        addToGallery({
+        const newItem = addToGallery({
           userId: user.id,
           originalImage: selectedImage,
           resultImage: result,
           selections: activeSelections,
         });
+        setCurrentGalleryItemId(newItem.id);
+      } else {
+        setCurrentGalleryItemId(null);
       }
       
       setGenState({ isLoading: false, error: null, resultImage: result });
@@ -595,6 +601,7 @@ const App: React.FC = () => {
     }
     setSelectedImage(null);
     setGenState({ isLoading: false, error: null, resultImage: null });
+    setCurrentGalleryItemId(null);
     setSelections({
       [StyleCategory.HAIR]: null,
       [StyleCategory.HAIR_LENGTH]: null,
@@ -691,6 +698,19 @@ const App: React.FC = () => {
     getAvailablePresets(QUICK_PRESETS, hasFullAccess),
   [hasFullAccess]);
 
+  // Check if current gallery item is favorited
+  const currentItemIsFavorite = useMemo(() => {
+    if (!currentGalleryItemId) return false;
+    const item = galleryItems.find(i => i.id === currentGalleryItemId);
+    return item?.isFavorite ?? false;
+  }, [currentGalleryItemId, galleryItems]);
+
+  const handleToggleFavorite = () => {
+    if (currentGalleryItemId) {
+      toggleFavorite(currentGalleryItemId);
+    }
+  };
+
   // Show landing page
   // Show password gate if not unlocked
   if (!isUnlocked) {
@@ -779,6 +799,7 @@ const App: React.FC = () => {
                       onClear={() => {
                         setSelectedImage(null);
                         setGenState(prev => ({ ...prev, resultImage: null }));
+                        setCurrentGalleryItemId(null);
                         setSelections({
                           [StyleCategory.HAIR]: null,
                           [StyleCategory.HAIR_LENGTH]: null,
@@ -817,6 +838,21 @@ const App: React.FC = () => {
                       Edit & Regenerate
                     </button>
                     <div className="flex items-center gap-2 sm:gap-3">
+                      {/* Favorite Button - only show when user is signed in */}
+                      {user && currentGalleryItemId && (
+                        <button 
+                          onClick={handleToggleFavorite}
+                          disabled={genState.isLoading}
+                          className={`p-3 rounded-xl border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                            currentItemIsFavorite 
+                              ? 'bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100' 
+                              : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-rose-400 hover:border-rose-200'
+                          }`}
+                          title={currentItemIsFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                        >
+                          <Heart size={18} className={currentItemIsFavorite ? 'fill-current' : ''} />
+                        </button>
+                      )}
                       <button 
                         onClick={handleShare}
                         disabled={genState.isLoading}
@@ -863,10 +899,12 @@ const App: React.FC = () => {
                         setSelectedImage(img);
                         setOriginalFilename(filename);
                         setGenState(prev => ({ ...prev, resultImage: null }));
+                        setCurrentGalleryItemId(null);
                       }}
                       onClear={() => {
                         setSelectedImage(null);
                         setGenState(prev => ({ ...prev, resultImage: null }));
+                        setCurrentGalleryItemId(null);
                         setSelections({
                           [StyleCategory.HAIR]: null,
                           [StyleCategory.HAIR_LENGTH]: null,

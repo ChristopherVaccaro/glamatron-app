@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
-import { X, Trash2, Heart, Download, Calendar, ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { X, Trash2, Heart, Download, Calendar, ChevronLeft, ChevronRight, ImageIcon, Filter, ArrowUpDown, Clock } from 'lucide-react';
 import { useGallery } from '../contexts/GalleryContext';
 import { GalleryItem } from '../types';
+
+// Time period filter options
+type TimePeriod = 'all' | 'today' | 'week' | 'month';
+type SortOption = 'newest' | 'oldest' | 'favorites';
 
 interface GalleryModalProps {
   isOpen: boolean;
@@ -11,10 +15,70 @@ interface GalleryModalProps {
 
 const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) => {
   const { getUserItems, removeItem, toggleFavorite } = useGallery();
-  const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
   
-  const items = getUserItems(userId);
+  const allItems = getUserItems(userId);
+  
+  // Derive selectedItem from the current items to ensure it reflects latest state
+  const selectedItem = useMemo(() => {
+    if (!selectedItemId) return null;
+    return allItems.find(item => item.id === selectedItemId) || null;
+  }, [selectedItemId, allItems]);
+
+  // Filter and sort items
+  const items = useMemo(() => {
+    let filtered = [...allItems];
+    
+    // Apply time period filter
+    if (timePeriod !== 'all') {
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      filtered = filtered.filter(item => {
+        const itemDate = new Date(item.createdAt);
+        switch (timePeriod) {
+          case 'today':
+            return itemDate >= startOfToday;
+          case 'week':
+            const weekAgo = new Date(startOfToday);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return itemDate >= weekAgo;
+          case 'month':
+            const monthAgo = new Date(startOfToday);
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            return itemDate >= monthAgo;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'oldest':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'favorites':
+          // Favorites first, then by newest
+          if (a.isFavorite && !b.isFavorite) return -1;
+          if (!a.isFavorite && b.isFavorite) return 1;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'newest':
+        default:
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+    
+    return filtered;
+  }, [allItems, timePeriod, sortBy]);
+
+  // Count favorites for display
+  const favoritesCount = useMemo(() => 
+    allItems.filter(item => item.isFavorite).length, 
+  [allItems]);
 
   if (!isOpen) return null;
 
@@ -31,7 +95,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
     removeItem(id);
     setShowDeleteConfirm(null);
     if (selectedItem?.id === id) {
-      setSelectedItem(null);
+      setSelectedItemId(null);
     }
   };
 
@@ -52,7 +116,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
     const newIndex = direction === 'prev' 
       ? (currentIndex - 1 + items.length) % items.length
       : (currentIndex + 1) % items.length;
-    setSelectedItem(items[newIndex]);
+    setSelectedItemId(items[newIndex].id);
   };
 
   return (
@@ -63,7 +127,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
         onClick={(e) => {
           e.stopPropagation();
           if (selectedItem) {
-            setSelectedItem(null);
+            setSelectedItemId(null);
           } else {
             onClose();
           }
@@ -80,7 +144,14 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900">History</h2>
-              <p className="text-sm text-slate-500">{items.length} {items.length === 1 ? 'image' : 'images'}</p>
+              <p className="text-sm text-slate-500">
+                {items.length} {items.length === 1 ? 'image' : 'images'}
+                {favoritesCount > 0 && (
+                  <span className="ml-2 text-rose-500">
+                    • {favoritesCount} <Heart size={10} className="inline fill-current" />
+                  </span>
+                )}
+              </p>
             </div>
           </div>
           <button
@@ -91,8 +162,55 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
           </button>
         </div>
 
+        {/* Filters Bar */}
+        {allItems.length > 0 && (
+          <div className="px-6 py-3 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center gap-3">
+            {/* Time Period Filter */}
+            <div className="flex items-center gap-2">
+              <Clock size={14} className="text-slate-400" />
+              <select
+                value={timePeriod}
+                onChange={(e) => setTimePeriod(e.target.value as TimePeriod)}
+                className="text-sm bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-300"
+              >
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+              </select>
+            </div>
+            
+            {/* Sort Options */}
+            <div className="flex items-center gap-2">
+              <ArrowUpDown size={14} className="text-slate-400" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="text-sm bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-300"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="favorites">Favorites First</option>
+              </select>
+            </div>
+            
+            {/* Quick filter: Favorites only */}
+            <button
+              onClick={() => setSortBy(sortBy === 'favorites' ? 'newest' : 'favorites')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                sortBy === 'favorites'
+                  ? 'bg-rose-100 text-rose-600 border border-rose-200'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:border-rose-200 hover:text-rose-500'
+              }`}
+            >
+              <Heart size={14} className={sortBy === 'favorites' ? 'fill-current' : ''} />
+              Favorites
+            </button>
+          </div>
+        )}
+
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(85vh-80px)]">
+        <div className="p-6 overflow-y-auto max-h-[calc(85vh-140px)]">
           {items.length === 0 ? (
             // Empty state
             <div className="text-center py-16">
@@ -111,7 +229,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
                 <div
                   key={item.id}
                   className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 cursor-pointer hover:ring-2 hover:ring-rose-500 transition-all"
-                  onClick={() => setSelectedItem(item)}
+                  onClick={() => setSelectedItemId(item.id)}
                 >
                   <img
                     src={item.resultImage}
@@ -146,7 +264,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
           <div 
             className="absolute inset-0 bg-black/70"
-            onClick={() => setSelectedItem(null)}
+            onClick={() => setSelectedItemId(null)}
           />
           
           <div className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
@@ -170,7 +288,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
             
             {/* Close button */}
             <button
-              onClick={() => setSelectedItem(null)}
+              onClick={() => setSelectedItemId(null)}
               className="absolute top-4 right-4 z-10 p-2 bg-white/90 rounded-full shadow-lg hover:bg-white transition-colors"
             >
               <X size={20} className="text-slate-700" />
