@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { UserProvider } from './contexts/UserContext';
 import { GalleryProvider } from './contexts/GalleryContext';
+import { initGA } from './utils/analytics';
+
+// Initialize Google Analytics
+initGA();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

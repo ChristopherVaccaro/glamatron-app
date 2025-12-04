@@ -42,6 +42,7 @@ import DevToolbar from './components/DevToolbar';
 import GalleryModal from './components/GalleryModal';
 import { useGallery } from './contexts/GalleryContext';
 import { generateStyledImage } from './services/geminiService';
+import { Analytics } from './utils/analytics';
 
 // Quick preset definitions
 export const QUICK_PRESETS = [
@@ -365,8 +366,10 @@ const App: React.FC = () => {
       }
       
       setGenState({ isLoading: false, error: null, resultImage: result });
+      Analytics.generationSuccess('custom');
     } catch (err: any) {
       // Don't deduct coin on failed generation
+      Analytics.generationError(err.message || 'Unknown error');
       setGenState(prev => ({ 
         ...prev,
         isLoading: false, 
@@ -378,9 +381,11 @@ const App: React.FC = () => {
   const handleGenerateClick = () => {
     // Check coins before starting generation
     if (!canGenerate) {
+      Analytics.coinPurchaseModalOpen();
       setShowPurchaseModal(true);
       return;
     }
+    Analytics.styleGeneration('manual');
     executeGeneration(selections);
   };
 
@@ -451,11 +456,13 @@ const App: React.FC = () => {
     setSelections(newSelections);
 
     // Trigger generation immediately with the new selections
+    Analytics.styleGeneration('randomize');
     executeGeneration(newSelections);
   };
 
   const handleDownload = async () => {
     if (!genState.resultImage) return;
+    Analytics.imageDownloaded();
     
     try {
       // Re-encode through canvas to create proper JPEG with headers
