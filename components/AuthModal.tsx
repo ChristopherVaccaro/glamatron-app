@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, User, ArrowRight, Coins, FlaskConical, Shield } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { SPECIAL_EMAILS, UserProfile } from '../types';
+import { Analytics } from '../utils/analytics';
 
 // Legacy export for backwards compatibility
 export interface UserData {
@@ -49,6 +50,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
     // Sign in through UserContext
     const userProfile = signIn(userEmail, userName);
     
+    // Track signup/login
+    if (mode === 'signup') {
+      Analytics.userSignup('email');
+    } else {
+      Analytics.userLogin('email');
+    }
+    
     // Also call legacy onSignIn for backwards compatibility
     const userData: UserData = {
       id: userProfile.id,
@@ -79,6 +87,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
     const userName = provider === 'google' ? 'Google User' : 'Apple User';
     
     const userProfile = signIn(userEmail, userName);
+    Analytics.userLogin(provider);
     
     const userData: UserData = {
       id: userProfile.id,

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Upload, X, Replace } from 'lucide-react';
+import { Analytics } from '../utils/analytics';
 
 interface ImageUploaderProps {
   onImageSelected: (base64: string, filename: string) => void;
@@ -16,6 +17,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
 
   const handleFile = (file: File) => {
     if (file && file.type.startsWith('image/')) {
+      Analytics.photoUpload();
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
