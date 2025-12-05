@@ -303,6 +303,12 @@ const App: React.FC = () => {
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
+  
+  // Track if sidebar panel is open (for hiding image X button on mobile)
+  const [isSidebarPanelOpen, setIsSidebarPanelOpen] = useState(false);
+  
+  // Surprise Me mode - when active, disables style options and enables generate button
+  const [surpriseMeActive, setSurpriseMeActive] = useState(false);
 
   const handleSelection = useCallback((category: StyleCategory, value: string) => {
     setSelections(prev => {
@@ -385,19 +391,36 @@ const App: React.FC = () => {
       setShowPurchaseModal(true);
       return;
     }
-    Analytics.styleGeneration('manual');
-    executeGeneration(selections);
+    
+    if (surpriseMeActive) {
+      // Generate random selections and execute
+      const randomSelections = generateRandomSelections();
+      setSelections(randomSelections);
+      Analytics.styleGeneration('randomize');
+      executeGeneration(randomSelections);
+      // Turn off surprise me after generation
+      setSurpriseMeActive(false);
+    } else {
+      Analytics.styleGeneration('manual');
+      executeGeneration(selections);
+    }
   };
 
-  const handleRandomize = () => {
+  // Toggle Surprise Me mode
+  const handleSurpriseMeToggle = () => {
     if (!selectedImage) return;
 
-    // Check coins before randomizing (since it triggers generation)
-    if (!canGenerate) {
-      setShowPurchaseModal(true);
-      return;
+    if (surpriseMeActive) {
+      // Turning off - just deactivate, keep any selections
+      setSurpriseMeActive(false);
+    } else {
+      // Turning on - activate surprise me mode (will generate random on Generate click)
+      setSurpriseMeActive(true);
     }
+  };
 
+  // Generate random selections (used when Generate is clicked with Surprise Me active)
+  const generateRandomSelections = (): UserSelections => {
     // Helper to get random item from array
     const getRandom = <T extends { value: string }>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)].value;
     
@@ -440,7 +463,7 @@ const App: React.FC = () => {
         randomAccessories.push(allAccessories[index].value);
     }
 
-    const newSelections: UserSelections = {
+    return {
       [StyleCategory.HAIR]: maybeGet(filteredHair, 0.7), 
       [StyleCategory.HAIR_LENGTH]: maybeGet(filteredHairLength, 0.4),
       [StyleCategory.HAIR_COLOR]: maybeGet(filteredHairColor, 0.5),
@@ -451,13 +474,6 @@ const App: React.FC = () => {
       [StyleCategory.ACCESSORIES]: randomAccessories,
       [StyleCategory.FACIAL_HAIR]: maybeGet(filteredFacialHair, 0.25),
     };
-
-    // Update UI with new selections
-    setSelections(newSelections);
-
-    // Trigger generation immediately with the new selections
-    Analytics.styleGeneration('randomize');
-    executeGeneration(newSelections);
   };
 
   const handleDownload = async () => {
@@ -781,13 +797,14 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Desktop Sidebar Navigation - Always visible, disabled when no image */}
+      {/* Desktop Sidebar Navigation - Always visible, disabled when no image or surprise me is active */}
       <SidebarNav 
         selections={selections}
         onSelect={handleSelection}
         optionsMap={optionsMap}
-        disabled={!selectedImage}
+        disabled={!selectedImage || surpriseMeActive}
         onPremiumClick={() => setShowPurchaseModal(true)}
+        onPanelOpenChange={setIsSidebarPanelOpen}
       />
 
       <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 sm:pl-20 lg:pl-24 py-6 flex-grow">
@@ -803,6 +820,7 @@ const App: React.FC = () => {
                     <ComparisonView 
                       originalImage={selectedImage!} 
                       generatedImage={genState.resultImage}
+                      hideCloseButton={isSidebarPanelOpen}
                       onClear={() => {
                         setSelectedImage(null);
                         setGenState(prev => ({ ...prev, resultImage: null }));
@@ -932,8 +950,8 @@ const App: React.FC = () => {
             {/* Style Selectors */}
             {selectedImage && (
               <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Quick Presets */}
-                <div className="mb-4">
+                {/* Quick Presets - disabled when surprise me is active */}
+                <div className={`mb-4 ${surpriseMeActive ? 'opacity-50 pointer-events-none' : ''}`}>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                       <Zap size={12} />
@@ -943,20 +961,22 @@ const App: React.FC = () => {
                       <button
                         onClick={() => {
                           const container = document.getElementById('quick-looks-scroll');
-                          if (container) container.scrollBy({ left: -200, behavior: 'smooth' });
+                          if (container) container.scrollBy({ left: -400, behavior: 'smooth' });
                         }}
                         className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
                         aria-label="Scroll left"
+                        disabled={surpriseMeActive}
                       >
                         <ChevronLeft size={18} />
                       </button>
                       <button
                         onClick={() => {
                           const container = document.getElementById('quick-looks-scroll');
-                          if (container) container.scrollBy({ left: 200, behavior: 'smooth' });
+                          if (container) container.scrollBy({ left: 400, behavior: 'smooth' });
                         }}
                         className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
                         aria-label="Scroll right"
+                        disabled={surpriseMeActive}
                       >
                         <ChevronRight size={18} />
                       </button>
@@ -973,13 +993,14 @@ const App: React.FC = () => {
                             handlePresetSelect(preset);
                           }
                         }}
-                        disabled={genState.isLoading}
+                        disabled={genState.isLoading || surpriseMeActive}
                         className={`
                           flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 shadow-sm relative
                           ${preset.isLocked 
                             ? 'bg-slate-50 border border-slate-200 text-slate-400 hover:border-amber-300 hover:bg-amber-50' 
                             : 'bg-white border border-slate-200 text-slate-700 hover:border-rose-300 hover:bg-rose-50'
                           }
+                          ${surpriseMeActive ? 'cursor-not-allowed' : ''}
                         `}
                       >
                         <span>{preset.emoji}</span>
@@ -995,30 +1016,42 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Selection Summary Chips - Always visible, content animates in */}
-                <div className="mb-4 p-3 bg-white rounded-xl border border-slate-200 sticky top-16 sm:top-20 z-40 shadow-md">
+                <div className={`mb-4 p-3 rounded-xl border sticky top-16 sm:top-20 z-40 shadow-md transition-all ${
+                  surpriseMeActive 
+                    ? 'bg-violet-50 border-violet-200' 
+                    : 'bg-white border-slate-200'
+                }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Look</span>
-                    {activeSelections.length > 0 && (
+                    <span className={`text-xs font-semibold uppercase tracking-wider ${surpriseMeActive ? 'text-violet-600' : 'text-slate-500'}`}>
+                      {surpriseMeActive ? 'Surprise Me Active' : 'Your Look'}
+                    </span>
+                    {activeSelections.length > 0 && !surpriseMeActive && (
                       <button onClick={handleReset} className="text-xs text-slate-500 hover:text-rose-500 flex items-center gap-1 transition-opacity">
                         <RotateCcw size={10} />
                         Clear All
                       </button>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-1.5 min-h-[28px]">
-                    {activeSelections.length > 0 ? (
-                      activeSelections.map((item, idx) => (
-                        <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-[#0F172A] text-white text-xs rounded-full animate-in fade-in zoom-in-95 duration-200">
-                          {item.label}
-                          <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-700 rounded-full p-0.5">
-                            <X size={10} className="text-white" />
-                          </button>
-                        </span>
-                      ))
+                  <div className="min-h-[28px]">
+                    {surpriseMeActive ? (
+                      <span className="text-xs text-violet-600">Generate a random look</span>
                     ) : (
-                      <span className="text-xs text-slate-400 italic">
-                        Click sidebar icons to select styles
-                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {activeSelections.length > 0 ? (
+                          activeSelections.map((item, idx) => (
+                            <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-[#0F172A] text-white text-xs rounded-full animate-in fade-in zoom-in-95 duration-200">
+                              {item.label}
+                              <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-700 rounded-full p-0.5">
+                                <X size={10} className="text-white" />
+                              </button>
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">
+                            Click sidebar icons to select styles
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1044,34 +1077,40 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Surprise Me Button with Tooltip */}
+                {/* Surprise Me Button with Tooltip - Toggle mode */}
                 <div className="relative group">
                   <button
-                    onClick={handleRandomize}
+                    onClick={handleSurpriseMeToggle}
                     disabled={genState.isLoading}
-                    className="p-2.5 sm:p-3 rounded-xl bg-violet-100 text-violet-700 hover:bg-violet-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className={`
+                      p-2.5 sm:p-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                      ${surpriseMeActive 
+                        ? 'bg-violet-600 text-white ring-2 ring-violet-400 ring-offset-2 animate-pulse' 
+                        : 'bg-violet-100 text-violet-700 hover:bg-violet-200'
+                      }
+                    `}
                   >
-                    <Dices size={18} className="sm:w-5 sm:h-5" />
+                    <Dices size={18} className={`sm:w-5 sm:h-5 ${surpriseMeActive ? 'animate-bounce' : ''}`} />
                   </button>
                   <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0F172A] text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    Surprise me
+                    {surpriseMeActive ? 'Click to disable random mode' : 'Surprise me'}
                     <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#0F172A]" />
                   </div>
                 </div>
                 <button
                   onClick={handleGenerateClick}
-                  disabled={genState.isLoading || selectionCount === 0}
+                  disabled={genState.isLoading || (!surpriseMeActive && selectionCount === 0)}
                   className={`
                     group relative flex-1 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg
                     flex items-center justify-center gap-2 sm:gap-3 transition-all duration-300 overflow-hidden
-                    ${genState.isLoading || selectionCount === 0
+                    ${genState.isLoading || (!surpriseMeActive && selectionCount === 0)
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
                       : 'bg-[#0F172A] text-white hover:shadow-2xl hover:shadow-slate-900/30 hover:scale-[1.02]'
                     }
                   `}
                 >
                   {/* Subtle shimmer effect */}
-                  {!genState.isLoading && selectionCount > 0 && (
+                  {!genState.isLoading && (surpriseMeActive || selectionCount > 0) && (
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
                   )}
                   <span className="relative z-10 flex items-center gap-2 sm:gap-3">

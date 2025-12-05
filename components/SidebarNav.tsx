@@ -116,9 +116,10 @@ interface SidebarNavProps {
   };
   disabled?: boolean;
   onPremiumClick?: () => void;
+  onPanelOpenChange?: (isOpen: boolean) => void;
 }
 
-const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMap, disabled = false, onPremiumClick }) => {
+const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMap, disabled = false, onPremiumClick, onPanelOpenChange }) => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -131,6 +132,11 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
       setActiveCategory(null);
     }
   }, [disabled]);
+
+  // Notify parent when panel open state changes
+  useEffect(() => {
+    onPanelOpenChange?.(activeCategory !== null);
+  }, [activeCategory, onPanelOpenChange]);
 
   // Reset scroll position when category changes
   useEffect(() => {
