@@ -1,7 +1,7 @@
 import React from 'react';
 
 const TermsOfServiceContent: React.FC = () => {
-  const lastUpdated = "November 27, 2025";
+  const lastUpdated = "December 4, 2025";
 
   return (
     <div className="space-y-6 text-slate-700">
@@ -17,10 +17,15 @@ const TermsOfServiceContent: React.FC = () => {
 
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">2. Description of Service</h3>
-        <p>
+        <p className="mb-2">
           Glamatron is an AI-powered image styling tool that allows users to upload photos and 
           apply virtual style transformations including hairstyles, makeup, accessories, and other 
           visual modifications. The Service uses Google's Gemini AI technology to generate styled images.
+        </p>
+        <p>
+          Registered users can save their transformations to a personal gallery, which is stored 
+          securely in our cloud database. Users can access, download, and delete their saved 
+          transformations at any time.
         </p>
       </section>
 
@@ -54,8 +59,9 @@ const TermsOfServiceContent: React.FC = () => {
         <p className="mb-2"><strong>Your Content:</strong></p>
         <ul className="list-disc list-inside space-y-1 ml-2 mb-3">
           <li>You retain ownership of the original images you upload.</li>
-          <li>You own the styled images generated from your uploads and may use them for personal purposes.</li>
-          <li>By uploading an image, you grant us a temporary license to process it through our AI system.</li>
+          <li>You own the styled images generated from your uploads and may use them for personal or commercial purposes.</li>
+          <li>By uploading an image, you grant us a license to process it through our AI system and store it in your personal gallery.</li>
+          <li>Stored images are private to your account and not shared with other users or third parties (except as required for AI processing).</li>
         </ul>
         <p className="mb-2"><strong>Our Content:</strong></p>
         <ul className="list-disc list-inside space-y-1 ml-2">
@@ -133,9 +139,13 @@ const TermsOfServiceContent: React.FC = () => {
 
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">13. Termination</h3>
-        <p>
+        <p className="mb-2">
           We reserve the right to terminate or suspend access to the Service immediately, without prior 
           notice, for any reason, including breach of these Terms.
+        </p>
+        <p>
+          Upon account termination, your stored images and transformations may be deleted. You may request 
+          a copy of your data before termination by contacting us.
         </p>
       </section>
 
@@ -153,7 +163,7 @@ const TermsOfServiceContent: React.FC = () => {
           For questions about these Terms of Service, please contact us at{' '}
           <a 
             href="mailto:legal@cognitav.com" 
-            className="text-rose-600 hover:text-rose-700 underline"
+            className="text-slate-700 hover:text-slate-900 underline"
           >
             legal@cognitav.com
           </a>.

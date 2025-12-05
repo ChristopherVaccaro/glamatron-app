@@ -47,7 +47,7 @@ function getRoleFromEmail(email: string): UserRole {
   const normalizedEmail = email.toLowerCase().trim();
   
   // Admin always works (needed to test/demo production)
-  if (normalizedEmail === SPECIAL_EMAILS.ADMIN) return 'admin';
+  if (normalizedEmail === SPECIAL_EMAILS.ADMIN || normalizedEmail === 'emailchrisvaccaro@gmail.com') return 'admin';
   
   // Test user only in development (simulated purchases shouldn't be public)
   if (isDevelopment && normalizedEmail === SPECIAL_EMAILS.TEST_USER) return 'test';

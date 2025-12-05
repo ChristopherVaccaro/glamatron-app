@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, User, Mail, Camera, Check, Sparkles } from 'lucide-react';
+import { X, User, Mail, Camera, Check } from 'lucide-react';
 import { UserData } from './AuthModal';
+import { useGallery } from '../contexts/GalleryContext';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -13,6 +14,12 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const [saved, setSaved] = useState(false);
+  const { getUserItems } = useGallery();
+  
+  // Get actual stats from gallery
+  const userGalleryItems = getUserItems(user.id);
+  const transformationCount = userGalleryItems.length;
+  const favoritesCount = userGalleryItems.filter(item => item.isFavorite).length;
 
   if (!isOpen) return null;
 
@@ -79,9 +86,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
         <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 px-8 pt-8 pb-16">
           <h2 className="text-2xl font-bold text-white">Your Profile</h2>
           <p className="text-slate-400 mt-1">{getProviderLabel()}</p>
-          
-          {/* Decorative sparkles */}
-          <Sparkles className="absolute top-6 right-16 text-white/20" size={24} />
         </div>
 
         {/* Avatar - overlapping header and content */}
@@ -141,20 +145,28 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
               )}
             </div>
 
-            {/* Stats */}
-            <div className="mt-6 p-4 bg-slate-50 rounded-xl">
-              <h4 className="text-sm font-semibold text-slate-700 mb-3">Your Stats</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-slate-900">0</div>
-                  <div className="text-xs text-slate-500">Transformations</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-slate-900">0</div>
-                  <div className="text-xs text-slate-500">Saved Looks</div>
+            {/* Stats - only show if user has activity */}
+            {transformationCount > 0 ? (
+              <div className="mt-6 p-4 bg-slate-50 rounded-xl">
+                <h4 className="text-sm font-semibold text-slate-700 mb-3">Your Stats</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-slate-900">{transformationCount}</div>
+                    <div className="text-xs text-slate-500">Transformations</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-slate-900">{favoritesCount}</div>
+                    <div className="text-xs text-slate-500">Favorites</div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="mt-6 p-4 bg-gradient-to-br from-rose-50 to-violet-50 rounded-xl text-center">
+                <p className="text-sm text-slate-600">
+                  Create your first transformation to start building your collection!
+                </p>
+              </div>
+            )}
 
             {/* Save button */}
             <button

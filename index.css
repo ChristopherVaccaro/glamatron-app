@@ -81,6 +81,12 @@ button:focus-visible {
 button {
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  cursor: pointer;
+}
+
+/* Hand cursor for all clickable elements */
+a, [role="button"], .cursor-pointer {
+  cursor: pointer;
 }
 
 /* Slide up animation for modal */

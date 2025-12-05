@@ -82,13 +82,25 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
 
   if (!isOpen) return null;
 
-  const handleDownload = (item: GalleryItem) => {
-    const link = document.createElement('a');
-    link.href = item.resultImage;
-    link.download = `glamatron-${item.id}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async (item: GalleryItem) => {
+    try {
+      // Fetch the image and create a blob for proper download
+      const response = await fetch(item.resultImage);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `glamatron-${item.id}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      // Fallback for CORS issues - open in new tab
+      console.error('Download error:', err);
+      window.open(item.resultImage, '_blank');
+    }
   };
 
   const handleDelete = (id: string) => {

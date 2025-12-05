@@ -40,6 +40,7 @@ import PurchaseModal from './components/PurchaseModal';
 import GlamCoinDisplay from './components/GlamCoinDisplay';
 import DevToolbar from './components/DevToolbar';
 import GalleryModal from './components/GalleryModal';
+import Toast from './components/Toast';
 import { useGallery } from './contexts/GalleryContext';
 import { generateStyledImage } from './services/geminiService';
 import { Analytics } from './utils/analytics';
@@ -307,25 +308,45 @@ const App: React.FC = () => {
   // Sync contextUser (from Supabase auth) to local user state
   useEffect(() => {
     if (contextUser && !user) {
-      // User signed in via Supabase OAuth - sync to local state
+      // User signed in via Supabase (Google or Email) - sync to local state
       setUser({
         id: contextUser.id,
         email: contextUser.email,
         name: contextUser.name,
         avatar: contextUser.avatar,
-        provider: 'google',
+        provider: contextUser.avatar ? 'google' : 'email', // If has avatar, likely Google
       });
-      setShowLanding(false); // Take them to the app
+      // Authenticated users bypass password gate and landing, go straight to tool
+      setIsUnlocked(true);
+      setShowLanding(false);
       // Load user's gallery from Supabase
       loadUserGallery(contextUser.id);
-    } else if (!contextUser && user?.provider === 'google') {
-      // User signed out from Supabase - clear local state and go to landing
+    } else if (!contextUser && user && (user.provider === 'google' || user.provider === 'email')) {
+      // User signed out from Supabase - go back to landing page (not password gate)
       setUser(null);
       setShowLanding(true);
+      // Keep isUnlocked true so they stay on landing, not password gate
       setSelectedImage(null);
       setGenState({ isLoading: false, error: null, resultImage: null });
     }
   }, [contextUser, user, loadUserGallery]);
+
+  // Toast notification state
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // Check for email confirmation on mount (Supabase redirects with hash params)
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const type = hashParams.get('type');
+    
+    // If this is an email confirmation redirect
+    if (accessToken && type === 'signup') {
+      setToast({ message: 'Account confirmed! Welcome to Glamatron.', type: 'success' });
+      // Clean up URL
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
   
   // Track if sidebar panel is open (for hiding image X button on mobile)
   const [isSidebarPanelOpen, setIsSidebarPanelOpen] = useState(false);
@@ -789,6 +810,15 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">

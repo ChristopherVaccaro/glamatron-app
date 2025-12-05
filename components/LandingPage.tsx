@@ -49,28 +49,33 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-rose-500/15 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-slate-700/20 rounded-full blur-3xl" />
 
-        {/* Header with Sign In */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-wide text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-              GLAMATRON
-            </h1>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => openAuth('signin')}
-                className="flex items-center gap-2 px-4 py-2 text-white text-sm font-medium hover:text-slate-300 transition-colors"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => openAuth('signup')}
-                className="flex items-center gap-2 px-4 py-2 bg-white text-slate-900 text-sm font-medium rounded-lg hover:bg-slate-100 transition-colors"
-              >
-                Register
-              </button>
+        {/* Header with Sign In - Sticky */}
+        <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-wide text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                GLAMATRON
+              </h1>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => openAuth('signin')}
+                  className="flex items-center gap-2 px-4 py-2 text-white text-sm font-medium hover:text-slate-300 transition-colors"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => openAuth('signup')}
+                  className="flex items-center gap-2 px-4 py-2 bg-white text-slate-900 text-sm font-medium rounded-lg hover:bg-slate-100 transition-colors"
+                >
+                  Register
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </header>
+        
+        {/* Spacer for fixed header */}
+        <div className="h-16" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-32">
           {/* Hero Title */}
@@ -89,7 +94,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
             </h2>
             
             <p className="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto mb-10">
-              Explore endless style possibilities with AI. Try new hairstyles, makeup looks, 
+              Explore endless style possibilities. Try new hairstyles, makeup looks, 
               and accessories—all from a single photo.
             </p>
 

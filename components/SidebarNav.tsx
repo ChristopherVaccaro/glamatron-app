@@ -210,7 +210,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
                 className={`
                   relative w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center sm:rounded-xl transition-all duration-200
                   ${disabled
-                    ? 'text-slate-300 cursor-not-allowed sm:bg-slate-50/80'
+                    ? 'text-slate-300 cursor-not-allowed'
                     : isActive 
                       ? 'bg-[#0F172A] text-white shadow-md rounded-lg' 
                       : 'text-slate-600 hover:text-slate-900 sm:bg-white sm:hover:bg-slate-100'

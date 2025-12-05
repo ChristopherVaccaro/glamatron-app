@@ -108,11 +108,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
       className={`
         relative flex flex-col items-center justify-center text-center p-8
         rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300
-        shadow-lg border-slate-200 bg-slate-50
+        border-slate-200 bg-white
         ${CONTAINER_HEIGHT}
         ${isDragging 
           ? 'border-rose-500 bg-rose-50 scale-[1.02]' 
-          : 'hover:bg-white hover:border-slate-400'
+          : 'hover:bg-slate-50 hover:border-slate-400'
         }
       `}
     >

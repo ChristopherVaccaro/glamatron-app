@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, User, ArrowRight, Coins, FlaskConical, Shield, Loader2 } from 'lucide-react';
+import { X, Mail, Lock, User, ArrowRight, Coins, FlaskConical, Shield, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { SPECIAL_EMAILS, UserProfile } from '../types';
 import { Analytics } from '../utils/analytics';
@@ -25,7 +25,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
   const { signIn } = useUser();
   const [mode, setMode] = useState<'signin' | 'signup'>(defaultMode);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Update mode when defaultMode prop changes
   useEffect(() => {
@@ -35,7 +37,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
   }, [isOpen, defaultMode]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Quick access buttons for dev emails
   const quickAccessEmails = [
@@ -45,30 +49,121 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const userEmail = email || 'user@example.com';
-    const userName = name || email.split('@')[0] || 'User';
-    
-    // Sign in through UserContext
-    const userProfile = signIn(userEmail, userName);
-    
-    // Track signup/login
-    if (mode === 'signup') {
-      Analytics.userSignup('email');
-    } else {
-      Analytics.userLogin('email');
+    setAuthError(null);
+    setSuccessMessage(null);
+
+    // Validate inputs
+    if (!email || !password) {
+      setAuthError('Please enter both email and password.');
+      return;
     }
-    
-    // Also call legacy onSignIn for backwards compatibility
-    const userData: UserData = {
-      id: userProfile.id,
-      email: userProfile.email,
-      name: userProfile.name,
-      provider: 'email',
-    };
-    onSignIn?.(userData);
-    onClose();
+
+    if (mode === 'signup' && !name) {
+      setAuthError('Please enter your name.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setAuthError('Password must be at least 6 characters.');
+      return;
+    }
+
+    if (mode === 'signup' && password !== confirmPassword) {
+      setAuthError('Passwords do not match.');
+      return;
+    }
+
+    // Use Supabase if configured
+    if (supabase && isSupabaseConfigured) {
+      setIsEmailLoading(true);
+
+      try {
+        if (mode === 'signup') {
+          // Sign up with Supabase
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                name: name,
+                full_name: name,
+              },
+              emailRedirectTo: `${window.location.origin}`,
+            },
+          });
+
+          if (error) {
+            setAuthError(error.message);
+            setIsEmailLoading(false);
+            return;
+          }
+
+          // Check if email confirmation is required
+          if (data.user && !data.session) {
+            // Email confirmation required
+            setSuccessMessage('Check your email for a confirmation link to complete your registration.');
+            setIsEmailLoading(false);
+            Analytics.userSignup('email');
+            return;
+          }
+
+          // User is signed in immediately (email confirmation disabled)
+          if (data.session) {
+            Analytics.userSignup('email');
+            onClose();
+          }
+        } else {
+          // Sign in with Supabase
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (error) {
+            if (error.message.includes('Invalid login credentials')) {
+              setAuthError('Invalid email or password. Please try again.');
+            } else if (error.message.includes('Email not confirmed')) {
+              setAuthError('Please confirm your email address before signing in.');
+            } else {
+              setAuthError(error.message);
+            }
+            setIsEmailLoading(false);
+            return;
+          }
+
+          if (data.session) {
+            Analytics.userLogin('email');
+            onClose();
+          }
+        }
+      } catch (err: any) {
+        console.error('Email auth error:', err);
+        setAuthError('An unexpected error occurred. Please try again.');
+      }
+
+      setIsEmailLoading(false);
+    } else {
+      // Fallback for dev mode without Supabase
+      const userName = name || email.split('@')[0] || 'User';
+      const userProfile = signIn(email, userName);
+      
+      if (mode === 'signup') {
+        Analytics.userSignup('email');
+      } else {
+        Analytics.userLogin('email');
+      }
+      
+      const userData: UserData = {
+        id: userProfile.id,
+        email: userProfile.email,
+        name: userProfile.name,
+        provider: 'email',
+      };
+      onSignIn?.(userData);
+      onClose();
+    }
   };
 
   const handleQuickAccess = (quickEmail: string) => {
@@ -135,21 +230,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
           <X size={20} />
         </button>
 
-        {/* Header */}
+        {/* Header - hide promotional text when showing confirmation */}
         <div className="px-8 pt-8 pb-6 text-center">
           <h2 className="text-2xl font-bold text-slate-900">
-            {mode === 'signin' ? 'Welcome back' : 'Create account'}
+            {successMessage ? 'Almost there!' : (mode === 'signin' ? 'Welcome back' : 'Create account')}
           </h2>
-          <p className="text-slate-500 mt-1">
-            {mode === 'signin' 
-              ? 'Sign in and glam up!' 
-              : 'Join and get 5 free GlamCoins!'}
-          </p>
-          {mode === 'signup' && (
-            <div className="flex items-center justify-center gap-1 mt-2 text-amber-600">
-              <Coins size={16} />
-              <span className="text-sm font-medium">Join and get 5 free GlamCoins to start</span>
-            </div>
+          {!successMessage && (
+            <>
+              {mode === 'signin' ? (
+                <p className="text-slate-500 mt-1">Sign in and glam up!</p>
+              ) : (
+                <div className="flex items-center justify-center gap-1 mt-2 text-amber-600">
+                  <Coins size={16} />
+                  <span className="text-sm font-medium">Join and get 5 free GlamCoins to start</span>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -162,6 +258,26 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
             </div>
           )}
 
+          {/* Success Message - Full Screen Version */}
+          {successMessage ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                <Mail className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Check Your Email</h3>
+              <p className="text-slate-600 mb-6">
+                We've sent a confirmation link to <span className="font-medium">{email}</span>. 
+                Click the link to activate your account.
+              </p>
+              <button
+                onClick={onClose}
+                className="px-6 py-2 bg-slate-900 text-white font-medium rounded-xl hover:bg-slate-800 transition-colors"
+              >
+                Got it
+              </button>
+            </div>
+          ) : (
+          <>
           {/* Google Sign-in Button */}
           <div className="mb-6">
             <button
@@ -203,7 +319,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
                   placeholder="Full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
                 />
               </div>
             )}
@@ -215,24 +331,44 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
               />
             </div>
 
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-10 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
+
+            {mode === 'signup' && (
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Confirm password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+                />
+              </div>
+            )}
 
             {mode === 'signin' && (
               <div className="text-right">
-                <button type="button" className="text-sm text-rose-600 hover:text-rose-700 font-medium">
+                <button type="button" className="text-sm text-slate-600 hover:text-slate-900 font-medium">
                   Forgot password?
                 </button>
               </div>
@@ -240,10 +376,20 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
 
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-rose-600 to-violet-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-rose-500/25 transition-all flex items-center justify-center gap-2"
+              disabled={isEmailLoading}
+              className="w-full py-3 bg-[#0F172A] text-white font-semibold rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {mode === 'signin' ? 'Sign In' : 'Create Account'}
-              <ArrowRight size={18} />
+              {isEmailLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  {mode === 'signin' ? 'Signing in...' : 'Creating account...'}
+                </>
+              ) : (
+                <>
+                  {mode === 'signin' ? 'Sign In' : 'Create Account'}
+                  <ArrowRight size={18} />
+                </>
+              )}
             </button>
           </form>
 
@@ -251,8 +397,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
           <p className="text-center text-slate-500 mt-6">
             {mode === 'signin' ? "Don't have an account? " : "Already have an account? "}
             <button
-              onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-              className="text-rose-600 hover:text-rose-700 font-semibold"
+              onClick={() => {
+                setMode(mode === 'signin' ? 'signup' : 'signin');
+                setAuthError(null);
+                setSuccessMessage(null);
+              }}
+              className="text-slate-700 hover:text-slate-900 font-semibold"
             >
               {mode === 'signin' ? 'Sign up' : 'Sign in'}
             </button>
@@ -279,6 +429,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
                 ))}
               </div>
             </div>
+          )}
+          </>
           )}
         </div>
       </div>
