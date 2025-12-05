@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User, Coins, Lock, Heart } from 'lucide-react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User, Coins, Lock, Heart, AlertTriangle } from 'lucide-react';
 import { 
   StyleCategory, 
   UserSelections, 
@@ -254,10 +254,10 @@ export const QUICK_PRESETS = [
 
 const App: React.FC = () => {
   // User context for GlamCoins and subscription
-  const { user: contextUser, features, canGenerate, deductCoin, signOut } = useUser();
+  const { user: contextUser, isAuthLoading, features, canGenerate, deductCoin, signOut } = useUser();
   
   // Gallery context for saving images
-  const { addItem: addToGallery, items: galleryItems, toggleFavorite, getUserItems } = useGallery();
+  const { addItem: addToGallery, items: galleryItems, toggleFavorite, getUserItems, loadUserGallery } = useGallery();
   
   // Track the current gallery item ID for the generated result
   const [currentGalleryItemId, setCurrentGalleryItemId] = useState<string | null>(null);
@@ -303,6 +303,35 @@ const App: React.FC = () => {
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
+  
+  // Sync contextUser (from Supabase auth) to local user state
+  useEffect(() => {
+    if (contextUser && !user) {
+      // User signed in via Supabase OAuth - sync to local state
+      setUser({
+        id: contextUser.id,
+        email: contextUser.email,
+        name: contextUser.name,
+        avatar: contextUser.avatar,
+        provider: 'google',
+      });
+      setShowLanding(false); // Take them to the app
+      // Load user's gallery from Supabase
+      loadUserGallery(contextUser.id);
+    } else if (!contextUser && user?.provider === 'google') {
+      // User signed out from Supabase - clear local state and go to landing
+      setUser(null);
+      setShowLanding(true);
+      setSelectedImage(null);
+      setGenState({ isLoading: false, error: null, resultImage: null });
+    }
+  }, [contextUser, user, loadUserGallery]);
+  
+  // Track if sidebar panel is open (for hiding image X button on mobile)
+  const [isSidebarPanelOpen, setIsSidebarPanelOpen] = useState(false);
+  
+  // Surprise Me mode - when active, disables style options and enables generate button
+  const [surpriseMeActive, setSurpriseMeActive] = useState(false);
 
   const handleSelection = useCallback((category: StyleCategory, value: string) => {
     setSelections(prev => {
@@ -352,15 +381,18 @@ const App: React.FC = () => {
         console.warn('Failed to deduct coin after generation');
       }
       
-      // Save to gallery if user is signed in
+      // Save to gallery if user is signed in (async - don't block UI)
       if (user?.id) {
-        const newItem = addToGallery({
+        addToGallery({
           userId: user.id,
           originalImage: selectedImage,
           resultImage: result,
           selections: activeSelections,
-        });
-        setCurrentGalleryItemId(newItem.id);
+        }).then(newItem => {
+          if (newItem) {
+            setCurrentGalleryItemId(newItem.id);
+          }
+        }).catch(console.error);
       } else {
         setCurrentGalleryItemId(null);
       }
@@ -385,19 +417,36 @@ const App: React.FC = () => {
       setShowPurchaseModal(true);
       return;
     }
-    Analytics.styleGeneration('manual');
-    executeGeneration(selections);
+    
+    if (surpriseMeActive) {
+      // Generate random selections and execute
+      const randomSelections = generateRandomSelections();
+      setSelections(randomSelections);
+      Analytics.styleGeneration('randomize');
+      executeGeneration(randomSelections);
+      // Turn off surprise me after generation
+      setSurpriseMeActive(false);
+    } else {
+      Analytics.styleGeneration('manual');
+      executeGeneration(selections);
+    }
   };
 
-  const handleRandomize = () => {
+  // Toggle Surprise Me mode
+  const handleSurpriseMeToggle = () => {
     if (!selectedImage) return;
 
-    // Check coins before randomizing (since it triggers generation)
-    if (!canGenerate) {
-      setShowPurchaseModal(true);
-      return;
+    if (surpriseMeActive) {
+      // Turning off - just deactivate, keep any selections
+      setSurpriseMeActive(false);
+    } else {
+      // Turning on - activate surprise me mode (will generate random on Generate click)
+      setSurpriseMeActive(true);
     }
+  };
 
+  // Generate random selections (used when Generate is clicked with Surprise Me active)
+  const generateRandomSelections = (): UserSelections => {
     // Helper to get random item from array
     const getRandom = <T extends { value: string }>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)].value;
     
@@ -440,7 +489,7 @@ const App: React.FC = () => {
         randomAccessories.push(allAccessories[index].value);
     }
 
-    const newSelections: UserSelections = {
+    return {
       [StyleCategory.HAIR]: maybeGet(filteredHair, 0.7), 
       [StyleCategory.HAIR_LENGTH]: maybeGet(filteredHairLength, 0.4),
       [StyleCategory.HAIR_COLOR]: maybeGet(filteredHairColor, 0.5),
@@ -451,13 +500,6 @@ const App: React.FC = () => {
       [StyleCategory.ACCESSORIES]: randomAccessories,
       [StyleCategory.FACIAL_HAIR]: maybeGet(filteredFacialHair, 0.25),
     };
-
-    // Update UI with new selections
-    setSelections(newSelections);
-
-    // Trigger generation immediately with the new selections
-    Analytics.styleGeneration('randomize');
-    executeGeneration(newSelections);
   };
 
   const handleDownload = async () => {
@@ -718,7 +760,18 @@ const App: React.FC = () => {
     }
   };
 
-  // Show landing page
+  // Show loading screen while checking auth
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center animate-in fade-in duration-300">
+          <div className="w-12 h-12 border-3 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-400 text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Show password gate if not unlocked
   if (!isUnlocked) {
     return <PasswordGate onUnlock={() => setIsUnlocked(true)} />;
@@ -781,13 +834,14 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Desktop Sidebar Navigation - Always visible, disabled when no image */}
+      {/* Desktop Sidebar Navigation - Always visible, disabled when no image or surprise me is active */}
       <SidebarNav 
         selections={selections}
         onSelect={handleSelection}
         optionsMap={optionsMap}
-        disabled={!selectedImage}
+        disabled={!selectedImage || surpriseMeActive}
         onPremiumClick={() => setShowPurchaseModal(true)}
+        onPanelOpenChange={setIsSidebarPanelOpen}
       />
 
       <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 sm:pl-20 lg:pl-24 py-6 flex-grow">
@@ -803,6 +857,7 @@ const App: React.FC = () => {
                     <ComparisonView 
                       originalImage={selectedImage!} 
                       generatedImage={genState.resultImage}
+                      hideCloseButton={isSidebarPanelOpen}
                       onClear={() => {
                         setSelectedImage(null);
                         setGenState(prev => ({ ...prev, resultImage: null }));
@@ -905,12 +960,12 @@ const App: React.FC = () => {
                       onImageSelected={(img, filename) => {
                         setSelectedImage(img);
                         setOriginalFilename(filename);
-                        setGenState(prev => ({ ...prev, resultImage: null }));
+                        setGenState(prev => ({ ...prev, resultImage: null, error: null }));
                         setCurrentGalleryItemId(null);
                       }}
                       onClear={() => {
                         setSelectedImage(null);
-                        setGenState(prev => ({ ...prev, resultImage: null }));
+                        setGenState(prev => ({ ...prev, resultImage: null, error: null }));
                         setCurrentGalleryItemId(null);
                         setSelections({
                           [StyleCategory.HAIR]: null,
@@ -926,14 +981,45 @@ const App: React.FC = () => {
                       }}
                     />
                   )}
+                  
+                  {/* Error Message Display */}
+                  {genState.error && !genState.isLoading && (
+                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                          <AlertTriangle className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-amber-800 mb-1">Oops! We couldn't transform this image</h4>
+                          <p className="text-sm text-amber-700 mb-3">
+                            Our AI had trouble processing your photo. This can happen with certain poses, angles, or image types.
+                          </p>
+                          <div className="text-sm text-amber-600 space-y-1">
+                            <p className="font-medium">Try these tips:</p>
+                            <ul className="list-disc list-inside space-y-0.5 text-amber-600/90">
+                              <li>Use a clear, front-facing portrait photo</li>
+                              <li>Make sure your face is well-lit and visible</li>
+                              <li>Try a different photo or fewer style options</li>
+                            </ul>
+                          </div>
+                          <button
+                            onClick={() => setGenState(prev => ({ ...prev, error: null }))}
+                            className="mt-3 text-sm font-medium text-amber-700 hover:text-amber-800 underline underline-offset-2"
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </section>
             {/* Style Selectors */}
             {selectedImage && (
               <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Quick Presets */}
-                <div className="mb-4">
+                {/* Quick Presets - disabled when surprise me is active */}
+                <div className={`mb-4 ${surpriseMeActive ? 'opacity-50 pointer-events-none' : ''}`}>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                       <Zap size={12} />
@@ -943,20 +1029,22 @@ const App: React.FC = () => {
                       <button
                         onClick={() => {
                           const container = document.getElementById('quick-looks-scroll');
-                          if (container) container.scrollBy({ left: -200, behavior: 'smooth' });
+                          if (container) container.scrollBy({ left: -400, behavior: 'smooth' });
                         }}
                         className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
                         aria-label="Scroll left"
+                        disabled={surpriseMeActive}
                       >
                         <ChevronLeft size={18} />
                       </button>
                       <button
                         onClick={() => {
                           const container = document.getElementById('quick-looks-scroll');
-                          if (container) container.scrollBy({ left: 200, behavior: 'smooth' });
+                          if (container) container.scrollBy({ left: 400, behavior: 'smooth' });
                         }}
                         className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
                         aria-label="Scroll right"
+                        disabled={surpriseMeActive}
                       >
                         <ChevronRight size={18} />
                       </button>
@@ -973,13 +1061,14 @@ const App: React.FC = () => {
                             handlePresetSelect(preset);
                           }
                         }}
-                        disabled={genState.isLoading}
+                        disabled={genState.isLoading || surpriseMeActive}
                         className={`
                           flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 shadow-sm relative
                           ${preset.isLocked 
                             ? 'bg-slate-50 border border-slate-200 text-slate-400 hover:border-amber-300 hover:bg-amber-50' 
                             : 'bg-white border border-slate-200 text-slate-700 hover:border-rose-300 hover:bg-rose-50'
                           }
+                          ${surpriseMeActive ? 'cursor-not-allowed' : ''}
                         `}
                       >
                         <span>{preset.emoji}</span>
@@ -995,30 +1084,42 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Selection Summary Chips - Always visible, content animates in */}
-                <div className="mb-4 p-3 bg-white rounded-xl border border-slate-200 sticky top-16 sm:top-20 z-40 shadow-md">
+                <div className={`mb-4 p-3 rounded-xl border sticky top-16 sm:top-20 z-40 shadow-md transition-all ${
+                  surpriseMeActive 
+                    ? 'bg-violet-50 border-violet-200' 
+                    : 'bg-white border-slate-200'
+                }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Your Look</span>
-                    {activeSelections.length > 0 && (
+                    <span className={`text-xs font-semibold uppercase tracking-wider ${surpriseMeActive ? 'text-violet-600' : 'text-slate-500'}`}>
+                      {surpriseMeActive ? 'Surprise Me Active' : 'Your Look'}
+                    </span>
+                    {activeSelections.length > 0 && !surpriseMeActive && (
                       <button onClick={handleReset} className="text-xs text-slate-500 hover:text-rose-500 flex items-center gap-1 transition-opacity">
                         <RotateCcw size={10} />
                         Clear All
                       </button>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-1.5 min-h-[28px]">
-                    {activeSelections.length > 0 ? (
-                      activeSelections.map((item, idx) => (
-                        <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-[#0F172A] text-white text-xs rounded-full animate-in fade-in zoom-in-95 duration-200">
-                          {item.label}
-                          <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-700 rounded-full p-0.5">
-                            <X size={10} className="text-white" />
-                          </button>
-                        </span>
-                      ))
+                  <div className="min-h-[28px]">
+                    {surpriseMeActive ? (
+                      <span className="text-xs text-violet-600">Generate a random look</span>
                     ) : (
-                      <span className="text-xs text-slate-400 italic">
-                        Click sidebar icons to select styles
-                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {activeSelections.length > 0 ? (
+                          activeSelections.map((item, idx) => (
+                            <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-[#0F172A] text-white text-xs rounded-full animate-in fade-in zoom-in-95 duration-200">
+                              {item.label}
+                              <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-700 rounded-full p-0.5">
+                                <X size={10} className="text-white" />
+                              </button>
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">
+                            Click sidebar icons to select styles
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1044,34 +1145,40 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Surprise Me Button with Tooltip */}
+                {/* Surprise Me Button with Tooltip - Toggle mode */}
                 <div className="relative group">
                   <button
-                    onClick={handleRandomize}
+                    onClick={handleSurpriseMeToggle}
                     disabled={genState.isLoading}
-                    className="p-2.5 sm:p-3 rounded-xl bg-violet-100 text-violet-700 hover:bg-violet-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className={`
+                      p-2.5 sm:p-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                      ${surpriseMeActive 
+                        ? 'bg-violet-600 text-white ring-2 ring-violet-400 ring-offset-2 animate-pulse' 
+                        : 'bg-violet-100 text-violet-700 hover:bg-violet-200'
+                      }
+                    `}
                   >
-                    <Dices size={18} className="sm:w-5 sm:h-5" />
+                    <Dices size={18} className={`sm:w-5 sm:h-5 ${surpriseMeActive ? 'animate-bounce' : ''}`} />
                   </button>
                   <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0F172A] text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    Surprise me
+                    {surpriseMeActive ? 'Click to disable random mode' : 'Surprise me'}
                     <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#0F172A]" />
                   </div>
                 </div>
                 <button
                   onClick={handleGenerateClick}
-                  disabled={genState.isLoading || selectionCount === 0}
+                  disabled={genState.isLoading || (!surpriseMeActive && selectionCount === 0)}
                   className={`
                     group relative flex-1 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg
                     flex items-center justify-center gap-2 sm:gap-3 transition-all duration-300 overflow-hidden
-                    ${genState.isLoading || selectionCount === 0
+                    ${genState.isLoading || (!surpriseMeActive && selectionCount === 0)
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
                       : 'bg-[#0F172A] text-white hover:shadow-2xl hover:shadow-slate-900/30 hover:scale-[1.02]'
                     }
                   `}
                 >
                   {/* Subtle shimmer effect */}
-                  {!genState.isLoading && selectionCount > 0 && (
+                  {!genState.isLoading && (surpriseMeActive || selectionCount > 0) && (
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
                   )}
                   <span className="relative z-10 flex items-center gap-2 sm:gap-3">

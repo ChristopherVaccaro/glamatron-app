@@ -5,9 +5,10 @@ interface ComparisonViewProps {
   originalImage: string;
   generatedImage: string;
   onClear?: () => void;
+  hideCloseButton?: boolean;
 }
 
-const ComparisonView: React.FC<ComparisonViewProps> = ({ originalImage, generatedImage, onClear }) => {
+const ComparisonView: React.FC<ComparisonViewProps> = ({ originalImage, generatedImage, onClear, hideCloseButton = false }) => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -85,8 +86,8 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ originalImage, generate
         </div>
       </div>
 
-      {/* X button to upload new image */}
-      {onClear && (
+      {/* X button to upload new image - hidden when sidebar panel is open on mobile */}
+      {onClear && !hideCloseButton && (
         <button
           onClick={(e) => {
             e.stopPropagation();

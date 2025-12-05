@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import { 
   UserProfile, 
   UserRole, 
@@ -7,9 +7,12 @@ import {
   SUBSCRIPTION_TIERS,
   SubscriptionFeatures
 } from '../types';
+import { supabase, isSupabaseConfigured } from '../services/supabaseService';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface UserContextType {
   user: UserProfile | null;
+  isAuthLoading: boolean; // True while checking for existing session
   isAdmin: boolean;
   isTestUser: boolean;
   features: SubscriptionFeatures;
@@ -57,8 +60,81 @@ function generateUserId(): string {
   return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
+// Helper to create UserProfile from Supabase user
+function createProfileFromSupabaseUser(supabaseUser: SupabaseUser): UserProfile {
+  const email = supabaseUser.email || '';
+  const role = getRoleFromEmail(email);
+  const name = supabaseUser.user_metadata?.full_name || 
+               supabaseUser.user_metadata?.name || 
+               email.split('@')[0] || 
+               'User';
+  
+  let glamCoins = DEFAULT_GLAMCOINS;
+  let isSubscribed = false;
+  
+  if (role === 'admin') {
+    glamCoins = 9999;
+    isSubscribed = true;
+  }
+
+  return {
+    id: supabaseUser.id,
+    email: email.toLowerCase().trim(),
+    name,
+    avatar: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture,
+    role,
+    glamCoins,
+    isSubscribed,
+    createdAt: new Date(supabaseUser.created_at),
+  };
+}
+
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Listen for Supabase auth state changes
+  useEffect(() => {
+    if (!supabase || !isSupabaseConfigured) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Check for existing session on mount
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const profile = createProfileFromSupabaseUser(session.user);
+          setUser(profile);
+        }
+      } catch (error) {
+        console.error('Error getting session:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    // Listen for auth changes (sign in, sign out, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          const profile = createProfileFromSupabaseUser(session.user);
+          setUser(profile);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // Derived state
   const isAdmin = user?.role === 'admin';
@@ -116,8 +192,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return newUser;
   }, []);
 
-  // Sign out - reset state (test user returns to defaults)
-  const signOut = useCallback(() => {
+  // Sign out - reset state and sign out from Supabase
+  const signOut = useCallback(async () => {
+    if (supabase && isSupabaseConfigured) {
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+        console.error('Error signing out:', error);
+      }
+    }
     setUser(null);
   }, []);
 
@@ -184,6 +267,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value: UserContextType = {
     user,
+    isAuthLoading: isLoading,
     isAdmin,
     isTestUser,
     features,

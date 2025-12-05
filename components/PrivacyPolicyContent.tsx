@@ -121,10 +121,10 @@ const PrivacyPolicyContent: React.FC = () => {
           If you have questions about this Privacy Policy, please contact us through the Contact page 
           or email us at{' '}
           <a 
-            href="mailto:privacy@cognitav.com" 
+            href="mailto:support@cognitav.com" 
             className="text-rose-600 hover:text-rose-700 underline"
           >
-            privacy@cognitav.com
+            support@cognitav.com
           </a>.
         </p>
       </section>

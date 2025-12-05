@@ -9,6 +9,8 @@ const ContactContent: React.FC = () => {
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({
@@ -17,14 +19,33 @@ const ContactContent: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, create a mailto link as a simple solution
-    // In production, you'd send this to a backend API
-    const subject = encodeURIComponent(`[Glamatron] ${formData.subject}: ${formData.name}`);
-    const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`);
-    window.location.href = `mailto:support@cognitav.com?subject=${subject}&body=${body}`;
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/send-contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send message');
+      }
+
+      setSubmitted(true);
+      setFormData({ name: '', email: '', subject: 'general', message: '' });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -33,9 +54,9 @@ const ContactContent: React.FC = () => {
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-8 h-8 text-green-600" />
         </div>
-        <h3 className="text-xl font-semibold text-slate-900 mb-2">Message Ready!</h3>
+        <h3 className="text-xl font-semibold text-slate-900 mb-2">Message Sent!</h3>
         <p className="text-slate-600 mb-4">
-          Your email client should have opened with your message. If not, you can email us directly at:
+          Thank you for reaching out. We'll get back to you soon at the email you provided.
         </p>
         <a 
           href="mailto:support@cognitav.com"
@@ -147,12 +168,28 @@ const ContactContent: React.FC = () => {
           />
         </div>
 
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
         <button
           type="submit"
-          className="w-full py-3 px-4 bg-gradient-to-r from-rose-600 to-violet-600 text-white font-semibold rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
+          disabled={isSubmitting}
+          className="w-full py-3 px-4 bg-gradient-to-r from-rose-600 to-violet-600 text-white font-semibold rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <Send size={18} />
-          Send Message
+          {isSubmitting ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Sending...
+            </>
+          ) : (
+            <>
+              <Send size={18} />
+              Send Message
+            </>
+          )}
         </button>
       </form>
 
