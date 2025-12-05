@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User, Coins, Lock, Heart } from 'lucide-react';
+import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User, Coins, Lock, Heart, AlertTriangle } from 'lucide-react';
 import { 
   StyleCategory, 
   UserSelections, 
@@ -257,7 +257,7 @@ const App: React.FC = () => {
   const { user: contextUser, isAuthLoading, features, canGenerate, deductCoin, signOut } = useUser();
   
   // Gallery context for saving images
-  const { addItem: addToGallery, items: galleryItems, toggleFavorite, getUserItems } = useGallery();
+  const { addItem: addToGallery, items: galleryItems, toggleFavorite, getUserItems, loadUserGallery } = useGallery();
   
   // Track the current gallery item ID for the generated result
   const [currentGalleryItemId, setCurrentGalleryItemId] = useState<string | null>(null);
@@ -316,6 +316,8 @@ const App: React.FC = () => {
         provider: 'google',
       });
       setShowLanding(false); // Take them to the app
+      // Load user's gallery from Supabase
+      loadUserGallery(contextUser.id);
     } else if (!contextUser && user?.provider === 'google') {
       // User signed out from Supabase - clear local state and go to landing
       setUser(null);
@@ -323,7 +325,7 @@ const App: React.FC = () => {
       setSelectedImage(null);
       setGenState({ isLoading: false, error: null, resultImage: null });
     }
-  }, [contextUser, user]);
+  }, [contextUser, user, loadUserGallery]);
   
   // Track if sidebar panel is open (for hiding image X button on mobile)
   const [isSidebarPanelOpen, setIsSidebarPanelOpen] = useState(false);
@@ -379,15 +381,18 @@ const App: React.FC = () => {
         console.warn('Failed to deduct coin after generation');
       }
       
-      // Save to gallery if user is signed in
+      // Save to gallery if user is signed in (async - don't block UI)
       if (user?.id) {
-        const newItem = addToGallery({
+        addToGallery({
           userId: user.id,
           originalImage: selectedImage,
           resultImage: result,
           selections: activeSelections,
-        });
-        setCurrentGalleryItemId(newItem.id);
+        }).then(newItem => {
+          if (newItem) {
+            setCurrentGalleryItemId(newItem.id);
+          }
+        }).catch(console.error);
       } else {
         setCurrentGalleryItemId(null);
       }
@@ -955,12 +960,12 @@ const App: React.FC = () => {
                       onImageSelected={(img, filename) => {
                         setSelectedImage(img);
                         setOriginalFilename(filename);
-                        setGenState(prev => ({ ...prev, resultImage: null }));
+                        setGenState(prev => ({ ...prev, resultImage: null, error: null }));
                         setCurrentGalleryItemId(null);
                       }}
                       onClear={() => {
                         setSelectedImage(null);
-                        setGenState(prev => ({ ...prev, resultImage: null }));
+                        setGenState(prev => ({ ...prev, resultImage: null, error: null }));
                         setCurrentGalleryItemId(null);
                         setSelections({
                           [StyleCategory.HAIR]: null,
@@ -975,6 +980,37 @@ const App: React.FC = () => {
                         });
                       }}
                     />
+                  )}
+                  
+                  {/* Error Message Display */}
+                  {genState.error && !genState.isLoading && (
+                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                          <AlertTriangle className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-amber-800 mb-1">Oops! We couldn't transform this image</h4>
+                          <p className="text-sm text-amber-700 mb-3">
+                            Our AI had trouble processing your photo. This can happen with certain poses, angles, or image types.
+                          </p>
+                          <div className="text-sm text-amber-600 space-y-1">
+                            <p className="font-medium">Try these tips:</p>
+                            <ul className="list-disc list-inside space-y-0.5 text-amber-600/90">
+                              <li>Use a clear, front-facing portrait photo</li>
+                              <li>Make sure your face is well-lit and visible</li>
+                              <li>Try a different photo or fewer style options</li>
+                            </ul>
+                          </div>
+                          <button
+                            onClick={() => setGenState(prev => ({ ...prev, error: null }))}
+                            className="mt-3 text-sm font-medium text-amber-700 hover:text-amber-800 underline underline-offset-2"
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </>
               )}

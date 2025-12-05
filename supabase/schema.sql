@@ -195,3 +195,65 @@ COMMENT ON TABLE public.transactions IS 'Coin purchase and bonus transactions';
 COMMENT ON TABLE public.subscriptions IS 'User subscription details';
 COMMENT ON COLUMN public.profiles.role IS 'User role: admin, test, or user';
 COMMENT ON COLUMN public.profiles.glam_coins IS 'Current coin balance for generations';
+
+-- =====================================================
+-- STORAGE BUCKET FOR GALLERY IMAGES
+-- =====================================================
+-- IMPORTANT: Create the storage bucket manually in Supabase Dashboard:
+-- 1. Go to Storage → New bucket → Name: "gallery-images" → Set to Public → Create
+-- 2. Then add these policies via Dashboard (Storage → gallery-images → Policies → New Policy):
+--
+-- Policy 1 - INSERT (uploads):
+--   Name: "Users can upload own images"
+--   Operation: INSERT
+--   Policy: (bucket_id = 'gallery-images' AND auth.uid()::text = (storage.foldername(name))[1])
+--
+-- Policy 2 - SELECT (view):
+--   Name: "Users can view own images"  
+--   Operation: SELECT
+--   Policy: (bucket_id = 'gallery-images' AND auth.uid()::text = (storage.foldername(name))[1])
+--
+-- Policy 3 - DELETE:
+--   Name: "Users can delete own images"
+--   Operation: DELETE
+--   Policy: (bucket_id = 'gallery-images' AND auth.uid()::text = (storage.foldername(name))[1])
+--
+-- OR for simpler setup, just enable "Public bucket" and add a single SELECT policy:
+--   Policy: true (allows anyone to view uploaded images via URL)
+
+-- =====================================================
+-- GALLERY TABLE (replaces localStorage)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.gallery_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  original_image_url TEXT NOT NULL,
+  result_image_url TEXT NOT NULL,
+  selections JSONB NOT NULL DEFAULT '{}',
+  is_favorite BOOLEAN NOT NULL DEFAULT FALSE,
+  title TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE public.gallery_items ENABLE ROW LEVEL SECURITY;
+
+-- Gallery policies
+CREATE POLICY "Users can view own gallery items" ON public.gallery_items
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own gallery items" ON public.gallery_items
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own gallery items" ON public.gallery_items
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own gallery items" ON public.gallery_items
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Index for performance
+CREATE INDEX IF NOT EXISTS idx_gallery_items_user_id ON public.gallery_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_gallery_items_created_at ON public.gallery_items(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_gallery_items_favorite ON public.gallery_items(user_id, is_favorite) WHERE is_favorite = TRUE;
+
+COMMENT ON TABLE public.gallery_items IS 'User gallery of generated images';
