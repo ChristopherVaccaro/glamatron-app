@@ -258,26 +258,28 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
             </button>
           </p>
 
-          {/* Developer Quick Access */}
-          <div className="mt-6 pt-4 border-t border-slate-200">
-            <p className="text-xs text-slate-400 mb-3 text-center">Developer Quick Access</p>
-            <div className="flex gap-2">
-              {quickAccessEmails.map(({ email: qEmail, label, icon: Icon, color }) => (
-                <button
-                  key={qEmail}
-                  onClick={() => handleQuickAccess(qEmail)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    color === 'violet' 
-                      ? 'bg-violet-100 text-violet-700 hover:bg-violet-200' 
-                      : 'bg-red-100 text-red-700 hover:bg-red-200'
-                  }`}
-                >
-                  <Icon size={14} />
-                  {label}
-                </button>
-              ))}
+          {/* Developer Quick Access - Only show in development */}
+          {import.meta.env.DEV && (
+            <div className="mt-6 pt-4 border-t border-slate-200">
+              <p className="text-xs text-slate-400 mb-3 text-center">Developer Quick Access</p>
+              <div className="flex gap-2">
+                {quickAccessEmails.map(({ email: qEmail, label, icon: Icon, color }) => (
+                  <button
+                    key={qEmail}
+                    onClick={() => handleQuickAccess(qEmail)}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      color === 'violet' 
+                        ? 'bg-violet-100 text-violet-700 hover:bg-violet-200' 
+                        : 'bg-red-100 text-red-700 hover:bg-red-200'
+                    }`}
+                  >
+                    <Icon size={14} />
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
