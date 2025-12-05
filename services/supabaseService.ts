@@ -1,29 +1,23 @@
 /**
  * Supabase Service
  * 
- * This service provides the foundation for Supabase integration.
- * Currently, the app uses local state for user management (UserContext).
- * 
- * To enable Supabase persistence:
- * 1. Run the schema.sql in your Supabase SQL Editor
- * 2. Add your Supabase credentials to .env
- * 3. Install @supabase/supabase-js: npm install @supabase/supabase-js
- * 4. Uncomment the code below and integrate with UserContext
+ * Handles authentication and database operations with Supabase.
  */
 
-// import { createClient } from '@supabase/supabase-js';
-// import { UserProfile, UserRole, SPECIAL_EMAILS, DEFAULT_GLAMCOINS } from '../types';
+import { createClient } from '@supabase/supabase-js';
 
-// const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-// const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// if (!supabaseUrl || !supabaseAnonKey) {
-//   console.warn('Supabase credentials not configured. Using local state only.');
-// }
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Supabase credentials not configured. Auth features will not work.');
+}
 
-// export const supabase = supabaseUrl && supabaseAnonKey 
-//   ? createClient(supabaseUrl, supabaseAnonKey)
-//   : null;
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
 
 /**
  * Database types matching the Supabase schema
@@ -250,10 +244,8 @@ export const GenerationsService = {
   // },
 };
 
-// Export placeholder for when Supabase is not configured
-export const isSupabaseConfigured = false; // Set to true when credentials are added
-
 export default {
+  supabase,
   SupabaseAuthService,
   ProfileService,
   GenerationsService,

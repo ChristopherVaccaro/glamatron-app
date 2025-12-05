@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User, Coins, Lock, Heart } from 'lucide-react';
 import { 
   StyleCategory, 
@@ -254,7 +254,7 @@ export const QUICK_PRESETS = [
 
 const App: React.FC = () => {
   // User context for GlamCoins and subscription
-  const { user: contextUser, features, canGenerate, deductCoin, signOut } = useUser();
+  const { user: contextUser, isAuthLoading, features, canGenerate, deductCoin, signOut } = useUser();
   
   // Gallery context for saving images
   const { addItem: addToGallery, items: galleryItems, toggleFavorite, getUserItems } = useGallery();
@@ -303,6 +303,27 @@ const App: React.FC = () => {
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
+  
+  // Sync contextUser (from Supabase auth) to local user state
+  useEffect(() => {
+    if (contextUser && !user) {
+      // User signed in via Supabase OAuth - sync to local state
+      setUser({
+        id: contextUser.id,
+        email: contextUser.email,
+        name: contextUser.name,
+        avatar: contextUser.avatar,
+        provider: 'google',
+      });
+      setShowLanding(false); // Take them to the app
+    } else if (!contextUser && user?.provider === 'google') {
+      // User signed out from Supabase - clear local state and go to landing
+      setUser(null);
+      setShowLanding(true);
+      setSelectedImage(null);
+      setGenState({ isLoading: false, error: null, resultImage: null });
+    }
+  }, [contextUser, user]);
   
   // Track if sidebar panel is open (for hiding image X button on mobile)
   const [isSidebarPanelOpen, setIsSidebarPanelOpen] = useState(false);
@@ -734,7 +755,18 @@ const App: React.FC = () => {
     }
   };
 
-  // Show landing page
+  // Show loading screen while checking auth
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center animate-in fade-in duration-300">
+          <div className="w-12 h-12 border-3 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-400 text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Show password gate if not unlocked
   if (!isUnlocked) {
     return <PasswordGate onUnlock={() => setIsUnlocked(true)} />;
