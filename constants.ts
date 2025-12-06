@@ -106,6 +106,7 @@ export const HAIR_COLOR_OPTIONS: StyleOption[] = [
   // Multi
   { id: 'hc_rainbow', label: 'Rainbow', value: 'Multicolor rainbow', category: StyleCategory.HAIR_COLOR },
   { id: 'hc_ombre', label: 'Ombre', value: 'Dark roots fading to blonde ends', category: StyleCategory.HAIR_COLOR },
+  { id: 'hc_balayage', label: 'Balayage', value: 'Hand-painted balayage highlights with natural gradient', category: StyleCategory.HAIR_COLOR },
   { id: 'hc_split', label: 'Split Dye', value: 'Split dyed half black half white', category: StyleCategory.HAIR_COLOR },
   { id: 'hc_galaxy', label: 'Galaxy', value: 'Galaxy mix of purple blue and black', category: StyleCategory.HAIR_COLOR },
   { id: 'hc_highlights', label: 'Chunky Highlights', value: 'Y2K chunky highlights', category: StyleCategory.HAIR_COLOR },

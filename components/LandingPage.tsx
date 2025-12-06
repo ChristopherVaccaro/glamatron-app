@@ -53,7 +53,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
         <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-wide text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <h1 className="text-xl sm:text-2xl tracking-wide text-white" style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }}>
                 GLAMATRON
               </h1>
               <div className="flex items-center gap-3">
@@ -456,7 +456,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
       <footer className="bg-slate-950 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-lg font-bold tracking-wide text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+            <div className="text-lg tracking-wide text-white" style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }}>
               GLAMATRON
             </div>
             <p className="text-slate-500 text-sm">

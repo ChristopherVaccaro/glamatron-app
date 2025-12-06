@@ -65,7 +65,7 @@ const CATEGORY_CONFIG = [
     label: 'Eyewear',
     icon: Glasses,
     categories: [
-      { key: 'GLASSES', title: 'Eyewear', category: StyleCategory.ACCESSORIES, optionsKey: 'GLASSES' },
+      { key: 'GLASSES', title: 'Eyewear', category: StyleCategory.ACCESSORIES, optionsKey: 'GLASSES', singleSelect: true },
     ],
   },
   {
@@ -98,7 +98,7 @@ const CATEGORY_CONFIG = [
 
 interface SidebarNavProps {
   selections: UserSelections;
-  onSelect: (category: StyleCategory, value: string) => void;
+  onSelect: (category: StyleCategory, value: string, singleSelect?: boolean) => void;
   optionsMap: {
     HAIR: ExtendedStyleOption[];
     HAIR_LENGTH: ExtendedStyleOption[];
@@ -207,10 +207,11 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
                 onMouseEnter={() => setHoveredCategory(config.id)}
                 onMouseLeave={() => setHoveredCategory(null)}
                 disabled={disabled}
+                style={disabled ? { cursor: 'not-allowed' } : undefined}
                 className={`
                   relative w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center sm:rounded-xl transition-all duration-200
                   ${disabled
-                    ? 'text-slate-300 cursor-not-allowed'
+                    ? 'text-slate-300'
                     : isActive 
                       ? 'bg-[#0F172A] text-white shadow-md rounded-lg' 
                       : 'text-slate-600 hover:text-slate-900 sm:bg-white sm:hover:bg-slate-100'
@@ -271,7 +272,14 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
               {activeCategoryConfig.categories.map((cat) => {
                 const optKey = (cat.optionsKey || cat.key) as keyof typeof optionsMap;
                 const options = optionsMap[optKey];
-                const isMultiSelect = cat.category === StyleCategory.ACCESSORIES;
+                // Accessories are multi-select by default, unless explicitly marked as singleSelect
+                const isSingleSelect = 'singleSelect' in cat && cat.singleSelect;
+                const isMultiSelect = cat.category === StyleCategory.ACCESSORIES && !isSingleSelect;
+                
+                // Wrap onSelect to pass singleSelect flag for eyewear
+                const handleSelect = (category: StyleCategory, value: string) => {
+                  onSelect(category, value, isSingleSelect);
+                };
                 
                 return (
                   <StyleSelector
@@ -280,7 +288,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
                     category={cat.category}
                     options={options}
                     selections={selections}
-                    onSelect={onSelect}
+                    onSelect={handleSelect}
                     multiSelect={isMultiSelect}
                     onPremiumClick={onPremiumClick}
                   />

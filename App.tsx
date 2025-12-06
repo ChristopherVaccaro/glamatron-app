@@ -353,15 +353,27 @@ const App: React.FC = () => {
   
   // Surprise Me mode - when active, disables style options and enables generate button
   const [surpriseMeActive, setSurpriseMeActive] = useState(false);
+  
+  // Quick Looks collapsed state - collapsed by default
+  const [quickLooksExpanded, setQuickLooksExpanded] = useState(false);
 
-  const handleSelection = useCallback((category: StyleCategory, value: string) => {
+  const handleSelection = useCallback((category: StyleCategory, value: string, singleSelect?: boolean) => {
     setSelections(prev => {
-      // Handle multi-select for accessories
+      // Handle accessories - can be multi-select or single-select depending on the subcategory
       if (category === StyleCategory.ACCESSORIES) {
         if (value === 'CLEAR_ALL') return { ...prev, [category]: [] };
         
         const current = prev[category] as string[];
         const exists = current.includes(value);
+        
+        // If single-select mode (e.g., eyewear), replace instead of toggle
+        if (singleSelect) {
+          return {
+            ...prev,
+            [category]: exists ? current.filter(v => v !== value) : [...current.filter(v => !v.includes('glasses') && !v.includes('Glasses') && !v.includes('sunglasses') && !v.includes('Sunglasses') && !v.includes('aviator') && !v.includes('Aviator')), value]
+          };
+        }
+        
         return {
           ...prev,
           [category]: exists 
@@ -826,7 +838,7 @@ const App: React.FC = () => {
             onClick={handleStartOver}
             className="flex items-center hover:opacity-80 transition-opacity"
           >
-            <span className="text-lg sm:text-xl font-bold tracking-wide text-slate-900" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+            <span className="text-lg sm:text-xl tracking-wide text-slate-900" style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }}>
               GLAMATRON
             </span>
           </button>
@@ -864,12 +876,12 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Desktop Sidebar Navigation - Always visible, disabled when no image or surprise me is active */}
+      {/* Desktop Sidebar Navigation - Always visible, disabled when no image, surprise me is active, or generating */}
       <SidebarNav 
         selections={selections}
         onSelect={handleSelection}
         optionsMap={optionsMap}
-        disabled={!selectedImage || surpriseMeActive}
+        disabled={!selectedImage || surpriseMeActive || genState.isLoading}
         onPremiumClick={() => setShowPurchaseModal(true)}
         onPanelOpenChange={setIsSidebarPanelOpen}
       />
@@ -1048,38 +1060,51 @@ const App: React.FC = () => {
             {/* Style Selectors */}
             {selectedImage && (
               <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Quick Presets - disabled when surprise me is active */}
-                <div className={`mb-4 ${surpriseMeActive ? 'opacity-50 pointer-events-none' : ''}`}>
-                  <div className="flex items-center justify-between mb-2">
+                {/* Quick Looks - Collapsible container */}
+                <div className={`mb-4 ${surpriseMeActive || genState.isLoading ? 'opacity-50 pointer-events-none' : ''}`} style={genState.isLoading ? { cursor: 'not-allowed' } : undefined}>
+                  <button
+                    onClick={() => setQuickLooksExpanded(!quickLooksExpanded)}
+                    className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm"
+                    disabled={surpriseMeActive || genState.isLoading}
+                  >
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                      <Zap size={12} />
+                      <Zap size={12} className="text-amber-500" />
                       Quick Looks
+                      <span className="text-slate-400 font-normal normal-case">• {availablePresets.length} presets</span>
                     </h3>
-                    <div className="hidden lg:flex items-center gap-1">
-                      <button
-                        onClick={() => {
-                          const container = document.getElementById('quick-looks-scroll');
-                          if (container) container.scrollBy({ left: -400, behavior: 'smooth' });
-                        }}
-                        className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                        aria-label="Scroll left"
-                        disabled={surpriseMeActive}
-                      >
-                        <ChevronLeft size={18} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          const container = document.getElementById('quick-looks-scroll');
-                          if (container) container.scrollBy({ left: 400, behavior: 'smooth' });
-                        }}
-                        className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                        aria-label="Scroll right"
-                        disabled={surpriseMeActive}
-                      >
-                        <ChevronRight size={18} />
-                      </button>
+                    <div className="flex items-center gap-2">
+                      {quickLooksExpanded && (
+                        <div className="hidden lg:flex items-center gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const container = document.getElementById('quick-looks-scroll');
+                              if (container) container.scrollBy({ left: -600, behavior: 'smooth' });
+                            }}
+                            className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                            aria-label="Scroll left"
+                          >
+                            <ChevronLeft size={16} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const container = document.getElementById('quick-looks-scroll');
+                              if (container) container.scrollBy({ left: 600, behavior: 'smooth' });
+                            }}
+                            className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                            aria-label="Scroll right"
+                          >
+                            <ChevronRight size={16} />
+                          </button>
+                        </div>
+                      )}
+                      <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${quickLooksExpanded ? 'rotate-180' : ''}`} />
                     </div>
-                  </div>
+                  </button>
+                  
+                  {/* Expandable content */}
+                  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${quickLooksExpanded ? 'max-h-[200px] opacity-100 mt-3' : 'max-h-0 opacity-0'}`}>
                   <div id="quick-looks-scroll" className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
                     {availablePresets.map(preset => (
                       <button
@@ -1098,7 +1123,7 @@ const App: React.FC = () => {
                             ? 'bg-slate-50 border border-slate-200 text-slate-400 hover:border-amber-300 hover:bg-amber-50' 
                             : 'bg-white border border-slate-200 text-slate-700 hover:border-rose-300 hover:bg-rose-50'
                           }
-                          ${surpriseMeActive ? 'cursor-not-allowed' : ''}
+                          ${surpriseMeActive || genState.isLoading ? 'cursor-not-allowed' : ''}
                         `}
                       >
                         <span>{preset.emoji}</span>
@@ -1110,6 +1135,7 @@ const App: React.FC = () => {
                         )}
                       </button>
                     ))}
+                  </div>
                   </div>
                 </div>
 
@@ -1123,7 +1149,7 @@ const App: React.FC = () => {
                     <span className={`text-xs font-semibold uppercase tracking-wider ${surpriseMeActive ? 'text-violet-600' : 'text-slate-500'}`}>
                       {surpriseMeActive ? 'Surprise Me Active' : 'Your Look'}
                     </span>
-                    {activeSelections.length > 0 && !surpriseMeActive && (
+                    {activeSelections.length > 0 && !surpriseMeActive && !genState.isLoading && (
                       <button onClick={handleReset} className="text-xs text-slate-500 hover:text-rose-500 flex items-center gap-1 transition-opacity">
                         <RotateCcw size={10} />
                         Clear All
@@ -1139,9 +1165,11 @@ const App: React.FC = () => {
                           activeSelections.map((item, idx) => (
                             <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-[#0F172A] text-white text-xs rounded-full animate-in fade-in zoom-in-95 duration-200">
                               {item.label}
-                              <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-700 rounded-full p-0.5">
-                                <X size={10} className="text-white" />
-                              </button>
+                              {!genState.isLoading && (
+                                <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-700 rounded-full p-0.5">
+                                  <X size={10} className="text-white" />
+                                </button>
+                              )}
                             </span>
                           ))
                         ) : (

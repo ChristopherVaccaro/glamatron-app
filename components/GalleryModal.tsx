@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, Trash2, Heart, Download, Calendar, ChevronLeft, ChevronRight, ImageIcon, Filter, ArrowUpDown, Clock } from 'lucide-react';
+import { X, Trash2, Heart, Download, Calendar, ChevronLeft, ChevronRight, ImageIcon, Filter, ArrowUpDown, Clock, Share2 } from 'lucide-react';
 import { useGallery } from '../contexts/GalleryContext';
 import { GalleryItem } from '../types';
 
@@ -108,6 +108,35 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
     setShowDeleteConfirm(null);
     if (selectedItem?.id === id) {
       setSelectedItemId(null);
+    }
+  };
+
+  const handleShare = async (item: GalleryItem) => {
+    try {
+      const response = await fetch(item.resultImage);
+      const blob = await response.blob();
+      const file = new File([blob], `glamatron-${item.id}.jpg`, { 
+        type: 'image/jpeg',
+        lastModified: Date.now()
+      });
+      
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'My Glamatron Transformation',
+          text: 'Check out my AI-powered style transformation!',
+          files: [file],
+        });
+      } else if (navigator.share) {
+        await navigator.share({
+          title: 'My Glamatron Transformation',
+          text: 'Check out my AI-powered style transformation! Created with Glamatron.',
+        });
+      } else {
+        // Fallback: copy image URL or download
+        handleDownload(item);
+      }
+    } catch (err) {
+      console.error('Share error:', err);
     }
   };
 
@@ -350,8 +379,17 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
                 </button>
                 
                 <button
+                  onClick={() => handleShare(selectedItem)}
+                  className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
+                  title="Share"
+                >
+                  <Share2 size={18} />
+                </button>
+                
+                <button
                   onClick={() => handleDownload(selectedItem)}
                   className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
+                  title="Download"
                 >
                   <Download size={18} />
                 </button>
