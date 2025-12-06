@@ -86,11 +86,11 @@ const ContactContent: React.FC = () => {
     <div className="space-y-6 text-slate-700">
       <section>
         <p className="mb-4">
-          Have a question, feedback, or need help? We'd love to hear from you! Fill out the form below 
-          or email us directly.
+          Have a question, feedback, or need help? We'd love to hear from you! 
+          Email us directly and we'll get back to you as soon as possible.
         </p>
         
-        <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl mb-6">
+        <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl">
           <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
             <Mail className="w-5 h-5 text-slate-700" />
           </div>
@@ -106,6 +106,12 @@ const ContactContent: React.FC = () => {
         </div>
       </section>
 
+      <p className="text-xs text-slate-500 text-center">
+        We typically respond within 24-48 hours.
+      </p>
+
+      {/* Contact form - hidden for now, keeping code for future implementation */}
+      {false && (
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -200,10 +206,7 @@ const ContactContent: React.FC = () => {
           )}
         </button>
       </form>
-
-      <p className="text-xs text-slate-500 text-center">
-        We typically respond within 24-48 hours.
-      </p>
+      )}
     </div>
   );
 };

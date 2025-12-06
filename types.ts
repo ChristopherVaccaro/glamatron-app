@@ -62,7 +62,7 @@ export const SPECIAL_EMAILS = {
 } as const;
 
 // Default glamcoins for new users
-export const DEFAULT_GLAMCOINS = 5;
+export const DEFAULT_GLAMCOINS = 10;
 
 // Subscription tier feature flags
 export interface SubscriptionFeatures {

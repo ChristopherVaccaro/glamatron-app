@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, User, Mail, Camera, Check } from 'lucide-react';
+import { X, User, Mail, Check, Trash2, AlertTriangle } from 'lucide-react';
 import { UserData } from './AuthModal';
 import { useGallery } from '../contexts/GalleryContext';
+import { useUser } from '../contexts/UserContext';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -12,9 +13,11 @@ interface ProfileModalProps {
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUpdateUser }) => {
   const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
   const [saved, setSaved] = useState(false);
-  const { getUserItems } = useGallery();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const { getUserItems, clearUserGallery } = useGallery();
+  const { signOut } = useUser();
   
   // Get actual stats from gallery
   const userGalleryItems = getUserItems(user.id);
@@ -24,9 +27,22 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
   if (!isOpen) return null;
 
   const handleSave = () => {
-    onUpdateUser({ ...user, name, email });
+    onUpdateUser({ ...user, name });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText.toLowerCase() !== 'delete') return;
+    
+    // Clear user's gallery data
+    await clearUserGallery(user.id);
+    
+    // Sign out the user
+    signOut();
+    
+    // Close modal
+    onClose();
   };
 
   // Get initials for avatar
@@ -98,9 +114,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
                 getInitials(name || user.name)
               )}
             </div>
-            <button className="absolute bottom-0 right-0 w-8 h-8 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-slate-700 transition-colors">
-              <Camera size={14} />
-            </button>
           </div>
         </div>
 
@@ -124,7 +137,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
               </div>
             </div>
 
-            {/* Email field */}
+            {/* Email field - always read-only for security */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
                 Email Address
@@ -133,16 +146,18 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all bg-slate-50"
+                  value={user.email}
+                  readOnly
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-600 cursor-not-allowed"
                   placeholder="your@email.com"
-                  disabled={user.provider !== 'email'}
                 />
               </div>
-              {user.provider !== 'email' && (
-                <p className="text-xs text-slate-500 mt-1.5">Email is managed by your {user.provider === 'google' ? 'Google' : 'Apple'} account</p>
-              )}
+              <p className="text-xs text-slate-500 mt-1.5">
+                {user.provider !== 'email' 
+                  ? `Email is managed by your ${user.provider === 'google' ? 'Google' : 'Apple'} account`
+                  : 'Email address cannot be changed'
+                }
+              </p>
             </div>
 
             {/* Stats - only show if user has activity */}
@@ -187,6 +202,63 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
                 'Save Changes'
               )}
             </button>
+
+            {/* Danger Zone - Delete Account */}
+            <div className="mt-8 pt-6 border-t border-slate-200">
+              {!showDeleteConfirm ? (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-full py-2.5 text-sm text-slate-500 hover:text-red-600 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={14} />
+                  Delete Account
+                </button>
+              ) : (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                      <AlertTriangle size={16} className="text-red-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-red-800 text-sm">Delete your account?</h4>
+                      <p className="text-xs text-red-600 mt-1">
+                        This will permanently delete your account and all your saved transformations. This action cannot be undone.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-red-700 mb-1">
+                      Type "delete" to confirm
+                    </label>
+                    <input
+                      type="text"
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      placeholder="delete"
+                      className="w-full px-3 py-2 text-sm border border-red-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setShowDeleteConfirm(false);
+                        setDeleteConfirmText('');
+                      }}
+                      className="flex-1 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteAccount}
+                      disabled={deleteConfirmText.toLowerCase() !== 'delete'}
+                      className="flex-1 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Delete Account
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

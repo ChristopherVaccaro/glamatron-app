@@ -47,7 +47,11 @@ function getRoleFromEmail(email: string): UserRole {
   const normalizedEmail = email.toLowerCase().trim();
   
   // Admin always works (needed to test/demo production)
-  if (normalizedEmail === SPECIAL_EMAILS.ADMIN || normalizedEmail === 'emailchrisvaccaro@gmail.com') return 'admin';
+  if (
+    normalizedEmail === SPECIAL_EMAILS.ADMIN || 
+    normalizedEmail === 'emailchrisvaccaro@gmail.com' ||
+    normalizedEmail === 'therise03@hotmail.com'
+  ) return 'admin';
   
   // Test user only in development (simulated purchases shouldn't be public)
   if (isDevelopment && normalizedEmail === SPECIAL_EMAILS.TEST_USER) return 'test';
@@ -227,9 +231,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(prev => prev ? { ...prev, glamCoins: prev.glamCoins + amount } : null);
   }, []);
 
-  // Subscribe
+  // Subscribe (adds 100 coins as monthly bonus)
   const subscribe = useCallback(() => {
-    setUser(prev => prev ? { ...prev, isSubscribed: true } : null);
+    setUser(prev => prev ? { 
+      ...prev, 
+      isSubscribed: true,
+      glamCoins: prev.glamCoins + 100 // Monthly bonus
+    } : null);
   }, []);
 
   // Unsubscribe
@@ -243,10 +251,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addCoins(coins);
   }, [user, addCoins]);
 
-  // Test user: Simulate subscribe
+  // Test user: Simulate subscribe (adds 100 coins when subscribing)
   const simulateSubscribe = useCallback(() => {
     if (!user || user.role !== 'test') return;
-    setUser(prev => prev ? { ...prev, isSubscribed: !prev.isSubscribed } : null);
+    // Only add coins when subscribing, not when already subscribed
+    if (!user.isSubscribed) {
+      setUser(prev => prev ? { 
+        ...prev, 
+        isSubscribed: true,
+        glamCoins: prev.glamCoins + 100 // Monthly bonus
+      } : null);
+    }
   }, [user]);
 
   // Test user: Reset to defaults

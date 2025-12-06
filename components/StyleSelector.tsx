@@ -25,7 +25,7 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({
   const currentSelection = selections[category];
 
   const isSelected = (value: string) => {
-    if (multiSelect && Array.isArray(currentSelection)) {
+    if (Array.isArray(currentSelection)) {
       return currentSelection.includes(value);
     }
     return currentSelection === value;
@@ -48,8 +48,8 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({
 
   return (
     <div className="mb-4 last:mb-0">
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+      <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200">
+        <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900">
           {title}
         </h4>
         {lockedCount > 0 && (

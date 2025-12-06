@@ -39,8 +39,8 @@ const PasswordGate: React.FC<PasswordGateProps> = ({ onUnlock }) => {
           {/* Logo */}
           <div className="text-center mb-8">
             <h1 
-              className="text-2xl sm:text-3xl font-bold tracking-wide text-white mb-2" 
-              style={{ fontFamily: "'Orbitron', sans-serif" }}
+              className="text-2xl sm:text-3xl tracking-wide text-white mb-2" 
+              style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }}
             >
               GLAMATRON
             </h1>
@@ -106,6 +106,14 @@ const PasswordGate: React.FC<PasswordGateProps> = ({ onUnlock }) => {
           {/* Footer */}
           <p className="text-center text-slate-500 text-xs mt-6">
             This site is currently in private beta.
+          </p>
+          <p className="text-center mt-3">
+            <a 
+              href="mailto:support@cognitav.com?subject=Glamatron%20Early%20Access%20Request&body=Hi%20Glamatron%20Team%2C%0A%0AI%27d%20love%20to%20get%20early%20access%20to%20Glamatron!%0A%0AName%3A%20%0AEmail%3A%20%0A%0AThanks!"
+              className="text-slate-400 hover:text-white text-sm underline underline-offset-2 transition-colors"
+            >
+              Want early access? Click here
+            </a>
           </p>
         </div>
       </div>
