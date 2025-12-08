@@ -66,12 +66,15 @@ ALTER TABLE public.generations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 
--- Profiles: Users can only read/update their own profile
+-- Profiles: Users can only read/update/delete their own profile
 CREATE POLICY "Users can view own profile" ON public.profiles
   FOR SELECT USING (auth.uid() = id);
 
 CREATE POLICY "Users can update own profile" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Users can delete own profile" ON public.profiles
+  FOR DELETE USING (auth.uid() = id);
 
 -- Generations: Users can only see their own generations
 CREATE POLICY "Users can view own generations" ON public.generations
