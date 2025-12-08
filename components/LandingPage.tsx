@@ -184,9 +184,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
                         className="w-full h-full object-cover"
                       />
                       {/* Sparkle decorations */}
-                      <Sparkles className="absolute top-6 right-6 text-amber-400 animate-pulse" size={20} />
-                      <Sparkles className="absolute bottom-10 left-6 text-white/60 animate-pulse" size={16} style={{ animationDelay: '0.5s' }} />
-                      <Sparkles className="absolute top-1/3 right-10 text-rose-300 animate-pulse" size={14} style={{ animationDelay: '1s' }} />
+                     
                       {/* Decorative elements */}
                       <div className="absolute top-4 left-4 px-3 py-1.5 bg-rose-500/70 backdrop-blur-sm rounded-lg text-xs font-medium text-white">
                         After
@@ -468,8 +466,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
           
           <p className="text-slate-400 text-lg mb-10 max-w-xl mx-auto">
             {isProduction 
-              ? "Request access and start experimenting with AI-powered style transformations."
-              : "Create an account and start experimenting with AI-powered style transformations today."
+              ? "Request access and start experimenting with style transformations."
+              : "Create an account and start experimenting with style transformations today."
             }
           </p>
 

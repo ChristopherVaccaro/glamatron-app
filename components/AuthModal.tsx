@@ -244,7 +244,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
               ) : (
                 <div className="flex items-center justify-center gap-1 mt-2 text-amber-600">
                   <Coins size={16} />
-                  <span className="text-sm font-medium">Join and get 10 free GlamCoins to start</span>
+                  <span className="text-sm font-medium">Join and get 5 free GlamCoins to start</span>
                 </div>
               )}
             </>

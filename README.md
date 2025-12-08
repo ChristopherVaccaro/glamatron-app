@@ -1,6 +1,6 @@
 # StyleMirror AI
 
-AI-powered style transformation app that lets you visualize different looks on your photos. Upload a selfie and customize hair styles, makeup, accessories, and expressions using Google's Gemini AI.
+Style transformation app that lets you visualize different looks on your photos. Upload a selfie and customize hair styles, makeup, accessories, and expressions.
 
 ![StyleMirror AI](https://img.shields.io/badge/Powered%20by-Gemini%20AI-blue)
 
