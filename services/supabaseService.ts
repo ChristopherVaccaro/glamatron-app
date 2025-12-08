@@ -301,7 +301,7 @@ export const GalleryService = {
       if (error) {
         console.error('Error uploading image:', error.message, error);
         // If it's a policy error, the bucket policies may not be set correctly
-        if (error.message?.includes('policy') || error.statusCode === '403' || error.message?.includes('409')) {
+        if (error.message?.includes('policy') || error.message?.includes('403') || error.message?.includes('409')) {
           console.error('Storage policy error - check bucket policies in Supabase Dashboard');
         }
         return null;
