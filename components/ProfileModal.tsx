@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, User, Mail, Check, Trash2, AlertTriangle } from 'lucide-react';
+import { X, User, Mail, Check, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import { UserData } from './AuthModal';
 import { useGallery } from '../contexts/GalleryContext';
 import { useUser } from '../contexts/UserContext';
+import { AccountService } from '../services/supabaseService';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -16,7 +17,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
   const [saved, setSaved] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const { getUserItems, clearUserGallery } = useGallery();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const { getUserItems } = useGallery();
   const { signOut } = useUser();
   
   // Get actual stats from gallery
@@ -35,14 +38,28 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
   const handleDeleteAccount = async () => {
     if (deleteConfirmText.toLowerCase() !== 'delete') return;
     
-    // Clear user's gallery data
-    await clearUserGallery(user.id);
+    setIsDeleting(true);
+    setDeleteError(null);
     
-    // Sign out the user
-    signOut();
-    
-    // Close modal
-    onClose();
+    try {
+      const result = await AccountService.deleteAccount(user.id);
+      
+      if (result.success) {
+        // Close modal first
+        onClose();
+        // Sign out from context - this triggers the redirect to landing page
+        await signOut();
+        // Force reload to clear all state if signOut doesn't trigger redirect
+        window.location.href = '/';
+      } else {
+        setDeleteError(result.error || 'Failed to delete account. Please try again.');
+      }
+    } catch (error) {
+      console.error('Delete account error:', error);
+      setDeleteError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Get initials for avatar
@@ -235,25 +252,40 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
                       value={deleteConfirmText}
                       onChange={(e) => setDeleteConfirmText(e.target.value)}
                       placeholder="delete"
-                      className="w-full px-3 py-2 text-sm border border-red-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      disabled={isDeleting}
+                      className="w-full px-3 py-2 text-sm border border-red-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent disabled:opacity-50"
                     />
                   </div>
+                  {deleteError && (
+                    <div className="mb-3 p-2 bg-red-100 border border-red-300 rounded-lg text-xs text-red-700">
+                      {deleteError}
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
                         setShowDeleteConfirm(false);
                         setDeleteConfirmText('');
+                        setDeleteError(null);
                       }}
-                      className="flex-1 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                      disabled={isDeleting}
+                      className="flex-1 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleDeleteAccount}
-                      disabled={deleteConfirmText.toLowerCase() !== 'delete'}
-                      className="flex-1 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={deleteConfirmText.toLowerCase() !== 'delete' || isDeleting}
+                      className="flex-1 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      Delete Account
+                      {isDeleting ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        'Delete Account'
+                      )}
                     </button>
                   </div>
                 </div>

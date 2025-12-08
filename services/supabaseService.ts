@@ -301,7 +301,7 @@ export const GalleryService = {
       if (error) {
         console.error('Error uploading image:', error.message, error);
         // If it's a policy error, the bucket policies may not be set correctly
-        if (error.message?.includes('policy') || error.statusCode === '403' || error.message?.includes('409')) {
+        if (error.message?.includes('policy') || error.message?.includes('403') || error.message?.includes('409')) {
           console.error('Storage policy error - check bucket policies in Supabase Dashboard');
         }
         return null;
@@ -563,11 +563,130 @@ export const GalleryService = {
   },
 };
 
+/**
+ * Account Service - Handles account deletion
+ */
+export const AccountService = {
+  /**
+   * Delete a user's account and all associated data via Edge Function
+   * This properly deletes: gallery items, gallery images, profile, and auth.users entry
+   */
+  async deleteAccount(userId: string): Promise<{ success: boolean; error?: string }> {
+    console.log('[AccountService] deleteAccount called for userId:', userId);
+    
+    if (!supabase) {
+      console.error('[AccountService] Supabase not configured');
+      return { success: false, error: 'Supabase not configured' };
+    }
+
+    try {
+      // Get access token from localStorage directly (Supabase stores it there)
+      console.log('[AccountService] Getting access token from storage...');
+      
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const storageKey = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`;
+      const storedSession = localStorage.getItem(storageKey);
+      
+      console.log('[AccountService] Storage key:', storageKey, 'Found:', !!storedSession);
+      
+      if (!storedSession) {
+        console.error('[AccountService] No stored session found');
+        return { success: false, error: 'Not authenticated' };
+      }
+      
+      const sessionData = JSON.parse(storedSession);
+      const accessToken = sessionData?.access_token;
+      
+      if (!accessToken) {
+        console.error('[AccountService] No access token in stored session');
+        return { success: false, error: 'Not authenticated' };
+      }
+      
+      console.log('[AccountService] Access token found, calling Edge Function...');
+
+      // Call the Edge Function directly via fetch
+      const response = await fetch(`${supabaseUrl}/functions/v1/delete-account`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('[AccountService] Edge Function response status:', response.status);
+      
+      const data = await response.json();
+      console.log('[AccountService] Edge Function response data:', data);
+
+      if (!response.ok) {
+        console.error('[AccountService] Edge function error:', data);
+        return { success: false, error: data.error || 'Failed to delete account' };
+      }
+
+      if (data?.error) {
+        console.error('[AccountService] Delete account error:', data.error);
+        return { success: false, error: data.error };
+      }
+
+      console.log('[AccountService] Account deleted successfully, clearing local storage...');
+      
+      // Clear the stored session
+      localStorage.removeItem(storageKey);
+      
+      // Sign out locally
+      try {
+        await supabase.auth.signOut();
+      } catch (e) {
+        console.log('[AccountService] signOut error (expected):', e);
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('[AccountService] Error in deleteAccount:', error);
+      return { success: false, error: 'Failed to delete account' };
+    }
+  },
+
+  /**
+   * Fallback deletion method if Edge Function is not deployed
+   * Deletes user data but leaves auth.users entry orphaned
+   */
+  async deleteAccountFallback(userId: string): Promise<{ success: boolean; error?: string }> {
+    if (!supabase) {
+      return { success: false, error: 'Supabase not configured' };
+    }
+
+    try {
+      // 1. Clear all gallery items and images
+      await GalleryService.clearUserGallery(userId);
+
+      // 2. Delete profile (cascades to generations, transactions, subscriptions)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (profileError) {
+        console.error('Error deleting profile:', profileError);
+      }
+
+      // 3. Sign out the user
+      await supabase.auth.signOut();
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error in deleteAccountFallback:', error);
+      return { success: false, error: 'Failed to delete account' };
+    }
+  },
+};
+
 export default {
   supabase,
   SupabaseAuthService,
   ProfileService,
   GenerationsService,
   GalleryService,
+  AccountService,
   isSupabaseConfigured,
 };

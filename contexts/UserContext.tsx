@@ -198,14 +198,30 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sign out - reset state and sign out from Supabase
   const signOut = useCallback(async () => {
+    // Clear user state immediately for responsive UI
+    setUser(null);
+    
     if (supabase && isSupabaseConfigured) {
       try {
-        await supabase.auth.signOut();
+        // Clear localStorage session directly (in case signOut hangs)
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        if (supabaseUrl) {
+          const storageKey = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`;
+          localStorage.removeItem(storageKey);
+        }
+        
+        // Try to sign out from Supabase (with timeout)
+        const signOutPromise = supabase.auth.signOut();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Sign out timeout')), 3000)
+        );
+        
+        await Promise.race([signOutPromise, timeoutPromise]);
       } catch (error) {
         console.error('Error signing out:', error);
+        // Already cleared user state and localStorage, so user is effectively signed out
       }
     }
-    setUser(null);
   }, []);
 
   // Deduct a coin for generation

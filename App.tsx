@@ -35,7 +35,7 @@ import PrivacyPolicyContent from './components/PrivacyPolicyContent';
 import TermsOfServiceContent from './components/TermsOfServiceContent';
 import ContactContent from './components/ContactContent';
 import LandingPage from './components/LandingPage';
-import PasswordGate from './components/PasswordGate';
+// Password gate removed
 import PurchaseModal from './components/PurchaseModal';
 import GlamCoinDisplay from './components/GlamCoinDisplay';
 import DevToolbar from './components/DevToolbar';
@@ -263,10 +263,7 @@ const App: React.FC = () => {
   // Track the current gallery item ID for the generated result
   const [currentGalleryItemId, setCurrentGalleryItemId] = useState<string | null>(null);
   
-  // Check if user has already unlocked the site this session
-  const [isUnlocked, setIsUnlocked] = useState(() => {
-    return sessionStorage.getItem('glamatron_access') === 'granted';
-  });
+  // Password gate removed - site is open
   const [showLanding, setShowLanding] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [originalFilename, setOriginalFilename] = useState<string>('image');
@@ -316,16 +313,14 @@ const App: React.FC = () => {
         avatar: contextUser.avatar,
         provider: contextUser.avatar ? 'google' : 'email', // If has avatar, likely Google
       });
-      // Authenticated users bypass password gate and landing, go straight to tool
-      setIsUnlocked(true);
+      // Authenticated users go straight to tool
       setShowLanding(false);
       // Load user's gallery from Supabase
       loadUserGallery(contextUser.id);
     } else if (!contextUser && user && (user.provider === 'google' || user.provider === 'email')) {
-      // User signed out from Supabase - go back to landing page (not password gate)
+      // User signed out from Supabase - go back to landing page
       setUser(null);
       setShowLanding(true);
-      // Keep isUnlocked true so they stay on landing, not password gate
       setSelectedImage(null);
       setGenState({ isLoading: false, error: null, resultImage: null });
     }
@@ -793,22 +788,8 @@ const App: React.FC = () => {
     }
   };
 
-  // Show loading screen while checking auth
-  if (isAuthLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center animate-in fade-in duration-300">
-          <div className="w-12 h-12 border-3 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-400 text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show password gate if not unlocked
-  if (!isUnlocked) {
-    return <PasswordGate onUnlock={() => setIsUnlocked(true)} />;
-  }
+  // Skip loading screen - go straight to landing page
+  // Auth will load in the background
 
   if (showLanding) {
     return (
