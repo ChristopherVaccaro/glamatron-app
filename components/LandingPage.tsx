@@ -13,9 +13,15 @@ import {
   UserPlus,
   Scissors,
   Eye,
-  Smile
+  Smile,
+  KeyRound
 } from 'lucide-react';
 import AuthModal, { UserData } from './AuthModal';
+import RequestAccessModal from './RequestAccessModal';
+import ForgotPasswordModal from './ForgotPasswordModal';
+
+// Check if we're in production (Vite sets this)
+const isProduction = import.meta.env.PROD;
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -26,6 +32,8 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [showRequestAccessModal, setShowRequestAccessModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
 
   const handleSignIn = (userData: UserData) => {
     onSignIn(userData);
@@ -57,18 +65,30 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
                 GLAMATRON
               </h1>
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => openAuth('signin')}
-                  className="flex items-center gap-2 px-4 py-2 text-white text-sm font-medium hover:text-slate-300 transition-colors"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => openAuth('signup')}
-                  className="flex items-center gap-2 px-4 py-2 bg-white text-slate-900 text-sm font-medium rounded-lg hover:bg-slate-100 transition-colors"
-                >
-                  Register
-                </button>
+                {isProduction ? (
+                  <button
+                    onClick={() => setShowRequestAccessModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-white text-slate-900 text-sm font-medium rounded-lg hover:bg-slate-100 transition-colors"
+                  >
+                    <KeyRound size={16} />
+                    Request Access
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => openAuth('signin')}
+                      className="flex items-center gap-2 px-4 py-2 text-white text-sm font-medium hover:text-slate-300 transition-colors"
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      onClick={() => openAuth('signup')}
+                      className="flex items-center gap-2 px-4 py-2 bg-white text-slate-900 text-sm font-medium rounded-lg hover:bg-slate-100 transition-colors"
+                    >
+                      Register
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -99,21 +119,34 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
-                onClick={() => openAuth('signup')}
-                className="group inline-flex items-center gap-3 px-8 py-4 bg-white text-slate-900 font-bold text-lg rounded-2xl hover:bg-slate-100 transition-all duration-300 shadow-2xl shadow-white/20 hover:shadow-white/30 hover:scale-105"
-              >
-                <UserPlus size={20} />
-                Create Account
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button
-                onClick={() => openAuth('signin')}
-                className="inline-flex items-center gap-2 px-6 py-4 text-white font-medium hover:text-slate-300 transition-colors"
-              >
-                <LogIn size={18} />
-                Already have an account? Sign In
-              </button>
+              {isProduction ? (
+                <button
+                  onClick={() => setShowRequestAccessModal(true)}
+                  className="group inline-flex items-center gap-3 px-8 py-4 bg-white text-slate-900 font-bold text-lg rounded-2xl hover:bg-slate-100 transition-all duration-300 shadow-2xl shadow-white/20 hover:shadow-white/30 hover:scale-105"
+                >
+                  <KeyRound size={20} />
+                  Request Access
+                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => openAuth('signup')}
+                    className="group inline-flex items-center gap-3 px-8 py-4 bg-white text-slate-900 font-bold text-lg rounded-2xl hover:bg-slate-100 transition-all duration-300 shadow-2xl shadow-white/20 hover:shadow-white/30 hover:scale-105"
+                  >
+                    <UserPlus size={20} />
+                    Create Account
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  <button
+                    onClick={() => openAuth('signin')}
+                    className="inline-flex items-center gap-2 px-6 py-4 text-white font-medium hover:text-slate-300 transition-colors"
+                  >
+                    <LogIn size={18} />
+                    Already have an account? Sign In
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -429,25 +462,41 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
           </h3>
           
           <p className="text-slate-400 text-lg mb-10 max-w-xl mx-auto">
-            Create an account and start experimenting with AI-powered style transformations today.
+            {isProduction 
+              ? "Request access and start experimenting with AI-powered style transformations."
+              : "Create an account and start experimenting with AI-powered style transformations today."
+            }
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={() => openAuth('signup')}
-              className="group inline-flex items-center gap-3 px-10 py-5 bg-white text-slate-900 font-bold text-lg rounded-2xl hover:bg-slate-100 transition-all duration-300 shadow-2xl shadow-white/10 hover:shadow-white/20 hover:scale-105"
-            >
-              <UserPlus size={24} />
-              Create Your Account
-              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button
-              onClick={() => openAuth('signin')}
-              className="inline-flex items-center gap-2 px-6 py-4 text-white/80 font-medium hover:text-white transition-colors"
-            >
-              <LogIn size={18} />
-              Sign In
-            </button>
+            {isProduction ? (
+              <button
+                onClick={() => setShowRequestAccessModal(true)}
+                className="group inline-flex items-center gap-3 px-10 py-5 bg-white text-slate-900 font-bold text-lg rounded-2xl hover:bg-slate-100 transition-all duration-300 shadow-2xl shadow-white/10 hover:shadow-white/20 hover:scale-105"
+              >
+                <KeyRound size={24} />
+                Request Access
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => openAuth('signup')}
+                  className="group inline-flex items-center gap-3 px-10 py-5 bg-white text-slate-900 font-bold text-lg rounded-2xl hover:bg-slate-100 transition-all duration-300 shadow-2xl shadow-white/10 hover:shadow-white/20 hover:scale-105"
+                >
+                  <UserPlus size={24} />
+                  Create Your Account
+                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+                <button
+                  onClick={() => openAuth('signin')}
+                  className="inline-flex items-center gap-2 px-6 py-4 text-white/80 font-medium hover:text-white transition-colors"
+                >
+                  <LogIn size={18} />
+                  Sign In
+                </button>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -472,6 +521,32 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
         onClose={() => setShowAuthModal(false)}
         onSignIn={handleSignIn}
         defaultMode={authMode}
+        onForgotPassword={() => {
+          setShowAuthModal(false);
+          setShowForgotPasswordModal(true);
+        }}
+      />
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={showForgotPasswordModal}
+        onClose={() => setShowForgotPasswordModal(false)}
+        onBackToSignIn={() => {
+          setShowForgotPasswordModal(false);
+          setAuthMode('signin');
+          setShowAuthModal(true);
+        }}
+      />
+
+      {/* Request Access Modal (Production only) */}
+      <RequestAccessModal
+        isOpen={showRequestAccessModal}
+        onClose={() => setShowRequestAccessModal(false)}
+        onSignIn={() => {
+          setShowRequestAccessModal(false);
+          setAuthMode('signin');
+          setShowAuthModal(true);
+        }}
       />
     </div>
   );

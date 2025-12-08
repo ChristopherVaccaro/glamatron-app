@@ -19,9 +19,10 @@ interface AuthModalProps {
   onClose: () => void;
   onSignIn?: (user: UserData) => void;
   defaultMode?: 'signin' | 'signup';
+  onForgotPassword?: () => void;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaultMode = 'signin' }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaultMode = 'signin', onForgotPassword }) => {
   const { signIn } = useUser();
   const [mode, setMode] = useState<'signin' | 'signup'>(defaultMode);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -368,7 +369,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
 
             {mode === 'signin' && (
               <div className="text-right">
-                <button type="button" className="text-sm text-slate-600 hover:text-slate-900 font-medium">
+                <button 
+                  type="button" 
+                  onClick={onForgotPassword}
+                  className="text-sm text-slate-600 hover:text-slate-900 font-medium"
+                >
                   Forgot password?
                 </button>
               </div>

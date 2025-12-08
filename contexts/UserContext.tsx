@@ -17,6 +17,10 @@ interface UserContextType {
   isTestUser: boolean;
   features: SubscriptionFeatures;
   
+  // Auth events
+  pendingPasswordRecovery: boolean; // True when user clicked password reset link
+  clearPasswordRecovery: () => void;
+  
   // Auth actions
   signIn: (email: string, name: string) => UserProfile;
   signOut: () => void;
@@ -96,6 +100,7 @@ function createProfileFromSupabaseUser(supabaseUser: SupabaseUser): UserProfile 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingPasswordRecovery, setPendingPasswordRecovery] = useState(false);
 
   // Listen for Supabase auth state changes
   useEffect(() => {
@@ -107,10 +112,44 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for existing session on mount
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const profile = createProfileFromSupabaseUser(session.user);
-          setUser(profile);
+        // Check URL hash for auth tokens (email confirmation, password recovery, etc.)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
+        
+        // If we have tokens in the URL, let Supabase handle them
+        // This happens for email confirmation and password recovery links
+        if (accessToken && refreshToken) {
+          console.log('Auth redirect detected, type:', type);
+          
+          // Set the session from URL tokens
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          
+          if (error) {
+            console.error('Error setting session from URL:', error);
+          } else if (data.session?.user) {
+            const profile = createProfileFromSupabaseUser(data.session.user);
+            setUser(profile);
+            
+            // Check if this is a password recovery flow
+            if (type === 'recovery') {
+              setPendingPasswordRecovery(true);
+            }
+          }
+          
+          // Clean up URL hash
+          window.history.replaceState(null, '', window.location.pathname);
+        } else {
+          // Normal session check
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            const profile = createProfileFromSupabaseUser(session.user);
+            setUser(profile);
+          }
         }
       } catch (error) {
         console.error('Error getting session:', error);
@@ -121,7 +160,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    // Listen for auth changes (sign in, sign out, token refresh)
+    // Listen for auth changes (sign in, sign out, token refresh, password recovery)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event);
@@ -129,8 +168,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_IN' && session?.user) {
           const profile = createProfileFromSupabaseUser(session.user);
           setUser(profile);
+        } else if (event === 'PASSWORD_RECOVERY' && session?.user) {
+          // User clicked password reset link
+          const profile = createProfileFromSupabaseUser(session.user);
+          setUser(profile);
+          setPendingPasswordRecovery(true);
+        } else if (event === 'USER_UPDATED' && session?.user) {
+          // User updated (e.g., password changed)
+          const profile = createProfileFromSupabaseUser(session.user);
+          setUser(profile);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
+          setPendingPasswordRecovery(false);
         }
       }
     );
@@ -296,12 +345,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } : null);
   }, [user]);
 
+  // Clear password recovery state (after user completes reset)
+  const clearPasswordRecovery = useCallback(() => {
+    setPendingPasswordRecovery(false);
+  }, []);
+
   const value: UserContextType = {
     user,
     isAuthLoading: isLoading,
     isAdmin,
     isTestUser,
     features,
+    pendingPasswordRecovery,
+    clearPasswordRecovery,
     signIn,
     signOut,
     deductCoin,

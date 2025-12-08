@@ -41,6 +41,8 @@ import GlamCoinDisplay from './components/GlamCoinDisplay';
 import DevToolbar from './components/DevToolbar';
 import GalleryModal from './components/GalleryModal';
 import Toast from './components/Toast';
+import ForgotPasswordModal from './components/ForgotPasswordModal';
+import ResetPasswordModal from './components/ResetPasswordModal';
 import { useGallery } from './contexts/GalleryContext';
 import { generateStyledImage } from './services/geminiService';
 import { Analytics } from './utils/analytics';
@@ -255,7 +257,7 @@ export const QUICK_PRESETS = [
 
 const App: React.FC = () => {
   // User context for GlamCoins and subscription
-  const { user: contextUser, isAuthLoading, features, canGenerate, deductCoin, signOut } = useUser();
+  const { user: contextUser, isAuthLoading, features, canGenerate, deductCoin, signOut, pendingPasswordRecovery } = useUser();
   
   // Gallery context for saving images
   const { addItem: addToGallery, items: galleryItems, toggleFavorite, getUserItems, loadUserGallery } = useGallery();
@@ -300,6 +302,7 @@ const App: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
   
   // Sync contextUser (from Supabase auth) to local user state
@@ -329,17 +332,16 @@ const App: React.FC = () => {
   // Toast notification state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
-  // Check for email confirmation on mount (Supabase redirects with hash params)
+  // Show toast for email confirmation (session is handled in UserContext)
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
     const type = hashParams.get('type');
     
-    // If this is an email confirmation redirect
-    if (accessToken && type === 'signup') {
+    // Show welcome toast for email confirmation
+    if (type === 'signup') {
       setToast({ message: 'Account confirmed! Welcome to Glamatron.', type: 'success' });
-      // Clean up URL
-      window.history.replaceState(null, '', window.location.pathname);
+    } else if (type === 'recovery') {
+      setToast({ message: 'Please set your new password.', type: 'info' });
     }
   }, []);
   
@@ -1270,6 +1272,27 @@ const App: React.FC = () => {
         onClose={() => setShowAuthModal(false)}
         onSignIn={(userData) => setUser(userData)}
         defaultMode={authModalMode}
+        onForgotPassword={() => {
+          setShowAuthModal(false);
+          setShowForgotPasswordModal(true);
+        }}
+      />
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={showForgotPasswordModal}
+        onClose={() => setShowForgotPasswordModal(false)}
+        onBackToSignIn={() => {
+          setShowForgotPasswordModal(false);
+          setAuthModalMode('signin');
+          setShowAuthModal(true);
+        }}
+      />
+
+      {/* Reset Password Modal - shown when user clicks password reset link */}
+      <ResetPasswordModal
+        isOpen={pendingPasswordRecovery}
+        onClose={() => {}}
       />
 
       {/* Profile Modal */}
