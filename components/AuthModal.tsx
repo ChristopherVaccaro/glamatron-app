@@ -20,9 +20,10 @@ interface AuthModalProps {
   onSignIn?: (user: UserData) => void;
   defaultMode?: 'signin' | 'signup';
   onForgotPassword?: () => void;
+  signInOnly?: boolean; // When true, hides the signup option
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaultMode = 'signin', onForgotPassword }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaultMode = 'signin', onForgotPassword, signInOnly = false }) => {
   const { signIn } = useUser();
   const [mode, setMode] = useState<'signin' | 'signup'>(defaultMode);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -243,7 +244,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
               ) : (
                 <div className="flex items-center justify-center gap-1 mt-2 text-amber-600">
                   <Coins size={16} />
-                  <span className="text-sm font-medium">Join and get 5 free GlamCoins to start</span>
+                  <span className="text-sm font-medium">Join and get 10 free GlamCoins to start</span>
                 </div>
               )}
             </>
@@ -398,20 +399,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
             </button>
           </form>
 
-          {/* Toggle mode */}
-          <p className="text-center text-slate-500 mt-6">
-            {mode === 'signin' ? "Don't have an account? " : "Already have an account? "}
-            <button
-              onClick={() => {
-                setMode(mode === 'signin' ? 'signup' : 'signin');
-                setAuthError(null);
-                setSuccessMessage(null);
-              }}
-              className="text-slate-700 hover:text-slate-900 font-semibold"
-            >
-              {mode === 'signin' ? 'Sign up' : 'Sign in'}
-            </button>
-          </p>
+          {/* Toggle mode - hidden in signInOnly mode */}
+          {!signInOnly && (
+            <p className="text-center text-slate-500 mt-6">
+              {mode === 'signin' ? "Don't have an account? " : "Already have an account? "}
+              <button
+                onClick={() => {
+                  setMode(mode === 'signin' ? 'signup' : 'signin');
+                  setAuthError(null);
+                  setSuccessMessage(null);
+                }}
+                className="text-slate-700 hover:text-slate-900 font-semibold"
+              >
+                {mode === 'signin' ? 'Sign up' : 'Sign in'}
+              </button>
+            </p>
+          )}
 
           {/* Developer Quick Access - Only show in development */}
           {import.meta.env.DEV && (

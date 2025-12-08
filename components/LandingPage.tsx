@@ -34,6 +34,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [showRequestAccessModal, setShowRequestAccessModal] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [signInOnly, setSignInOnly] = useState(false); // When true, hides signup option in AuthModal
 
   const handleSignIn = (userData: UserData) => {
     onSignIn(userData);
@@ -118,7 +119,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
               and accessories—all from a single photo.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* In production, only show Request Access button - no content below */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
               {isProduction ? (
                 <button
                   onClick={() => setShowRequestAccessModal(true)}
@@ -203,6 +205,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
         </div>
       </section>
 
+      {/* All showcase sections hidden in production */}
+      {!isProduction && (
+      <>
       {/* Showcase Section 1 - Hair Transformations */}
       <section className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -500,6 +505,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
           </div>
         </div>
       </section>
+      </>
+      )}
 
       {/* Simple Footer */}
       <footer className="bg-slate-950 py-8">
@@ -518,13 +525,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
       {/* Auth Modal */}
       <AuthModal
         isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
+        onClose={() => {
+          setShowAuthModal(false);
+          setSignInOnly(false); // Reset when closing
+        }}
         onSignIn={handleSignIn}
         defaultMode={authMode}
         onForgotPassword={() => {
           setShowAuthModal(false);
           setShowForgotPasswordModal(true);
         }}
+        signInOnly={signInOnly}
       />
 
       {/* Forgot Password Modal */}
@@ -545,6 +556,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
         onSignIn={() => {
           setShowRequestAccessModal(false);
           setAuthMode('signin');
+          setSignInOnly(true); // Prevent signup when coming from Request Access
           setShowAuthModal(true);
         }}
       />
