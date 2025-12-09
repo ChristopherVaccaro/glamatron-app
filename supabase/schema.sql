@@ -138,9 +138,9 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- Function to deduct coins
+-- Function to deduct coins (returns detailed result with new balance)
 CREATE OR REPLACE FUNCTION public.deduct_coin(user_uuid UUID)
-RETURNS BOOLEAN AS $$
+RETURNS TABLE(success BOOLEAN, new_balance INTEGER, message TEXT) AS $$
 DECLARE
   current_coins INTEGER;
   is_sub BOOLEAN;
@@ -150,37 +150,148 @@ BEGIN
   FROM public.profiles
   WHERE id = user_uuid;
   
+  -- User not found
+  IF NOT FOUND THEN
+    RETURN QUERY SELECT FALSE, 0, 'User not found'::TEXT;
+    RETURN;
+  END IF;
+  
   -- Admin and subscribed users don't lose coins
   IF user_role = 'admin' OR is_sub THEN
-    RETURN TRUE;
+    RETURN QUERY SELECT TRUE, current_coins, 'Unlimited access'::TEXT;
+    RETURN;
   END IF;
   
   -- Check if user has coins
   IF current_coins <= 0 THEN
-    RETURN FALSE;
+    RETURN QUERY SELECT FALSE, 0, 'Insufficient coins'::TEXT;
+    RETURN;
   END IF;
   
   -- Deduct coin
   UPDATE public.profiles
   SET glam_coins = glam_coins - 1, updated_at = NOW()
-  WHERE id = user_uuid;
+  WHERE id = user_uuid
+  RETURNING glam_coins INTO current_coins;
   
-  RETURN TRUE;
+  -- Log the transaction
+  INSERT INTO public.transactions (user_id, type, coins_amount, description)
+  VALUES (user_uuid, 'purchase', -1, 'Generation cost');
+  
+  RETURN QUERY SELECT TRUE, current_coins, 'Coin deducted'::TEXT;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to add coins (for purchases)
-CREATE OR REPLACE FUNCTION public.add_coins(user_uuid UUID, amount INTEGER, transaction_type TEXT DEFAULT 'purchase')
-RETURNS BOOLEAN AS $$
+-- Function to add coins (for purchases) - returns detailed result
+CREATE OR REPLACE FUNCTION public.add_coins(user_uuid UUID, amount INTEGER, transaction_type TEXT DEFAULT 'purchase', trans_description TEXT DEFAULT 'Coin purchase')
+RETURNS TABLE(success BOOLEAN, new_balance INTEGER, message TEXT) AS $$
+DECLARE
+  current_coins INTEGER;
 BEGIN
+  -- Validate amount
+  IF amount <= 0 THEN
+    RETURN QUERY SELECT FALSE, 0, 'Invalid amount'::TEXT;
+    RETURN;
+  END IF;
+
+  -- Update coins
   UPDATE public.profiles
   SET glam_coins = glam_coins + amount, updated_at = NOW()
-  WHERE id = user_uuid;
+  WHERE id = user_uuid
+  RETURNING glam_coins INTO current_coins;
   
+  -- User not found
+  IF NOT FOUND THEN
+    RETURN QUERY SELECT FALSE, 0, 'User not found'::TEXT;
+    RETURN;
+  END IF;
+  
+  -- Log the transaction
   INSERT INTO public.transactions (user_id, type, coins_amount, description)
-  VALUES (user_uuid, transaction_type, amount, 'Coin purchase');
+  VALUES (user_uuid, transaction_type, amount, trans_description);
   
-  RETURN TRUE;
+  RETURN QUERY SELECT TRUE, current_coins, 'Coins added'::TEXT;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to get user profile
+CREATE OR REPLACE FUNCTION public.get_profile(user_uuid UUID)
+RETURNS TABLE(
+  id UUID,
+  email TEXT,
+  name TEXT,
+  avatar_url TEXT,
+  role TEXT,
+  glam_coins INTEGER,
+  is_subscribed BOOLEAN,
+  subscription_tier TEXT,
+  subscription_expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    p.id,
+    p.email,
+    p.name,
+    p.avatar_url,
+    p.role,
+    p.glam_coins,
+    p.is_subscribed,
+    p.subscription_tier,
+    p.subscription_expires_at,
+    p.created_at
+  FROM public.profiles p
+  WHERE p.id = user_uuid;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to update subscription status
+CREATE OR REPLACE FUNCTION public.update_subscription(user_uuid UUID, subscribed BOOLEAN, bonus_coins INTEGER DEFAULT 0)
+RETURNS TABLE(success BOOLEAN, new_balance INTEGER, is_now_subscribed BOOLEAN) AS $$
+DECLARE
+  current_coins INTEGER;
+BEGIN
+  UPDATE public.profiles
+  SET 
+    is_subscribed = subscribed,
+    subscription_tier = CASE WHEN subscribed THEN 'pro' ELSE 'free' END,
+    glam_coins = glam_coins + bonus_coins,
+    updated_at = NOW()
+  WHERE id = user_uuid
+  RETURNING glam_coins INTO current_coins;
+  
+  IF NOT FOUND THEN
+    RETURN QUERY SELECT FALSE, 0, FALSE;
+    RETURN;
+  END IF;
+  
+  -- Log subscription transaction if bonus coins given
+  IF bonus_coins > 0 THEN
+    INSERT INTO public.transactions (user_id, type, coins_amount, description)
+    VALUES (user_uuid, 'subscription', bonus_coins, 'Subscription bonus coins');
+  END IF;
+  
+  RETURN QUERY SELECT TRUE, current_coins, subscribed;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to log a generation
+CREATE OR REPLACE FUNCTION public.log_generation(
+  user_uuid UUID,
+  selections_data JSONB,
+  gen_status TEXT DEFAULT 'completed',
+  error_msg TEXT DEFAULT NULL
+)
+RETURNS UUID AS $$
+DECLARE
+  new_id UUID;
+BEGIN
+  INSERT INTO public.generations (user_id, selections, status, error_message)
+  VALUES (user_uuid, selections_data, gen_status, error_msg)
+  RETURNING id INTO new_id;
+  
+  RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -260,3 +371,9 @@ CREATE INDEX IF NOT EXISTS idx_gallery_items_created_at ON public.gallery_items(
 CREATE INDEX IF NOT EXISTS idx_gallery_items_favorite ON public.gallery_items(user_id, is_favorite) WHERE is_favorite = TRUE;
 
 COMMENT ON TABLE public.gallery_items IS 'User gallery of generated images';
+
+-- =====================================================
+-- REALTIME SUBSCRIPTIONS
+-- =====================================================
+-- Enable realtime for profiles table (for live coin balance updates)
+ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;

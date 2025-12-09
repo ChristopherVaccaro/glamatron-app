@@ -147,112 +147,310 @@ export const SupabaseAuthService = {
 };
 
 /**
- * Profile Service (for future implementation)
+ * Profile Service - Manages user profiles and GlamCoins via Supabase
  */
+export interface CoinOperationResult {
+  success: boolean;
+  new_balance: number;
+  message: string;
+}
+
+export interface SubscriptionResult {
+  success: boolean;
+  new_balance: number;
+  is_now_subscribed: boolean;
+}
+
 export const ProfileService = {
   /**
-   * Get user profile
+   * Get user profile from Supabase
    */
-  // async getProfile(userId: string): Promise<DbProfile | null> {
-  //   if (!supabase) return null;
-  //   
-  //   const { data, error } = await supabase
-  //     .from('profiles')
-  //     .select('*')
-  //     .eq('id', userId)
-  //     .single();
-  //   
-  //   if (error) throw error;
-  //   return data;
-  // },
+  async getProfile(userId: string): Promise<DbProfile | null> {
+    if (!supabase) {
+      console.warn('Supabase not configured, cannot get profile');
+      return null;
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .rpc('get_profile', { user_uuid: userId });
+      
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+      
+      // RPC returns an array, get first item
+      if (data && data.length > 0) {
+        const profile = data[0];
+        return {
+          id: profile.id,
+          email: profile.email,
+          name: profile.name,
+          avatar_url: profile.avatar_url,
+          role: profile.role as 'admin' | 'test' | 'user',
+          glam_coins: profile.glam_coins,
+          is_subscribed: profile.is_subscribed,
+          subscription_tier: profile.subscription_tier as 'free' | 'pro' | 'enterprise',
+          subscription_expires_at: profile.subscription_expires_at,
+          created_at: profile.created_at,
+          updated_at: profile.created_at, // Not returned by function, use created_at
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error in getProfile:', error);
+      return null;
+    }
+  },
 
   /**
    * Deduct a coin from user's balance
+   * Returns the result with new balance
    */
-  // async deductCoin(userId: string): Promise<boolean> {
-  //   if (!supabase) return false;
-  //   
-  //   const { data, error } = await supabase
-  //     .rpc('deduct_coin', { user_uuid: userId });
-  //   
-  //   if (error) throw error;
-  //   return data as boolean;
-  // },
+  async deductCoin(userId: string): Promise<CoinOperationResult> {
+    if (!supabase) {
+      console.warn('Supabase not configured, cannot deduct coin');
+      return { success: false, new_balance: 0, message: 'Supabase not configured' };
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .rpc('deduct_coin', { user_uuid: userId });
+      
+      if (error) {
+        console.error('Error deducting coin:', error);
+        return { success: false, new_balance: 0, message: error.message };
+      }
+      
+      // RPC returns array with single row
+      if (data && data.length > 0) {
+        return {
+          success: data[0].success,
+          new_balance: data[0].new_balance,
+          message: data[0].message,
+        };
+      }
+      
+      return { success: false, new_balance: 0, message: 'No response from server' };
+    } catch (error) {
+      console.error('Error in deductCoin:', error);
+      return { success: false, new_balance: 0, message: 'Network error' };
+    }
+  },
 
   /**
    * Add coins to user's balance
    */
-  // async addCoins(userId: string, amount: number): Promise<boolean> {
-  //   if (!supabase) return false;
-  //   
-  //   const { data, error } = await supabase
-  //     .rpc('add_coins', { user_uuid: userId, amount });
-  //   
-  //   if (error) throw error;
-  //   return data as boolean;
-  // },
+  async addCoins(
+    userId: string, 
+    amount: number, 
+    transactionType: string = 'purchase',
+    description: string = 'Coin purchase'
+  ): Promise<CoinOperationResult> {
+    if (!supabase) {
+      console.warn('Supabase not configured, cannot add coins');
+      return { success: false, new_balance: 0, message: 'Supabase not configured' };
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .rpc('add_coins', { 
+          user_uuid: userId, 
+          amount,
+          transaction_type: transactionType,
+          trans_description: description,
+        });
+      
+      if (error) {
+        console.error('Error adding coins:', error);
+        return { success: false, new_balance: 0, message: error.message };
+      }
+      
+      if (data && data.length > 0) {
+        return {
+          success: data[0].success,
+          new_balance: data[0].new_balance,
+          message: data[0].message,
+        };
+      }
+      
+      return { success: false, new_balance: 0, message: 'No response from server' };
+    } catch (error) {
+      console.error('Error in addCoins:', error);
+      return { success: false, new_balance: 0, message: 'Network error' };
+    }
+  },
 
   /**
    * Update subscription status
    */
-  // async updateSubscription(userId: string, isSubscribed: boolean): Promise<void> {
-  //   if (!supabase) return;
-  //   
-  //   const { error } = await supabase
-  //     .from('profiles')
-  //     .update({ 
-  //       is_subscribed: isSubscribed,
-  //       subscription_tier: isSubscribed ? 'pro' : 'free',
-  //       updated_at: new Date().toISOString()
-  //     })
-  //     .eq('id', userId);
-  //   
-  //   if (error) throw error;
-  // },
+  async updateSubscription(
+    userId: string, 
+    isSubscribed: boolean,
+    bonusCoins: number = 0
+  ): Promise<SubscriptionResult> {
+    if (!supabase) {
+      console.warn('Supabase not configured, cannot update subscription');
+      return { success: false, new_balance: 0, is_now_subscribed: false };
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .rpc('update_subscription', { 
+          user_uuid: userId, 
+          subscribed: isSubscribed,
+          bonus_coins: bonusCoins,
+        });
+      
+      if (error) {
+        console.error('Error updating subscription:', error);
+        return { success: false, new_balance: 0, is_now_subscribed: false };
+      }
+      
+      if (data && data.length > 0) {
+        return {
+          success: data[0].success,
+          new_balance: data[0].new_balance,
+          is_now_subscribed: data[0].is_now_subscribed,
+        };
+      }
+      
+      return { success: false, new_balance: 0, is_now_subscribed: false };
+    } catch (error) {
+      console.error('Error in updateSubscription:', error);
+      return { success: false, new_balance: 0, is_now_subscribed: false };
+    }
+  },
+
+  /**
+   * Subscribe to real-time profile changes
+   */
+  subscribeToProfile(
+    userId: string,
+    onUpdate: (profile: Partial<DbProfile>) => void
+  ): (() => void) | null {
+    if (!supabase) {
+      console.warn('Supabase not configured, cannot subscribe to profile');
+      return null;
+    }
+    
+    const channel = supabase
+      .channel(`profile:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${userId}`,
+        },
+        (payload) => {
+          console.log('Profile updated:', payload.new);
+          onUpdate(payload.new as Partial<DbProfile>);
+        }
+      )
+      .subscribe();
+    
+    // Return unsubscribe function
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  },
 };
 
 /**
- * Generations Service (for future implementation)
+ * Generations Service - Logs and retrieves generation history
  */
 export const GenerationsService = {
   /**
-   * Log a generation
+   * Log a generation via RPC function
    */
-  // async logGeneration(
-  //   userId: string, 
-  //   selections: Record<string, unknown>,
-  //   status: 'completed' | 'failed' = 'completed'
-  // ): Promise<void> {
-  //   if (!supabase) return;
-  //   
-  //   const { error } = await supabase
-  //     .from('generations')
-  //     .insert({
-  //       user_id: userId,
-  //       selections,
-  //       status,
-  //       coins_used: 1
-  //     });
-  //   
-  //   if (error) throw error;
-  // },
+  async logGeneration(
+    userId: string, 
+    selections: Record<string, unknown>,
+    status: 'completed' | 'failed' = 'completed',
+    errorMessage?: string
+  ): Promise<string | null> {
+    if (!supabase) {
+      console.warn('Supabase not configured, cannot log generation');
+      return null;
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .rpc('log_generation', {
+          user_uuid: userId,
+          selections_data: selections,
+          gen_status: status,
+          error_msg: errorMessage || null,
+        });
+      
+      if (error) {
+        console.error('Error logging generation:', error);
+        return null;
+      }
+      
+      return data as string; // Returns the generation ID
+    } catch (error) {
+      console.error('Error in logGeneration:', error);
+      return null;
+    }
+  },
 
   /**
    * Get user's generation history
    */
-  // async getHistory(userId: string, limit: number = 20): Promise<DbGeneration[]> {
-  //   if (!supabase) return [];
-  //   
-  //   const { data, error } = await supabase
-  //     .from('generations')
-  //     .select('*')
-  //     .eq('user_id', userId)
-  //     .order('created_at', { ascending: false })
-  //     .limit(limit);
-  //   
-  //   if (error) throw error;
-  //   return data || [];
-  // },
+  async getHistory(userId: string, limit: number = 20): Promise<DbGeneration[]> {
+    if (!supabase) {
+      console.warn('Supabase not configured, cannot get history');
+      return [];
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('generations')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      if (error) {
+        console.error('Error fetching generation history:', error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error in getHistory:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Get generation count for a user
+   */
+  async getGenerationCount(userId: string): Promise<number> {
+    if (!supabase) return 0;
+    
+    try {
+      const { count, error } = await supabase
+        .from('generations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+      
+      if (error) {
+        console.error('Error getting generation count:', error);
+        return 0;
+      }
+      
+      return count || 0;
+    } catch (error) {
+      console.error('Error in getGenerationCount:', error);
+      return 0;
+    }
+  },
 };
 
 /**

@@ -7,7 +7,13 @@ import {
   SUBSCRIPTION_TIERS,
   SubscriptionFeatures
 } from '../types';
-import { supabase, isSupabaseConfigured } from '../services/supabaseService';
+import { 
+  supabase, 
+  isSupabaseConfigured, 
+  ProfileService, 
+  GenerationsService,
+  DbProfile 
+} from '../services/supabaseService';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface UserContextType {
@@ -26,9 +32,12 @@ interface UserContextType {
   signOut: () => void;
   
   // GlamCoin actions
-  deductCoin: () => boolean; // Returns false if no coins left
-  addCoins: (amount: number) => void;
+  deductCoin: () => Promise<boolean>; // Returns false if no coins left (async - calls Supabase)
+  addCoins: (amount: number) => Promise<boolean>; // Returns false if failed
   canGenerate: boolean;
+  
+  // Generation logging
+  logGeneration: (selections: Record<string, unknown>, status?: 'completed' | 'failed', errorMessage?: string) => Promise<void>;
   
   // Subscription actions
   subscribe: () => void;
@@ -68,8 +77,8 @@ function generateUserId(): string {
   return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// Helper to create UserProfile from Supabase user
-function createProfileFromSupabaseUser(supabaseUser: SupabaseUser): UserProfile {
+// Helper to create basic UserProfile from Supabase auth user (fallback when DB unavailable)
+function createBasicProfileFromSupabaseUser(supabaseUser: SupabaseUser): UserProfile {
   const email = supabaseUser.email || '';
   const role = getRoleFromEmail(email);
   const name = supabaseUser.user_metadata?.full_name || 
@@ -95,6 +104,37 @@ function createProfileFromSupabaseUser(supabaseUser: SupabaseUser): UserProfile 
     isSubscribed,
     createdAt: new Date(supabaseUser.created_at),
   };
+}
+
+// Helper to create UserProfile from Supabase DB profile
+function createProfileFromDbProfile(dbProfile: DbProfile, supabaseUser?: SupabaseUser): UserProfile {
+  const role = getRoleFromEmail(dbProfile.email);
+  
+  return {
+    id: dbProfile.id,
+    email: dbProfile.email,
+    name: dbProfile.name || dbProfile.email.split('@')[0],
+    avatar: dbProfile.avatar_url || supabaseUser?.user_metadata?.avatar_url || supabaseUser?.user_metadata?.picture,
+    role,
+    glamCoins: dbProfile.glam_coins,
+    isSubscribed: dbProfile.is_subscribed,
+    createdAt: new Date(dbProfile.created_at),
+  };
+}
+
+// Async helper to fetch profile from DB and create UserProfile
+async function fetchAndCreateProfile(supabaseUser: SupabaseUser): Promise<UserProfile> {
+  // Try to fetch from database first
+  const dbProfile = await ProfileService.getProfile(supabaseUser.id);
+  
+  if (dbProfile) {
+    console.log('Profile loaded from Supabase DB:', dbProfile.glam_coins, 'coins');
+    return createProfileFromDbProfile(dbProfile, supabaseUser);
+  }
+  
+  // Fallback to basic profile if DB fetch fails
+  console.log('Using basic profile (DB unavailable)');
+  return createBasicProfileFromSupabaseUser(supabaseUser);
 }
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -132,7 +172,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (error) {
             console.error('Error setting session from URL:', error);
           } else if (data.session?.user) {
-            const profile = createProfileFromSupabaseUser(data.session.user);
+            const profile = await fetchAndCreateProfile(data.session.user);
             setUser(profile);
             
             // Check if this is a password recovery flow
@@ -147,7 +187,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Normal session check
           const { data: { session } } = await supabase.auth.getSession();
           if (session?.user) {
-            const profile = createProfileFromSupabaseUser(session.user);
+            const profile = await fetchAndCreateProfile(session.user);
             setUser(profile);
           }
         }
@@ -166,16 +206,16 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Auth state changed:', event);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          const profile = createProfileFromSupabaseUser(session.user);
+          const profile = await fetchAndCreateProfile(session.user);
           setUser(profile);
         } else if (event === 'PASSWORD_RECOVERY' && session?.user) {
           // User clicked password reset link
-          const profile = createProfileFromSupabaseUser(session.user);
+          const profile = await fetchAndCreateProfile(session.user);
           setUser(profile);
           setPendingPasswordRecovery(true);
         } else if (event === 'USER_UPDATED' && session?.user) {
           // User updated (e.g., password changed)
-          const profile = createProfileFromSupabaseUser(session.user);
+          const profile = await fetchAndCreateProfile(session.user);
           setUser(profile);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
@@ -188,6 +228,25 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, []);
+
+  // Real-time subscription to profile changes (for external updates like admin grants)
+  useEffect(() => {
+    if (!user || !isSupabaseConfigured) return;
+    
+    const unsubscribe = ProfileService.subscribeToProfile(user.id, (updatedProfile) => {
+      // Update local state when profile changes in DB
+      if (updatedProfile.glam_coins !== undefined) {
+        setUser(prev => prev ? { ...prev, glamCoins: updatedProfile.glam_coins as number } : null);
+      }
+      if (updatedProfile.is_subscribed !== undefined) {
+        setUser(prev => prev ? { ...prev, isSubscribed: updatedProfile.is_subscribed as boolean } : null);
+      }
+    });
+    
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [user?.id]); // Only re-subscribe when user ID changes
 
   // Derived state
   const isAdmin = user?.role === 'admin';
@@ -273,42 +332,116 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Deduct a coin for generation
-  const deductCoin = useCallback((): boolean => {
+  // Deduct a coin for generation (calls Supabase)
+  const deductCoin = useCallback(async (): Promise<boolean> => {
     if (!user) return false;
     
-    // Admin has unlimited
+    // Admin has unlimited - no DB call needed
     if (user.role === 'admin') return true;
     
-    // Subscribed users have unlimited
+    // Subscribed users have unlimited - no DB call needed
     if (user.isSubscribed) return true;
     
-    // Check if user has coins
+    // Check if user has coins locally first (optimistic check)
     if (user.glamCoins <= 0) return false;
     
-    // Deduct coin
+    // Call Supabase to deduct coin
+    if (isSupabaseConfigured) {
+      const result = await ProfileService.deductCoin(user.id);
+      
+      if (result.success) {
+        // Update local state with new balance from server
+        setUser(prev => prev ? { ...prev, glamCoins: result.new_balance } : null);
+        return true;
+      } else {
+        console.warn('Failed to deduct coin:', result.message);
+        // If server says insufficient coins, sync local state
+        if (result.message === 'Insufficient coins') {
+          setUser(prev => prev ? { ...prev, glamCoins: 0 } : null);
+        }
+        return false;
+      }
+    }
+    
+    // Fallback to local-only if Supabase not configured
     setUser(prev => prev ? { ...prev, glamCoins: prev.glamCoins - 1 } : null);
     return true;
   }, [user]);
 
-  // Add coins (for purchases)
-  const addCoins = useCallback((amount: number) => {
+  // Add coins (for purchases) - calls Supabase
+  const addCoins = useCallback(async (amount: number): Promise<boolean> => {
+    if (!user) return false;
+    
+    if (isSupabaseConfigured) {
+      const result = await ProfileService.addCoins(user.id, amount, 'purchase', 'Coin purchase');
+      
+      if (result.success) {
+        // Update local state with new balance from server
+        setUser(prev => prev ? { ...prev, glamCoins: result.new_balance } : null);
+        return true;
+      } else {
+        console.error('Failed to add coins:', result.message);
+        return false;
+      }
+    }
+    
+    // Fallback to local-only
     setUser(prev => prev ? { ...prev, glamCoins: prev.glamCoins + amount } : null);
-  }, []);
+    return true;
+  }, [user]);
 
-  // Subscribe (adds 100 coins as monthly bonus)
-  const subscribe = useCallback(() => {
+  // Subscribe (adds 100 coins as monthly bonus) - calls Supabase
+  const subscribe = useCallback(async () => {
+    if (!user) return;
+    
+    if (isSupabaseConfigured) {
+      const result = await ProfileService.updateSubscription(user.id, true, 100);
+      
+      if (result.success) {
+        setUser(prev => prev ? { 
+          ...prev, 
+          isSubscribed: result.is_now_subscribed,
+          glamCoins: result.new_balance
+        } : null);
+        return;
+      }
+    }
+    
+    // Fallback to local-only
     setUser(prev => prev ? { 
       ...prev, 
       isSubscribed: true,
-      glamCoins: prev.glamCoins + 100 // Monthly bonus
+      glamCoins: prev.glamCoins + 100
     } : null);
-  }, []);
+  }, [user]);
 
-  // Unsubscribe
-  const unsubscribe = useCallback(() => {
+  // Unsubscribe - calls Supabase
+  const unsubscribe = useCallback(async () => {
+    if (!user) return;
+    
+    if (isSupabaseConfigured) {
+      const result = await ProfileService.updateSubscription(user.id, false, 0);
+      
+      if (result.success) {
+        setUser(prev => prev ? { ...prev, isSubscribed: false } : null);
+        return;
+      }
+    }
+    
+    // Fallback to local-only
     setUser(prev => prev ? { ...prev, isSubscribed: false } : null);
-  }, []);
+  }, [user]);
+
+  // Log a generation to Supabase
+  const logGeneration = useCallback(async (
+    selections: Record<string, unknown>,
+    status: 'completed' | 'failed' = 'completed',
+    errorMessage?: string
+  ): Promise<void> => {
+    if (!user || !isSupabaseConfigured) return;
+    
+    await GenerationsService.logGeneration(user.id, selections, status, errorMessage);
+  }, [user]);
 
   // Test user: Simulate purchase
   const simulatePurchase = useCallback((coins: number) => {
@@ -363,6 +496,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deductCoin,
     addCoins,
     canGenerate,
+    logGeneration,
     subscribe,
     unsubscribe,
     simulatePurchase,

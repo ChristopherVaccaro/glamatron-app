@@ -257,7 +257,7 @@ export const QUICK_PRESETS = [
 
 const App: React.FC = () => {
   // User context for GlamCoins and subscription
-  const { user: contextUser, isAuthLoading, features, canGenerate, deductCoin, signOut, pendingPasswordRecovery } = useUser();
+  const { user: contextUser, isAuthLoading, features, canGenerate, deductCoin, logGeneration, signOut, pendingPasswordRecovery } = useUser();
   
   // Gallery context for saving images
   const { addItem: addToGallery, items: galleryItems, toggleFavorite, getUserItems, loadUserGallery } = useGallery();
@@ -404,12 +404,15 @@ const App: React.FC = () => {
     try {
       const result = await generateStyledImage(selectedImage, activeSelections);
       
-      // Deduct coin on successful generation
-      const coinDeducted = deductCoin();
+      // Deduct coin on successful generation (async - calls Supabase)
+      const coinDeducted = await deductCoin();
       if (!coinDeducted && !features.unlimitedGenerations) {
         // This shouldn't happen if canGenerate was true, but handle edge case
         console.warn('Failed to deduct coin after generation');
       }
+      
+      // Log generation to Supabase for history tracking (async - don't block UI)
+      logGeneration(activeSelections as unknown as Record<string, unknown>, 'completed').catch(console.error);
       
       // Save to gallery if user is signed in (async - don't block UI)
       if (user?.id) {
@@ -430,7 +433,8 @@ const App: React.FC = () => {
       setGenState({ isLoading: false, error: null, resultImage: result });
       Analytics.generationSuccess('custom');
     } catch (err: any) {
-      // Don't deduct coin on failed generation
+      // Don't deduct coin on failed generation, but log the failure
+      logGeneration(activeSelections as unknown as Record<string, unknown>, 'failed', err.message).catch(console.error);
       Analytics.generationError(err.message || 'Unknown error');
       setGenState(prev => ({ 
         ...prev,
