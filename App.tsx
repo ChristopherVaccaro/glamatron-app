@@ -307,7 +307,16 @@ const App: React.FC = () => {
   
   // Sync contextUser (from Supabase auth) to local user state
   useEffect(() => {
+    console.log('Sync effect running - contextUser:', contextUser?.email, 'local user:', user?.email, 'isAuthLoading:', isAuthLoading);
+    
+    // Wait for auth to finish loading before syncing
+    if (isAuthLoading) {
+      console.log('Auth still loading, waiting...');
+      return;
+    }
+    
     if (contextUser && !user) {
+      console.log('Syncing contextUser to local state');
       // User signed in via Supabase (Google or Email) - sync to local state
       setUser({
         id: contextUser.id,
@@ -322,12 +331,13 @@ const App: React.FC = () => {
       loadUserGallery(contextUser.id);
     } else if (!contextUser && user && (user.provider === 'google' || user.provider === 'email')) {
       // User signed out from Supabase - go back to landing page
+      console.log('User signed out, clearing state');
       setUser(null);
       setShowLanding(true);
       setSelectedImage(null);
       setGenState({ isLoading: false, error: null, resultImage: null });
     }
-  }, [contextUser, user, loadUserGallery]);
+  }, [contextUser, user, isAuthLoading, loadUserGallery]);
 
   // Toast notification state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -794,8 +804,20 @@ const App: React.FC = () => {
     }
   };
 
-  // Skip loading screen - go straight to landing page
-  // Auth will load in the background
+  // Show a brief loading state while checking auth
+  // This prevents showing the landing page to already-authenticated users
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <span className="text-2xl tracking-wide text-white" style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }}>
+            GLAMATRON
+          </span>
+          <div className="mt-4 w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (showLanding) {
     return (

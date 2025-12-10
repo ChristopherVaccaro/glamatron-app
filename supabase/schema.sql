@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'test', 'user')),
   glam_coins INTEGER NOT NULL DEFAULT 5,
   is_subscribed BOOLEAN NOT NULL DEFAULT FALSE,
+  has_purchased BOOLEAN NOT NULL DEFAULT FALSE, -- Unlocks full style library after first purchase
   subscription_tier TEXT DEFAULT 'free' CHECK (subscription_tier IN ('free', 'pro', 'enterprise')),
   subscription_expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

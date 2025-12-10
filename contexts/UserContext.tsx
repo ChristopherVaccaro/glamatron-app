@@ -33,19 +33,14 @@ interface UserContextType {
   
   // GlamCoin actions
   deductCoin: () => Promise<boolean>; // Returns false if no coins left (async - calls Supabase)
-  addCoins: (amount: number) => Promise<boolean>; // Returns false if failed
+  completePurchase: (coins: number, stripePaymentId?: string, priceInCents?: number) => Promise<boolean>; // Complete a purchase
   canGenerate: boolean;
   
   // Generation logging
   logGeneration: (selections: Record<string, unknown>, status?: 'completed' | 'failed', errorMessage?: string) => Promise<void>;
   
-  // Subscription actions
-  subscribe: () => void;
-  unsubscribe: () => void;
-  
   // Test user actions (only work for test user)
   simulatePurchase: (coins: number) => void;
-  simulateSubscribe: () => void;
   resetTestUser: () => void;
 }
 
@@ -88,10 +83,12 @@ function createBasicProfileFromSupabaseUser(supabaseUser: SupabaseUser): UserPro
   
   let glamCoins = DEFAULT_GLAMCOINS;
   let isSubscribed = false;
+  let hasPurchased = false;
   
   if (role === 'admin') {
     glamCoins = 9999;
     isSubscribed = true;
+    hasPurchased = true;
   }
 
   return {
@@ -102,6 +99,7 @@ function createBasicProfileFromSupabaseUser(supabaseUser: SupabaseUser): UserPro
     role,
     glamCoins,
     isSubscribed,
+    hasPurchased,
     createdAt: new Date(supabaseUser.created_at),
   };
 }
@@ -118,22 +116,35 @@ function createProfileFromDbProfile(dbProfile: DbProfile, supabaseUser?: Supabas
     role,
     glamCoins: dbProfile.glam_coins,
     isSubscribed: dbProfile.is_subscribed,
+    hasPurchased: dbProfile.has_purchased ?? false,
     createdAt: new Date(dbProfile.created_at),
   };
 }
 
 // Async helper to fetch profile from DB and create UserProfile
 async function fetchAndCreateProfile(supabaseUser: SupabaseUser): Promise<UserProfile> {
-  // Try to fetch from database first
-  const dbProfile = await ProfileService.getProfile(supabaseUser.id);
-  
-  if (dbProfile) {
-    console.log('Profile loaded from Supabase DB:', dbProfile.glam_coins, 'coins');
-    return createProfileFromDbProfile(dbProfile, supabaseUser);
+  // Try to fetch from database first, with a timeout to prevent hanging
+  try {
+    console.log('Attempting to fetch profile from DB...');
+    const timeoutPromise = new Promise<null>((_, reject) => 
+      setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+    );
+    
+    const dbProfile = await Promise.race([
+      ProfileService.getProfile(supabaseUser.id),
+      timeoutPromise
+    ]);
+    
+    if (dbProfile) {
+      console.log('Profile loaded from Supabase DB:', dbProfile.glam_coins, 'coins');
+      return createProfileFromDbProfile(dbProfile, supabaseUser);
+    }
+  } catch (error) {
+    console.warn('Profile fetch failed or timed out:', error);
   }
   
-  // Fallback to basic profile if DB fetch fails
-  console.log('Using basic profile (DB unavailable)');
+  // Fallback to basic profile if DB fetch fails or times out
+  console.log('Using basic profile (DB unavailable or timeout)');
   return createBasicProfileFromSupabaseUser(supabaseUser);
 }
 
@@ -203,23 +214,59 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes (sign in, sign out, token refresh, password recovery)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event);
+        console.log('Auth state changed:', event, session?.user?.email);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          const profile = await fetchAndCreateProfile(session.user);
-          setUser(profile);
+          try {
+            console.log('Fetching profile for user:', session.user.id);
+            const profile = await fetchAndCreateProfile(session.user);
+            console.log('Profile fetched:', profile.email, profile.glamCoins, 'coins');
+            setUser(profile);
+            setIsLoading(false); // Ensure loading is false after sign-in
+          } catch (error) {
+            console.error('Error fetching profile on sign-in:', error);
+            // Fallback to basic profile
+            const basicProfile = createBasicProfileFromSupabaseUser(session.user);
+            setUser(basicProfile);
+            setIsLoading(false);
+          }
         } else if (event === 'PASSWORD_RECOVERY' && session?.user) {
           // User clicked password reset link
-          const profile = await fetchAndCreateProfile(session.user);
-          setUser(profile);
-          setPendingPasswordRecovery(true);
+          try {
+            const profile = await fetchAndCreateProfile(session.user);
+            setUser(profile);
+            setPendingPasswordRecovery(true);
+            setIsLoading(false);
+          } catch (error) {
+            console.error('Error fetching profile on password recovery:', error);
+            setIsLoading(false);
+          }
         } else if (event === 'USER_UPDATED' && session?.user) {
           // User updated (e.g., password changed)
-          const profile = await fetchAndCreateProfile(session.user);
-          setUser(profile);
+          try {
+            const profile = await fetchAndCreateProfile(session.user);
+            setUser(profile);
+          } catch (error) {
+            console.error('Error fetching profile on user update:', error);
+          }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setPendingPasswordRecovery(false);
+          setIsLoading(false);
+        } else if (event === 'INITIAL_SESSION') {
+          // Initial session check complete
+          console.log('Initial session event, session:', session?.user?.email);
+          if (session?.user) {
+            try {
+              const profile = await fetchAndCreateProfile(session.user);
+              setUser(profile);
+            } catch (error) {
+              console.error('Error fetching profile on initial session:', error);
+              const basicProfile = createBasicProfileFromSupabaseUser(session.user);
+              setUser(basicProfile);
+            }
+          }
+          setIsLoading(false);
         }
       }
     );
@@ -252,11 +299,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAdmin = user?.role === 'admin';
   const isTestUser = user?.role === 'test';
 
-  // Determine feature access based on role and subscription
+  // Determine feature access based on role and purchase status
+  // Full styles unlock after any GlamCoin purchase
   const features = useMemo((): SubscriptionFeatures => {
     if (!user) return SUBSCRIPTION_TIERS.free;
     if (user.role === 'admin') return SUBSCRIPTION_TIERS.admin;
-    if (user.isSubscribed) return SUBSCRIPTION_TIERS.subscribed;
+    if (user.hasPurchased) return SUBSCRIPTION_TIERS.purchased;
     return SUBSCRIPTION_TIERS.free;
   }, [user]);
 
@@ -274,13 +322,16 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set initial state based on role
     let glamCoins = DEFAULT_GLAMCOINS;
     let isSubscribed = false;
+    let hasPurchased = false;
     
     if (role === 'admin') {
       glamCoins = 9999; // "Unlimited" display
       isSubscribed = true;
+      hasPurchased = true;
     } else if (role === 'test') {
       glamCoins = DEFAULT_GLAMCOINS;
       isSubscribed = false;
+      hasPurchased = false;
     }
 
     const newUser: UserProfile = {
@@ -290,12 +341,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       role,
       glamCoins,
       isSubscribed,
+      hasPurchased,
       createdAt: new Date(),
       // Store defaults for test user reset
       ...(role === 'test' && {
         _testUserDefaults: {
           glamCoins: DEFAULT_GLAMCOINS,
           isSubscribed: false,
+          hasPurchased: false,
         }
       })
     };
@@ -368,68 +421,39 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   }, [user]);
 
-  // Add coins (for purchases) - calls Supabase
-  const addCoins = useCallback(async (amount: number): Promise<boolean> => {
+  // Complete a GlamCoin purchase - adds coins and marks user as having purchased
+  // This unlocks the full style library
+  const completePurchase = useCallback(async (
+    coins: number,
+    stripePaymentId?: string,
+    priceInCents?: number
+  ): Promise<boolean> => {
     if (!user) return false;
     
     if (isSupabaseConfigured) {
-      const result = await ProfileService.addCoins(user.id, amount, 'purchase', 'Coin purchase');
+      const result = await ProfileService.completePurchase(user.id, coins, stripePaymentId, priceInCents);
       
       if (result.success) {
-        // Update local state with new balance from server
-        setUser(prev => prev ? { ...prev, glamCoins: result.new_balance } : null);
-        return true;
-      } else {
-        console.error('Failed to add coins:', result.message);
-        return false;
-      }
-    }
-    
-    // Fallback to local-only
-    setUser(prev => prev ? { ...prev, glamCoins: prev.glamCoins + amount } : null);
-    return true;
-  }, [user]);
-
-  // Subscribe (adds 100 coins as monthly bonus) - calls Supabase
-  const subscribe = useCallback(async () => {
-    if (!user) return;
-    
-    if (isSupabaseConfigured) {
-      const result = await ProfileService.updateSubscription(user.id, true, 100);
-      
-      if (result.success) {
+        // Update local state with new balance and mark as purchased
         setUser(prev => prev ? { 
           ...prev, 
-          isSubscribed: result.is_now_subscribed,
-          glamCoins: result.new_balance
+          glamCoins: result.new_balance,
+          hasPurchased: true 
         } : null);
-        return;
+        return true;
+      } else {
+        console.error('Failed to complete purchase:', result.message);
+        return false;
       }
     }
     
     // Fallback to local-only
     setUser(prev => prev ? { 
       ...prev, 
-      isSubscribed: true,
-      glamCoins: prev.glamCoins + 100
+      glamCoins: prev.glamCoins + coins,
+      hasPurchased: true 
     } : null);
-  }, [user]);
-
-  // Unsubscribe - calls Supabase
-  const unsubscribe = useCallback(async () => {
-    if (!user) return;
-    
-    if (isSupabaseConfigured) {
-      const result = await ProfileService.updateSubscription(user.id, false, 0);
-      
-      if (result.success) {
-        setUser(prev => prev ? { ...prev, isSubscribed: false } : null);
-        return;
-      }
-    }
-    
-    // Fallback to local-only
-    setUser(prev => prev ? { ...prev, isSubscribed: false } : null);
+    return true;
   }, [user]);
 
   // Log a generation to Supabase
@@ -443,23 +467,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await GenerationsService.logGeneration(user.id, selections, status, errorMessage);
   }, [user]);
 
-  // Test user: Simulate purchase
+  // Test user: Simulate purchase (for testing the purchase flow)
   const simulatePurchase = useCallback((coins: number) => {
     if (!user || user.role !== 'test') return;
-    addCoins(coins);
-  }, [user, addCoins]);
-
-  // Test user: Simulate subscribe (adds 100 coins when subscribing)
-  const simulateSubscribe = useCallback(() => {
-    if (!user || user.role !== 'test') return;
-    // Only add coins when subscribing, not when already subscribed
-    if (!user.isSubscribed) {
-      setUser(prev => prev ? { 
-        ...prev, 
-        isSubscribed: true,
-        glamCoins: prev.glamCoins + 100 // Monthly bonus
-      } : null);
-    }
+    // Simulate a purchase by adding coins and marking as purchased
+    setUser(prev => prev ? { 
+      ...prev, 
+      glamCoins: prev.glamCoins + coins,
+      hasPurchased: true 
+    } : null);
   }, [user]);
 
   // Test user: Reset to defaults
@@ -469,12 +485,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const defaults = user._testUserDefaults || {
       glamCoins: DEFAULT_GLAMCOINS,
       isSubscribed: false,
+      hasPurchased: false,
     };
     
     setUser(prev => prev ? {
       ...prev,
       glamCoins: defaults.glamCoins,
       isSubscribed: defaults.isSubscribed,
+      hasPurchased: defaults.hasPurchased,
     } : null);
   }, [user]);
 
@@ -494,13 +512,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     deductCoin,
-    addCoins,
+    completePurchase,
     canGenerate,
     logGeneration,
-    subscribe,
-    unsubscribe,
     simulatePurchase,
-    simulateSubscribe,
     resetTestUser,
   };
 

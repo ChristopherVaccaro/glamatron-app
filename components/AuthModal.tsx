@@ -114,7 +114,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
           // User is signed in immediately (email confirmation disabled)
           if (data.session) {
             Analytics.userSignup('email');
+            setIsEmailLoading(false);
             onClose();
+            return;
           }
         } else {
           // Sign in with Supabase
@@ -136,8 +138,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
           }
 
           if (data.session) {
+            console.log('Sign-in successful, closing modal');
             Analytics.userLogin('email');
+            setIsEmailLoading(false);
             onClose();
+            return; // Exit early - auth state change will handle the rest
+          } else {
+            console.log('Sign-in returned no session:', data);
           }
         }
       } catch (err: any) {
