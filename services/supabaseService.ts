@@ -30,6 +30,7 @@ export interface DbProfile {
   role: 'admin' | 'test' | 'user';
   glam_coins: number;
   is_subscribed: boolean;
+  has_purchased: boolean; // Whether user has ever purchased GlamCoins
   subscription_tier: 'free' | 'pro' | 'enterprise';
   subscription_expires_at: string | null;
   created_at: string;
@@ -191,6 +192,7 @@ export const ProfileService = {
           role: profile.role as 'admin' | 'test' | 'user',
           glam_coins: profile.glam_coins,
           is_subscribed: profile.is_subscribed,
+          has_purchased: profile.has_purchased ?? false,
           subscription_tier: profile.subscription_tier as 'free' | 'pro' | 'enterprise',
           subscription_expires_at: profile.subscription_expires_at,
           created_at: profile.created_at,
@@ -279,6 +281,50 @@ export const ProfileService = {
       return { success: false, new_balance: 0, message: 'No response from server' };
     } catch (error) {
       console.error('Error in addCoins:', error);
+      return { success: false, new_balance: 0, message: 'Network error' };
+    }
+  },
+
+  /**
+   * Complete a GlamCoin purchase - adds coins and marks user as having purchased
+   * This unlocks the full style library
+   */
+  async completePurchase(
+    userId: string,
+    coinsToAdd: number,
+    stripePaymentId?: string,
+    priceInCents?: number
+  ): Promise<CoinOperationResult> {
+    if (!supabase) {
+      console.warn('Supabase not configured, cannot complete purchase');
+      return { success: false, new_balance: 0, message: 'Supabase not configured' };
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .rpc('complete_purchase', { 
+          user_uuid: userId, 
+          coins_to_add: coinsToAdd,
+          stripe_payment_id: stripePaymentId || null,
+          price_in_cents: priceInCents || null,
+        });
+      
+      if (error) {
+        console.error('Error completing purchase:', error);
+        return { success: false, new_balance: 0, message: error.message };
+      }
+      
+      if (data && data.length > 0) {
+        return {
+          success: data[0].success,
+          new_balance: data[0].new_balance,
+          message: data[0].message,
+        };
+      }
+      
+      return { success: false, new_balance: 0, message: 'No response from server' };
+    } catch (error) {
+      console.error('Error in completePurchase:', error);
       return { success: false, new_balance: 0, message: 'Network error' };
     }
   },

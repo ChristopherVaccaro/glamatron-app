@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Wrench, Coins, Crown, RotateCcw, ChevronUp, ChevronDown, Plus, Minus, Shield, FlaskConical } from 'lucide-react';
+import { Wrench, Coins, Unlock, RotateCcw, ChevronUp, ChevronDown, Plus, Minus, Shield, FlaskConical } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 const DevToolbar: React.FC = () => {
-  const { user, isTestUser, isAdmin, simulatePurchase, simulateSubscribe, resetTestUser } = useUser();
+  const { user, isTestUser, isAdmin, simulatePurchase, resetTestUser, features } = useUser();
   const [isExpanded, setIsExpanded] = useState(true);
 
   // Only show for test user or admin
@@ -85,12 +85,12 @@ const DevToolbar: React.FC = () => {
               </div>
             </div>
             <div className="p-3 bg-slate-800 rounded-lg">
-              <div className="flex items-center gap-2 text-violet-400 mb-1">
-                <Crown size={14} />
-                <span className="text-xs">Subscription</span>
+              <div className="flex items-center gap-2 text-emerald-400 mb-1">
+                <Unlock size={14} />
+                <span className="text-xs">Full Access</span>
               </div>
               <div className="text-lg font-bold text-white">
-                {user.isSubscribed ? 'Active' : 'None'}
+                {user.hasPurchased ? 'Unlocked' : 'Locked'}
               </div>
             </div>
           </div>
@@ -123,21 +123,6 @@ const DevToolbar: React.FC = () => {
                   </button>
                 </div>
               </div>
-
-              {/* Subscription Toggle */}
-              <button
-                onClick={simulateSubscribe}
-                className={`
-                  w-full px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2
-                  ${user.isSubscribed 
-                    ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' 
-                    : 'bg-violet-600 text-white hover:bg-violet-500'
-                  }
-                `}
-              >
-                <Crown size={16} />
-                {user.isSubscribed ? 'Cancel Subscription' : 'Simulate Subscribe'}
-              </button>
 
               {/* Reset Button */}
               <button
