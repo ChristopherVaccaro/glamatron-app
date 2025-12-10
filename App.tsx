@@ -342,8 +342,9 @@ const App: React.FC = () => {
   // Toast notification state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
-  // Show toast for email confirmation (session is handled in UserContext)
+  // Show toast for email confirmation and payment success
   useEffect(() => {
+    // Check hash params (for Supabase auth redirects)
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get('type');
     
@@ -352,6 +353,24 @@ const App: React.FC = () => {
       setToast({ message: 'Account confirmed! Welcome to Glamatron.', type: 'success' });
     } else if (type === 'recovery') {
       setToast({ message: 'Please set your new password.', type: 'info' });
+    }
+
+    // Check URL query params (for Stripe payment success)
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    const coinsAdded = urlParams.get('coins');
+    
+    if (paymentStatus === 'success') {
+      const message = coinsAdded 
+        ? `Payment successful! ${coinsAdded} GlamCoins have been added to your account.`
+        : 'Payment successful! Your GlamCoins have been added.';
+      setToast({ message, type: 'success' });
+      
+      // Clean up the URL (remove query params)
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (paymentStatus === 'cancelled') {
+      setToast({ message: 'Payment was cancelled. No charges were made.', type: 'info' });
+      window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
   

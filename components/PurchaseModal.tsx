@@ -8,6 +8,7 @@ interface PurchaseModalProps {
 }
 
 // GlamCoin packages with Stripe Payment Links
+// URLs are configured in environment variables to support test/live modes
 const GLAMCOIN_PACKAGES = [
   { 
     id: 'pack_5', 
@@ -15,7 +16,7 @@ const GLAMCOIN_PACKAGES = [
     price: '$2.99', 
     pricePerCoin: '$0.60', 
     popular: false,
-    stripeUrl: 'https://buy.stripe.com/bJe00k1GidEi9MdgQ81oI00'
+    stripeUrl: import.meta.env.VITE_STRIPE_LINK_5_COINS || 'https://buy.stripe.com/test_placeholder_5'
   },
   { 
     id: 'pack_10', 
@@ -23,7 +24,7 @@ const GLAMCOIN_PACKAGES = [
     price: '$4.99', 
     pricePerCoin: '$0.50', 
     popular: true,
-    stripeUrl: 'https://buy.stripe.com/bJeaEY2KmdEiaQh57q1oI01'
+    stripeUrl: import.meta.env.VITE_STRIPE_LINK_10_COINS || 'https://buy.stripe.com/test_placeholder_10'
   },
   { 
     id: 'pack_25', 
@@ -31,7 +32,7 @@ const GLAMCOIN_PACKAGES = [
     price: '$9.99', 
     pricePerCoin: '$0.40', 
     popular: false,
-    stripeUrl: 'https://buy.stripe.com/8x24gAet41VA9Md1Ve1oI02'
+    stripeUrl: import.meta.env.VITE_STRIPE_LINK_25_COINS || 'https://buy.stripe.com/test_placeholder_25'
   },
 ];
 
