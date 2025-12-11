@@ -23,7 +23,8 @@ import {
   FACIAL_HAIR_OPTIONS
 } from './constants';
 import StyleSelector from './components/StyleSelector';
-import SidebarNav from './components/SidebarNav';
+import SidebarNav, { AppMode } from './components/SidebarNav';
+import { StyleFilter, STYLE_TRANSFER_CONSTRAINTS } from './styleConstants';
 import ImageUploader from './components/ImageUploader';
 import ComparisonView from './components/ComparisonView';
 import AuthModal, { UserData } from './components/AuthModal';
@@ -382,6 +383,12 @@ const App: React.FC = () => {
   
   // Quick Looks collapsed state - collapsed by default
   const [quickLooksExpanded, setQuickLooksExpanded] = useState(false);
+  
+  // App Mode - 'looks' (original) or 'styles' (style transfer)
+  const [appMode, setAppMode] = useState<AppMode>('looks');
+  
+  // Selected style filter for styles mode
+  const [selectedStyleFilter, setSelectedStyleFilter] = useState<StyleFilter | null>(null);
 
   const handleSelection = useCallback((category: StyleCategory, value: string, singleSelect?: boolean) => {
     setSelections(prev => {
@@ -418,7 +425,7 @@ const App: React.FC = () => {
   }, []);
 
   // Core generation logic extracted to handle both manual and random triggers
-  const executeGeneration = async (activeSelections: UserSelections) => {
+  const executeGeneration = async (activeSelections: UserSelections, styleFilter?: StyleFilter | null) => {
     if (!selectedImage) return;
 
     // Check if user can generate (has coins or unlimited access)
@@ -431,7 +438,16 @@ const App: React.FC = () => {
     setGenState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const result = await generateStyledImage(selectedImage, activeSelections);
+      // If in styles mode with a filter, use the style prompt instead
+      let result: string;
+      if (appMode === 'styles' && styleFilter) {
+        // Build the full style transfer prompt
+        const fullPrompt = `${STYLE_TRANSFER_CONSTRAINTS}\n\n${styleFilter.prompt}`;
+        // Use the generateStyledImage but pass the style prompt as a custom instruction
+        result = await generateStyledImage(selectedImage, activeSelections, fullPrompt);
+      } else {
+        result = await generateStyledImage(selectedImage, activeSelections);
+      }
       
       // Deduct coin on successful generation (async - calls Supabase)
       const coinDeducted = await deductCoin();
@@ -481,6 +497,27 @@ const App: React.FC = () => {
       return;
     }
     
+    // Handle styles mode
+    if (appMode === 'styles') {
+      if (!selectedStyleFilter) return;
+      Analytics.styleGeneration('style_transfer');
+      // For styles mode, pass empty selections but include the style filter
+      const emptySelections: UserSelections = {
+        [StyleCategory.HAIR]: null,
+        [StyleCategory.HAIR_LENGTH]: null,
+        [StyleCategory.HAIR_COLOR]: null,
+        [StyleCategory.ACCESSORIES]: [],
+        [StyleCategory.MAKEUP]: null,
+        [StyleCategory.EXPRESSION]: null,
+        [StyleCategory.EYES]: null,
+        [StyleCategory.LIPS]: null,
+        [StyleCategory.FACIAL_HAIR]: null,
+      };
+      executeGeneration(emptySelections, selectedStyleFilter);
+      return;
+    }
+    
+    // Handle looks mode (original behavior)
     if (surpriseMeActive) {
       // Generate random selections and execute
       const randomSelections = generateRandomSelections();
@@ -848,6 +885,33 @@ const App: React.FC = () => {
     );
   }
 
+  // Handle app mode change
+  const handleAppModeChange = (newMode: AppMode) => {
+    setAppMode(newMode);
+    // Clear selections when switching modes
+    if (newMode === 'styles') {
+      setSelections({
+        [StyleCategory.HAIR]: null,
+        [StyleCategory.HAIR_LENGTH]: null,
+        [StyleCategory.HAIR_COLOR]: null,
+        [StyleCategory.ACCESSORIES]: [],
+        [StyleCategory.MAKEUP]: null,
+        [StyleCategory.EXPRESSION]: null,
+        [StyleCategory.EYES]: null,
+        [StyleCategory.LIPS]: null,
+        [StyleCategory.FACIAL_HAIR]: null,
+      });
+      setSurpriseMeActive(false);
+    } else {
+      setSelectedStyleFilter(null);
+    }
+  };
+
+  // Determine if generate button should be enabled
+  const canClickGenerate = appMode === 'styles' 
+    ? selectedStyleFilter !== null 
+    : (surpriseMeActive || selectionCount > 0);
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Toast Notification */}
@@ -909,9 +973,13 @@ const App: React.FC = () => {
         selections={selections}
         onSelect={handleSelection}
         optionsMap={optionsMap}
-        disabled={!selectedImage || surpriseMeActive || genState.isLoading}
+        disabled={!selectedImage || (appMode === 'looks' && surpriseMeActive) || genState.isLoading}
         onPremiumClick={() => setShowPurchaseModal(true)}
         onPanelOpenChange={setIsSidebarPanelOpen}
+        appMode={appMode}
+        onAppModeChange={handleAppModeChange}
+        selectedStyleFilter={selectedStyleFilter}
+        onStyleFilterSelect={setSelectedStyleFilter}
       />
 
       <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 sm:pl-20 lg:pl-24 py-6 flex-grow">
@@ -961,14 +1029,38 @@ const App: React.FC = () => {
                   
                   {/* Action Buttons - disabled during loading */}
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                    <button
-                      onClick={() => setGenState(prev => ({ ...prev, resultImage: null }))}
-                      disabled={genState.isLoading}
-                      className="flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <RotateCcw size={18} />
-                      Edit & Regenerate
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setGenState(prev => ({ ...prev, resultImage: null }))}
+                        disabled={genState.isLoading}
+                        className="flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <RotateCcw size={18} />
+                        Edit & Regenerate
+                      </button>
+                      {/* Cross-mode transfer button */}
+                      <button
+                        onClick={() => {
+                          // Use the result image as the new source
+                          if (genState.resultImage) {
+                            setSelectedImage(genState.resultImage);
+                            setGenState(prev => ({ ...prev, resultImage: null }));
+                            // Switch to the other mode
+                            handleAppModeChange(appMode === 'looks' ? 'styles' : 'looks');
+                          }
+                        }}
+                        disabled={genState.isLoading}
+                        className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                          appMode === 'looks'
+                            ? 'bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100'
+                            : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                        title={appMode === 'looks' ? 'Apply a style to this result' : 'Try looks on this result'}
+                      >
+                        {appMode === 'looks' ? <Sparkles size={18} /> : <Wand2 size={18} />}
+                        <span className="hidden sm:inline">{appMode === 'looks' ? 'Try in Styles' : 'Try in Looks'}</span>
+                      </button>
+                    </div>
                     <div className="flex items-center gap-2 sm:gap-3">
                       {/* Favorite Button - only show when user is signed in */}
                       {user && currentGalleryItemId && (
@@ -1088,7 +1180,8 @@ const App: React.FC = () => {
             {/* Style Selectors */}
             {selectedImage && (
               <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Quick Looks - Collapsible container */}
+                {/* Quick Looks - Collapsible container - Only show in looks mode */}
+                {appMode === 'looks' && (
                 <div className={`mb-4 ${surpriseMeActive || genState.isLoading ? 'opacity-50 pointer-events-none' : ''}`} style={genState.isLoading ? { cursor: 'not-allowed' } : undefined}>
                   <button
                     onClick={() => setQuickLooksExpanded(!quickLooksExpanded)}
@@ -1166,8 +1259,10 @@ const App: React.FC = () => {
                   </div>
                   </div>
                 </div>
+                )}
 
                 {/* Selection Summary Chips - Always visible, content animates in */}
+                {appMode === 'looks' && (
                 <div className={`mb-4 p-3 rounded-xl border sticky top-16 sm:top-20 z-40 shadow-md transition-all ${
                   surpriseMeActive 
                     ? 'bg-violet-50 border-violet-200' 
@@ -1209,6 +1304,44 @@ const App: React.FC = () => {
                     )}
                   </div>
                 </div>
+                )}
+
+                {/* STYLES MODE: Selected Style Display */}
+                {appMode === 'styles' && (
+                  <div className="mb-4 p-3 rounded-xl border border-purple-200 bg-purple-50 sticky top-16 sm:top-20 z-40 shadow-md">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-purple-600">
+                        Style Transfer Mode
+                      </span>
+                      {selectedStyleFilter && (
+                        <button 
+                          onClick={() => setSelectedStyleFilter(null)} 
+                          className="text-xs text-purple-500 hover:text-rose-500 flex items-center gap-1 transition-opacity"
+                        >
+                          <RotateCcw size={10} />
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    <div className="min-h-[28px]">
+                      {selectedStyleFilter ? (
+                        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium rounded-full animate-in fade-in zoom-in-95 duration-200">
+                          {selectedStyleFilter.name}
+                          <button 
+                            onClick={() => setSelectedStyleFilter(null)} 
+                            className="hover:bg-white/20 rounded-full p-0.5"
+                          >
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ) : (
+                        <span className="text-xs text-purple-500 italic">
+                          Click sidebar icons to select a style
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
               </section>
             )}
@@ -1216,59 +1349,65 @@ const App: React.FC = () => {
             {/* Action Buttons - Visible on all screen sizes when image is selected */}
             {selectedImage && (
               <div className="flex items-center gap-2 sm:gap-3">
-                {/* Clear All Selections Button with Tooltip */}
-                <div className="relative group">
-                  <button
-                    onClick={handleReset}
-                    disabled={genState.isLoading || selectionCount === 0}
-                    className="p-2.5 sm:p-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <RotateCcw size={18} className="sm:w-5 sm:h-5" />
-                  </button>
-                  <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0F172A] text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    Clear all selections
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#0F172A]" />
+                {/* Clear All Selections Button with Tooltip - Only in looks mode */}
+                {appMode === 'looks' && (
+                  <div className="relative group">
+                    <button
+                      onClick={handleReset}
+                      disabled={genState.isLoading || selectionCount === 0}
+                      className="p-2.5 sm:p-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <RotateCcw size={18} className="sm:w-5 sm:h-5" />
+                    </button>
+                    <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0F172A] text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                      Clear all selections
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#0F172A]" />
+                    </div>
                   </div>
-                </div>
+                )}
                 
-                {/* Surprise Me Button with Tooltip - Toggle mode */}
-                <div className="relative group">
-                  <button
-                    onClick={handleSurpriseMeToggle}
-                    disabled={genState.isLoading}
-                    className={`
-                      p-2.5 sm:p-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
-                      ${surpriseMeActive 
-                        ? 'bg-violet-600 text-white ring-2 ring-violet-400 ring-offset-2 animate-pulse' 
-                        : 'bg-violet-100 text-violet-700 hover:bg-violet-200'
-                      }
-                    `}
-                  >
-                    <Dices size={18} className={`sm:w-5 sm:h-5 ${surpriseMeActive ? 'animate-bounce' : ''}`} />
-                  </button>
-                  <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0F172A] text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    {surpriseMeActive ? 'Click to disable random mode' : 'Surprise me'}
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#0F172A]" />
+                {/* Surprise Me Button with Tooltip - Toggle mode - Only in looks mode */}
+                {appMode === 'looks' && (
+                  <div className="relative group">
+                    <button
+                      onClick={handleSurpriseMeToggle}
+                      disabled={genState.isLoading}
+                      className={`
+                        p-2.5 sm:p-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                        ${surpriseMeActive 
+                          ? 'bg-violet-600 text-white ring-2 ring-violet-400 ring-offset-2 animate-pulse' 
+                          : 'bg-violet-100 text-violet-700 hover:bg-violet-200'
+                        }
+                      `}
+                    >
+                      <Dices size={18} className={`sm:w-5 sm:h-5 ${surpriseMeActive ? 'animate-bounce' : ''}`} />
+                    </button>
+                    <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0F172A] text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                      {surpriseMeActive ? 'Click to disable random mode' : 'Surprise me'}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#0F172A]" />
+                    </div>
                   </div>
-                </div>
+                )}
                 <button
                   onClick={handleGenerateClick}
-                  disabled={genState.isLoading || (!surpriseMeActive && selectionCount === 0)}
+                  disabled={genState.isLoading || !canClickGenerate}
                   className={`
                     group relative flex-1 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg
                     flex items-center justify-center gap-2 sm:gap-3 transition-all duration-300 overflow-hidden
-                    ${genState.isLoading || (!surpriseMeActive && selectionCount === 0)
+                    ${genState.isLoading || !canClickGenerate
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-                      : 'bg-[#0F172A] text-white hover:shadow-2xl hover:shadow-slate-900/30 hover:scale-[1.02]'
+                      : appMode === 'styles'
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-2xl hover:shadow-purple-500/30 hover:scale-[1.02]'
+                        : 'bg-[#0F172A] text-white hover:shadow-2xl hover:shadow-slate-900/30 hover:scale-[1.02]'
                     }
                   `}
                 >
                   {/* Subtle shimmer effect */}
-                  {!genState.isLoading && (surpriseMeActive || selectionCount > 0) && (
+                  {!genState.isLoading && canClickGenerate && (
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
                   )}
                   <span className="relative z-10 flex items-center gap-2 sm:gap-3">
-                    {genState.isLoading ? 'Processing...' : 'Generate New Look'}
+                    {genState.isLoading ? 'Processing...' : appMode === 'styles' ? 'Apply Style' : 'Generate New Look'}
                     {!genState.isLoading && <Sparkles size={18} className="sm:w-5 sm:h-5 group-hover:animate-pulse" />}
                   </span>
                 </button>

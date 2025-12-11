@@ -82,6 +82,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export const generateStyledImage = async (
   imageBase64: string,
   selections: UserSelections,
+  customPrompt?: string,
   retryCount = 0
 ): Promise<string> => {
   const MAX_RETRIES = 2;
@@ -96,7 +97,8 @@ export const generateStyledImage = async (
   const cleanBase64 = imageBase64.split(',')[1] || imageBase64;
 
   try {
-    const prompt = getSystemPrompt(selections);
+    // Use custom prompt for style transfer mode, otherwise use the standard prompt
+    const prompt = customPrompt || getSystemPrompt(selections);
     console.log("Attempt", retryCount + 1, "- Sending request to Gemini...");
     
     const response = await ai.models.generateContent({
@@ -205,7 +207,7 @@ export const generateStyledImage = async (
     if (isRetryable && retryCount < MAX_RETRIES) {
       console.log(`Retrying in ${(retryCount + 1) * 1000}ms...`);
       await delay((retryCount + 1) * 1000);
-      return generateStyledImage(imageBase64, selections, retryCount + 1);
+      return generateStyledImage(imageBase64, selections, customPrompt, retryCount + 1);
     }
     
     throw error;
