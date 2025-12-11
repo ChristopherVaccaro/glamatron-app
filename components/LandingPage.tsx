@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import AuthModal, { UserData } from './AuthModal';
 import ForgotPasswordModal from './ForgotPasswordModal';
+import FAQSection from './FAQSection';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -159,6 +160,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FAQSection />
 
       {/* Simple Footer */}
       <footer className="bg-slate-950 py-8">

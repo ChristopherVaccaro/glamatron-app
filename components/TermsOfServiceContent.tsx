@@ -162,10 +162,10 @@ const TermsOfServiceContent: React.FC = () => {
         <p>
           For questions about these Terms of Service, please contact us at{' '}
           <a 
-            href="mailto:support@cognitav.com" 
+            href="mailto:support@glamatron.com" 
             className="text-slate-700 hover:text-slate-900 underline"
           >
-            support@cognitav.com
+            support@glamatron.com
           </a>.
         </p>
       </section>

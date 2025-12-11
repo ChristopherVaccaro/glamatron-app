@@ -657,7 +657,7 @@ const App: React.FC = () => {
         try {
           await navigator.share({
             title: 'My Glamatron Transformation',
-            text: 'Check out my style transformation!',
+            text: 'Check out my style transformation with Glamatron!',
             files: [file],
           });
         } catch (shareErr: any) {
@@ -668,7 +668,7 @@ const App: React.FC = () => {
               try {
                 await navigator.share({
                   title: 'My Glamatron Transformation',
-                  text: 'Check out my style transformation! Created with Glamatron.',
+                  text: 'Check out my style transformation with Glamatron!',
                 });
               } catch {
                 handleDownload();
