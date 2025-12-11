@@ -40,7 +40,7 @@ const ContactContent: React.FC = () => {
         data = text ? JSON.parse(text) : {};
       } catch {
         // If API isn't available (local dev), show fallback message
-        throw new Error('Email service is not available. Please email us directly at support@cognitav.com');
+        throw new Error('Email service is not available. Please email us directly at support@glamatron.com');
       }
 
       if (!response.ok) {
@@ -67,10 +67,10 @@ const ContactContent: React.FC = () => {
           Thank you for reaching out. We'll get back to you soon at the email you provided.
         </p>
         <a 
-          href="mailto:support@cognitav.com"
+          href="mailto:support@glamatron.com"
           className="text-slate-700 hover:text-slate-900 font-medium underline"
         >
-          support@cognitav.com
+          support@glamatron.com
         </a>
         <button
           onClick={() => setSubmitted(false)}
@@ -97,10 +97,10 @@ const ContactContent: React.FC = () => {
           <div>
             <p className="text-sm text-slate-500">Email us directly</p>
             <a 
-              href="mailto:support@cognitav.com"
+              href="mailto:support@glamatron.com"
               className="text-slate-700 hover:text-slate-900 font-medium"
             >
-              support@cognitav.com
+              support@glamatron.com
             </a>
           </div>
         </div>

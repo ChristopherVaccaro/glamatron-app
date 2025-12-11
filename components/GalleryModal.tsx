@@ -123,13 +123,13 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: 'My Glamatron Transformation',
-          text: 'Check out my style transformation!',
+          text: 'Check out my style transformation with Glamatron!',
           files: [file],
         });
       } else if (navigator.share) {
         await navigator.share({
           title: 'My Glamatron Transformation',
-          text: 'Check out my style transformation! Created with Glamatron.',
+          text: 'Check out my style transformation with Glamatron!',
         });
       } else {
         // Fallback: copy image URL or download

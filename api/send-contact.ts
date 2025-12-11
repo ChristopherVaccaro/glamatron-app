@@ -53,7 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       body: JSON.stringify({
         from: 'Glamatron Contact <noreply@cognitav.com>',
-        to: ['support@cognitav.com'],
+        to: ['support@glamatron.com'],
         reply_to: email,
         subject: `[Glamatron] ${subjectLabel}: ${name}`,
         html: `
