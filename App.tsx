@@ -40,6 +40,8 @@ import PurchaseModal from './components/PurchaseModal';
 import GlamCoinDisplay from './components/GlamCoinDisplay';
 import DevToolbar from './components/DevToolbar';
 import GalleryModal from './components/GalleryModal';
+import AdminGalleryModal from './components/AdminGalleryModal';
+import FAQModal from './components/FAQModal';
 import Toast from './components/Toast';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import ResetPasswordModal from './components/ResetPasswordModal';
@@ -277,6 +279,8 @@ const App: React.FC = () => {
   });
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
+  const [showAdminGalleryModal, setShowAdminGalleryModal] = useState(false);
+  const [showFAQModal, setShowFAQModal] = useState(false);
   
   const [selections, setSelections] = useState<UserSelections>({
     [StyleCategory.HAIR]: null,
@@ -888,6 +892,8 @@ const App: React.FC = () => {
                 }}
                 onOpenProfile={() => setShowProfileModal(true)}
                 onOpenGallery={() => setShowGalleryModal(true)}
+                onOpenAdminGallery={() => setShowAdminGalleryModal(true)}
+                onOpenFAQ={() => setShowFAQModal(true)}
               />
             ) : (
               <button 
@@ -1364,6 +1370,18 @@ const App: React.FC = () => {
           userId={user.id}
         />
       )}
+
+      {/* Admin Gallery Modal - all users' creations (admin only) */}
+      <AdminGalleryModal
+        isOpen={showAdminGalleryModal}
+        onClose={() => setShowAdminGalleryModal(false)}
+      />
+
+      {/* FAQ Modal */}
+      <FAQModal
+        isOpen={showFAQModal}
+        onClose={() => setShowFAQModal(false)}
+      />
 
       {/* Developer Toolbar - only visible for test user and admin */}
       <DevToolbar />
