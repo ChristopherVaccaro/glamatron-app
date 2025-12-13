@@ -27,36 +27,54 @@ export const FREE_STYLE_IDS: Set<string> = new Set([
   'hl_medium',
   'hl_long',
 
-  // HAIR COLOR - Basic naturals + a few fun (6 of ~25)
+  // HAIR COLOR - Naturals + fun colors (8 of ~30)
   'hc_black',
   'hc_darkbrown',
   'hc_honey',
   'hc_auburn',
   'hc_pastelpink',
   'hc_blue',
+  'hc_platinum',
+  'hc_lavender',
 
-  // EXPRESSIONS - Common ones (8 of ~30)
+  // EXPRESSIONS - Variety for experimentation (15 of ~36)
+  // Neutral/Relaxed
+  'ex_neutral',
+  'ex_content',
+  'ex_beaming',
+  // Emotional - Happy
   'ex_smile',
   'ex_grin',
-  'ex_neutral',
-  'ex_smirk',
-  'ex_surprised',
   'ex_laugh',
-  'ex_content',
+  // Emotional - Serious
+  'ex_serious',
+  'ex_focused',
+  // Playful
   'ex_wink',
+  'ex_smirk',
+  'ex_tongue',
+  // Expressive
+  'ex_surprised',
+  'ex_pout',
+  'ex_kiss',
+  'ex_lipbite',
 
-  // MAKEUP - Basic looks (5 of ~18)
+  // MAKEUP - Range of looks (7 of ~22)
   'm_none',
   'm_natural',
   'm_softglam',
   'm_fullglam',
   'm_bronzed',
+  'm_dewy',
+  'm_sunkissed',
 
-  // EYES - Common styles (4 of ~20)
+  // EYES - Common styles (6 of ~24)
   'e_natural',
   'e_falsies',
   'e_smokey',
   'e_cateye',
+  'e_smokey_brown',
+  'e_fox',
 
   // LIPS - Basic colors (4 of ~12)
   'l_nude',
@@ -64,41 +82,47 @@ export const FREE_STYLE_IDS: Set<string> = new Set([
   'l_red',
   'l_pink',
 
-  // GLASSES - Popular styles (4 of ~20)
+  // GLASSES - Popular styles (6 of ~23)
   'a_aviator',
   'a_wayfarer',
   'a_round',
   'a_cateye',
+  'a_thick',
+  'a_clear',
 
-  // PIERCINGS - Basic (4 of ~25)
+  // PIERCINGS - Basic (4 of ~28)
   'a_nose_stud',
   'a_lobe_stud',
   'a_lobe_hoop',
   'a_huggie',
 
-  // HEADWEAR - Common (4 of ~25)
+  // HEADWEAR - Common (4 of ~29)
   'a_cap',
   'a_beanie',
   'a_headband',
   'a_bandana',
 
-  // JEWELRY - Basic (4 of ~18)
+  // JEWELRY - Basic (4 of ~22)
   'a_hoops',
   'a_studs',
   'a_choker',
   'a_goldchain',
 
-  // FACE EXTRAS - Common (3 of ~16)
+  // FACE EXTRAS - Common (5 of ~19)
   'a_freckles',
   'a_gems',
   'a_glitter',
+  'a_mole',
+  'a_bindi',
 
-  // FACIAL HAIR - Basic (5 of ~25)
+  // FACIAL HAIR - Variety (7 of ~27)
   'fh_none',
   'fh_stubble',
   'fh_goatee',
   'fh_short',
   'fh_stache_chevron',
+  'fh_full',
+  'fh_stubble_light',
 ]);
 
 /**

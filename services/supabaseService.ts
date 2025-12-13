@@ -60,6 +60,11 @@ export interface DbGalleryItem {
   created_at: string;
 }
 
+export interface DbGalleryItemWithProfile extends DbGalleryItem {
+  user_email: string;
+  user_name: string | null;
+}
+
 export interface DbTransaction {
   id: string;
   user_id: string;
@@ -803,6 +808,42 @@ export const GalleryService = {
     } catch (error) {
       console.error('Error in clearUserGallery:', error);
       return false;
+    }
+  },
+
+  /**
+   * Get ALL gallery items with user profile info (Admin only)
+   * Uses RPC function that bypasses RLS for admin access
+   */
+  async getAllItemsWithProfiles(): Promise<DbGalleryItemWithProfile[]> {
+    if (!supabase) {
+      console.warn('Supabase not configured, cannot get all items');
+      return [];
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('get_all_gallery_items_admin');
+
+      if (error) {
+        console.error('Error fetching all gallery items:', error);
+        return [];
+      }
+
+      return (data || []).map((item: any) => ({
+        id: item.id,
+        user_id: item.user_id,
+        original_image_url: item.original_image_url,
+        result_image_url: item.result_image_url,
+        selections: item.selections,
+        is_favorite: item.is_favorite,
+        title: item.title,
+        created_at: item.created_at,
+        user_email: item.user_email || 'Unknown',
+        user_name: item.user_name || null,
+      }));
+    } catch (error) {
+      console.error('Error in getAllItemsWithProfiles:', error);
+      return [];
     }
   },
 };

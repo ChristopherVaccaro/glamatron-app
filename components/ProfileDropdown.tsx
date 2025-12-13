@@ -1,17 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, LogOut, ChevronDown, ImageIcon } from 'lucide-react';
+import { User, LogOut, ChevronDown, ImageIcon, Users, HelpCircle } from 'lucide-react';
 import { UserData } from './AuthModal';
+import { useUser } from '../contexts/UserContext';
 
 interface ProfileDropdownProps {
   user: UserData;
   onSignOut: () => void;
   onOpenProfile: () => void;
   onOpenGallery: () => void;
+  onOpenAdminGallery?: () => void;
+  onOpenFAQ?: () => void;
 }
 
-const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onSignOut, onOpenProfile, onOpenGallery }) => {
+const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onSignOut, onOpenProfile, onOpenGallery, onOpenAdminGallery, onOpenFAQ }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { isAdmin } = useUser();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -115,6 +119,36 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onSignOut, onOp
               <ImageIcon size={18} className="text-slate-400" />
               <span className="font-medium">History</span>
             </button>
+            
+            {/* Admin-only: All Users Gallery */}
+            {isAdmin && onOpenAdminGallery && (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  onOpenAdminGallery();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <Users size={18} className="text-slate-400" />
+                <span className="font-medium">All Users Gallery</span>
+              </button>
+            )}
+            
+            <div className="my-1 border-t border-slate-100" />
+            
+            {/* FAQ / Help */}
+            {onOpenFAQ && (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  onOpenFAQ();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <HelpCircle size={18} className="text-slate-400" />
+                <span className="font-medium">Help & FAQ</span>
+              </button>
+            )}
             
             <div className="my-1 border-t border-slate-100" />
             

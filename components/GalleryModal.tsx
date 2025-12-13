@@ -180,13 +180,16 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
-              <ImageIcon size={20} className="text-slate-600" />
+            <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
+              <ImageIcon size={20} className="text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900">History</h2>
               <p className="text-sm text-slate-500">
-                {items.length} {items.length === 1 ? 'image' : 'images'}
+                {timePeriod !== 'all' && items.length !== allItems.length 
+                  ? `${items.length} of ${allItems.length} transformations`
+                  : `${items.length} ${items.length === 1 ? 'transformation' : 'transformations'}`
+                }
                 {favoritesCount > 0 && (
                   <span className="ml-2 text-rose-500">
                     • {favoritesCount} <Heart size={10} className="inline fill-current" />
@@ -253,15 +256,32 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(85vh-140px)]">
           {items.length === 0 ? (
-            // Empty state
+            // Empty state - differentiate between no items at all vs no items matching filter
             <div className="text-center py-16">
               <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
                 <ImageIcon size={32} className="text-slate-400" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">No creations yet</h3>
-              <p className="text-slate-500 max-w-sm mx-auto">
-                Your generated images will appear here. Start transforming to build your gallery!
-              </p>
+              {allItems.length === 0 ? (
+                <>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">No transformations yet</h3>
+                  <p className="text-slate-500 max-w-sm mx-auto">
+                    Your generated images will appear here. Start transforming to build your gallery!
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">No matching transformations</h3>
+                  <p className="text-slate-500 max-w-sm mx-auto">
+                    No transformations found for the selected time period. Try selecting "All Time" to see everything.
+                  </p>
+                  <button
+                    onClick={() => setTimePeriod('all')}
+                    className="mt-4 px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors"
+                  >
+                    Show All
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             // Gallery grid
