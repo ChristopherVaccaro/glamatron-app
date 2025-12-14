@@ -49,7 +49,8 @@ const CATEGORY_CONFIG = [
     label: 'Eyes',
     icon: Eye,
     categories: [
-      { key: 'EYES', title: 'Eyes & Contacts', category: StyleCategory.EYES, optionsKey: 'EYES' },
+      { key: 'EYE_MAKEUP', title: 'Eye Makeup', category: StyleCategory.EYES, optionsKey: 'EYE_MAKEUP' },
+      { key: 'EYE_COLOR', title: 'Eye Color / Contacts', category: StyleCategory.EYES, optionsKey: 'EYE_COLOR' },
     ],
   },
   {

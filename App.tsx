@@ -3,7 +3,7 @@ import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, Rot
 import { 
   StyleCategory, 
   UserSelections, 
-  GenerationState 
+  GenerationState
 } from './types';
 import { useUser } from './contexts/UserContext';
 import { filterStyleOptions, getAvailablePresets } from './utils/styleAccess';
@@ -14,6 +14,8 @@ import {
   EXPRESSION_OPTIONS,
   MAKEUP_OPTIONS, 
   EYE_OPTIONS,
+  EYE_MAKEUP_OPTIONS,
+  EYE_COLOR_OPTIONS,
   LIP_OPTIONS,
   GLASSES_OPTIONS,
   PIERCING_OPTIONS,
@@ -38,11 +40,12 @@ import LandingPage from './components/LandingPage';
 // Password gate removed
 import PurchaseModal from './components/PurchaseModal';
 import GlamCoinDisplay from './components/GlamCoinDisplay';
-import DevToolbar from './components/DevToolbar';
+// DevToolbar removed
 import GalleryModal from './components/GalleryModal';
 import AdminGalleryModal from './components/AdminGalleryModal';
 import FAQModal from './components/FAQModal';
 import Toast from './components/Toast';
+import StyleAnalyzerModal from './components/StyleAnalyzerModal';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import ResetPasswordModal from './components/ResetPasswordModal';
 import { useGallery } from './contexts/GalleryContext';
@@ -255,6 +258,262 @@ export const QUICK_PRESETS = [
       [StyleCategory.FACIAL_HAIR]: null,
     }
   },
+  // ===== NEW QUICK LOOKS (Popularity rated 1-10) =====
+  {
+    // Popularity: 10/10 - #1 trending on TikTok/Instagram
+    id: 'clean_girl',
+    name: 'Clean Girl',
+    emoji: '✨',
+    selections: {
+      [StyleCategory.HAIR]: 'Slicked back tight bun',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.MAKEUP]: 'Minimal "clean girl" aesthetic makeup',
+      [StyleCategory.EXPRESSION]: 'Calm neutral expression',
+      [StyleCategory.EYES]: 'Natural lashes with mascara only',
+      [StyleCategory.LIPS]: 'High shine clear lip gloss',
+      [StyleCategory.ACCESSORIES]: ['Small huggie hoop earrings'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 9/10 - Most requested for dates/events
+    id: 'soft_glam',
+    name: 'Soft Glam',
+    emoji: '🌹',
+    selections: {
+      [StyleCategory.HAIR]: 'Loose beachy waves',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.MAKEUP]: 'Soft glam bridal style makeup',
+      [StyleCategory.EXPRESSION]: 'Subtle closed-mouth smile',
+      [StyleCategory.EYES]: 'Warm brown matte smokey eye',
+      [StyleCategory.LIPS]: 'Matte nude lipstick',
+      [StyleCategory.ACCESSORIES]: ['Classic diamond stud earrings'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 9/10 - Viral "old money" aesthetic
+    id: 'old_money',
+    name: 'Old Money',
+    emoji: '🏛️',
+    selections: {
+      [StyleCategory.HAIR]: 'Elegant low ponytail',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Deep dark brown',
+      [StyleCategory.MAKEUP]: 'Flawless full-coverage matte foundation',
+      [StyleCategory.EXPRESSION]: 'Calm neutral expression',
+      [StyleCategory.EYES]: 'Natural lashes with mascara only',
+      [StyleCategory.LIPS]: 'Matte nude lipstick',
+      [StyleCategory.ACCESSORIES]: ['String of pearls necklace', 'Classic pearl stud earrings'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 8/10 - Trending feminine aesthetic
+    id: 'coquette',
+    name: 'Coquette',
+    emoji: '🎀',
+    selections: {
+      [StyleCategory.HAIR]: 'Long voluminous curly hair',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.MAKEUP]: 'Igari style heavy blush under eyes',
+      [StyleCategory.EXPRESSION]: 'Cute upset pouting expression',
+      [StyleCategory.EYES]: 'Dramatic long false eyelashes',
+      [StyleCategory.LIPS]: 'Korean style gradient ombre lips',
+      [StyleCategory.ACCESSORIES]: ['Satin hair ribbon bow'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 8/10 - Gen Z favorite
+    id: 'streetwear',
+    name: 'Streetwear',
+    emoji: '🔥',
+    selections: {
+      [StyleCategory.HAIR]: 'Double space buns',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Icy platinum blonde',
+      [StyleCategory.MAKEUP]: 'Heavy bronzer sun-kissed look',
+      [StyleCategory.EXPRESSION]: 'Serious intense expression',
+      [StyleCategory.EYES]: 'Sharp black winged eyeliner',
+      [StyleCategory.LIPS]: 'Matte nude lipstick',
+      [StyleCategory.ACCESSORIES]: ['Thick gold chain necklace', 'Large gold hoop earrings'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 8/10 - Festival/summer favorite
+    id: 'mermaid',
+    name: 'Mermaid',
+    emoji: '🧜‍♀️',
+    selections: {
+      [StyleCategory.HAIR]: 'Long flowing wavy hair',
+      [StyleCategory.HAIR_LENGTH]: 'Very long waist length',
+      [StyleCategory.HAIR_COLOR]: 'Galaxy mix of purple blue and black',
+      [StyleCategory.MAKEUP]: 'Intense highlighter strobing effect',
+      [StyleCategory.EXPRESSION]: 'Sultry seductive gaze',
+      [StyleCategory.EYES]: 'Eyes embellished with rhinestones',
+      [StyleCategory.LIPS]: 'Sparkling glitter lips',
+      [StyleCategory.ACCESSORIES]: ['Rhinestone face gems', 'Glitter dusted on cheekbones'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 9/10 - High commercial value
+    id: 'bridal',
+    name: 'Bridal Glow',
+    emoji: '👰',
+    selections: {
+      [StyleCategory.HAIR]: 'Elegant formal updo',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.MAKEUP]: 'Dewy glass skin high-shine base',
+      [StyleCategory.EXPRESSION]: 'Radiant beaming smile',
+      [StyleCategory.EYES]: 'Dramatic long false eyelashes',
+      [StyleCategory.LIPS]: 'Matte nude lipstick',
+      [StyleCategory.ACCESSORIES]: ['Sparkling crystal tiara', 'Pearl drop earrings'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 7/10 - Nostalgia trend
+    id: 'supermodel',
+    name: '90s Supermodel',
+    emoji: '💃',
+    selections: {
+      [StyleCategory.HAIR]: 'Voluminous salon blowout',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Rich chestnut brown',
+      [StyleCategory.MAKEUP]: 'Sculpted heavy contour makeup',
+      [StyleCategory.EXPRESSION]: 'Confident asymmetrical smirk',
+      [StyleCategory.EYES]: 'Black and grey smokey eye',
+      [StyleCategory.LIPS]: '90s brown lip liner with lighter center',
+      [StyleCategory.ACCESSORIES]: ['Large gold hoop earrings'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 8/10 - K-beauty influence growing
+    id: 'glass_skin',
+    name: 'Glass Skin',
+    emoji: '💎',
+    selections: {
+      [StyleCategory.HAIR]: 'Long sleek straight hair',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Jet black',
+      [StyleCategory.MAKEUP]: 'Dewy glass skin high-shine base',
+      [StyleCategory.EXPRESSION]: 'Peaceful content expression',
+      [StyleCategory.EYES]: 'Wet look glossy eyelids',
+      [StyleCategory.LIPS]: 'Korean style gradient ombre lips',
+      [StyleCategory.ACCESSORIES]: [],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 8/10 - Consistently popular IG aesthetic
+    id: 'baddie',
+    name: 'Insta Baddie',
+    emoji: '👑',
+    selections: {
+      [StyleCategory.HAIR]: 'Long flowing wavy hair',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Dark roots fading to blonde ends',
+      [StyleCategory.MAKEUP]: 'Heavy contour and highlight full glam',
+      [StyleCategory.EXPRESSION]: 'Sultry seductive gaze',
+      [StyleCategory.EYES]: 'Sharp cut crease eyeshadow',
+      [StyleCategory.LIPS]: 'Matte nude lipstick',
+      [StyleCategory.ACCESSORIES]: ['Multiple layered gold necklaces', 'Large gold hoop earrings'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 7/10 - Dark academia trending
+    id: 'dark_academia',
+    name: 'Dark Academia',
+    emoji: '📚',
+    selections: {
+      [StyleCategory.HAIR]: 'Casual messy textured updo with loose strands',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Deep dark brown',
+      [StyleCategory.MAKEUP]: 'Minimal "clean girl" aesthetic makeup',
+      [StyleCategory.EXPRESSION]: 'Intensely focused concentration',
+      [StyleCategory.EYES]: 'Warm brown matte smokey eye',
+      [StyleCategory.LIPS]: 'Deep burgundy wine lipstick',
+      [StyleCategory.ACCESSORIES]: ['Round wire-frame glasses'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 7/10 - Y2K nostalgia
+    id: 'y2k',
+    name: 'Y2K Baby',
+    emoji: '💿',
+    selections: {
+      [StyleCategory.HAIR]: 'Two braided pigtails',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Y2K chunky highlights',
+      [StyleCategory.MAKEUP]: 'Intense highlighter strobing effect',
+      [StyleCategory.EXPRESSION]: 'Silly duck face selfie expression',
+      [StyleCategory.EYES]: 'Vibrant blue 80s eyeshadow',
+      [StyleCategory.LIPS]: 'High shine clear lip gloss',
+      [StyleCategory.ACCESSORIES]: ['90s butterfly hair clips', 'Trendy transparent frame glasses'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 7/10 - Masculine groomed look
+    id: 'gentleman',
+    name: 'Modern Gentleman',
+    emoji: '🎩',
+    selections: {
+      [StyleCategory.HAIR]: 'Clean skin fade haircut',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.MAKEUP]: null,
+      [StyleCategory.EXPRESSION]: 'Confident asymmetrical smirk',
+      [StyleCategory.EYES]: null,
+      [StyleCategory.LIPS]: null,
+      [StyleCategory.ACCESSORIES]: [],
+      [StyleCategory.FACIAL_HAIR]: 'Neatly shaped boxed beard',
+    }
+  },
+  {
+    // Popularity: 8/10 - Natural beauty trending
+    id: 'natural_glow',
+    name: 'Natural Glow',
+    emoji: '🌿',
+    selections: {
+      [StyleCategory.HAIR]: 'Long voluminous curly hair',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.MAKEUP]: 'Dewy glass skin high-shine base',
+      [StyleCategory.EXPRESSION]: 'Radiant beaming smile',
+      [StyleCategory.EYES]: 'Natural lashes with mascara only',
+      [StyleCategory.LIPS]: 'High shine clear lip gloss',
+      [StyleCategory.ACCESSORIES]: ['Dusted with natural freckles'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    // Popularity: 6/10 - Edgy alternative
+    id: 'grunge_revival',
+    name: 'Grunge Revival',
+    emoji: '🖤',
+    selections: {
+      [StyleCategory.HAIR]: 'Trendy wolf cut with layers',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Jet black',
+      [StyleCategory.MAKEUP]: 'Smudged messy 90s grunge makeup',
+      [StyleCategory.EXPRESSION]: 'Rolling eyes annoyed expression',
+      [StyleCategory.EYES]: 'Black and grey smokey eye',
+      [StyleCategory.LIPS]: 'Deep burgundy wine lipstick',
+      [StyleCategory.ACCESSORIES]: ['Silver septum clicker ring', 'Black velvet choker necklace'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
 ];
 
 const App: React.FC = () => {
@@ -281,7 +540,9 @@ const App: React.FC = () => {
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [showAdminGalleryModal, setShowAdminGalleryModal] = useState(false);
   const [showFAQModal, setShowFAQModal] = useState(false);
+  const [showStyleAnalyzerModal, setShowStyleAnalyzerModal] = useState(false);
   
+      
   const [selections, setSelections] = useState<UserSelections>({
     [StyleCategory.HAIR]: null,
     [StyleCategory.HAIR_LENGTH]: null,
@@ -308,6 +569,51 @@ const App: React.FC = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
+
+  const [showAuthSplash, setShowAuthSplash] = useState(true);
+  const [authSplashFading, setAuthSplashFading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthLoading) {
+      setShowAuthSplash(true);
+      setAuthSplashFading(false);
+      return;
+    }
+
+    const t = window.setTimeout(() => {
+      setAuthSplashFading(true);
+    }, 150);
+
+    return () => window.clearTimeout(t);
+  }, [isAuthLoading]);
+
+  // Effect to hide body scrollbar during splash
+  useEffect(() => {
+    if (showAuthSplash) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showAuthSplash]);
+
+  const authSplash = showAuthSplash ? (
+    <div
+      className={`fixed inset-0 z-[9999] h-screen overflow-hidden bg-slate-900 flex items-center justify-center transition-opacity duration-500 ${authSplashFading ? 'opacity-0' : 'opacity-100'}`}
+      onTransitionEnd={() => {
+        if (authSplashFading) setShowAuthSplash(false);
+      }}
+    >
+      <div className="text-center">
+        <span className="text-2xl tracking-wide text-white" style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }}>
+          GLAMATRON
+        </span>
+        <div className="mt-4 w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
+      </div>
+    </div>
+  ) : null;
   
   // Sync contextUser (from Supabase auth) to local user state
   useEffect(() => {
@@ -709,6 +1015,30 @@ const App: React.FC = () => {
     setSelections(preset.selections as UserSelections);
   };
 
+  // Handle applying styles from Style Analyzer
+  const handleApplyAnalyzedStyles = (analyzedSelections: Partial<UserSelections>) => {
+    setSelections(prev => {
+      const newSelections = { ...prev };
+      
+      // Apply each analyzed selection
+      Object.entries(analyzedSelections).forEach(([key, value]) => {
+        if (key === StyleCategory.ACCESSORIES && Array.isArray(value)) {
+          // Merge accessories instead of replacing
+          const currentAccessories = prev[StyleCategory.ACCESSORIES] || [];
+          const newAccessories = [...new Set([...currentAccessories, ...value])];
+          newSelections[StyleCategory.ACCESSORIES] = newAccessories;
+        } else if (value !== null && value !== undefined) {
+          (newSelections as any)[key] = value;
+        }
+      });
+      
+      return newSelections;
+    });
+    
+    // Disable Surprise Me if it was active
+    setSurpriseMeActive(false);
+  };
+
   const handleStartOver = () => {
     // If user is logged in, just reset the tool state (don't go to landing page)
     // If not logged in, go to landing page
@@ -800,6 +1130,8 @@ const App: React.FC = () => {
     EXPRESSION: filterStyleOptions(EXPRESSION_OPTIONS, hasFullAccess),
     MAKEUP: filterStyleOptions(MAKEUP_OPTIONS, hasFullAccess),
     EYES: filterStyleOptions(EYE_OPTIONS, hasFullAccess),
+    EYE_MAKEUP: filterStyleOptions(EYE_MAKEUP_OPTIONS, hasFullAccess),
+    EYE_COLOR: filterStyleOptions(EYE_COLOR_OPTIONS, hasFullAccess),
     LIPS: filterStyleOptions(LIP_OPTIONS, hasFullAccess),
     GLASSES: filterStyleOptions(GLASSES_OPTIONS, hasFullAccess),
     PIERCINGS: filterStyleOptions(PIERCING_OPTIONS, hasFullAccess),
@@ -827,33 +1159,22 @@ const App: React.FC = () => {
     }
   };
 
-  // Show a brief loading state while checking auth
-  // This prevents showing the landing page to already-authenticated users
-  if (isAuthLoading) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <span className="text-2xl tracking-wide text-white" style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }}>
-            GLAMATRON
-          </span>
-          <div className="mt-4 w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
-
   if (showLanding) {
     return (
-      <LandingPage 
-        onGetStarted={() => setShowLanding(false)} 
-        onSignIn={(userData) => setUser(userData)}
-        user={user}
-      />
+      <>
+        <LandingPage 
+          onGetStarted={() => setShowLanding(false)} 
+          onSignIn={(userData) => setUser(userData)}
+          user={user}
+        />
+        {authSplash}
+      </>
     );
   }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      {authSplash}
       {/* Toast Notification */}
       {toast && (
         <Toast
@@ -981,7 +1302,7 @@ const App: React.FC = () => {
                         <button 
                           onClick={handleToggleFavorite}
                           disabled={genState.isLoading}
-                          className={`p-3 rounded-xl border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                          className={`px-4 py-3.5 rounded-xl border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                             currentItemIsFavorite 
                               ? 'bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100' 
                               : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-rose-400 hover:border-rose-200'
@@ -994,7 +1315,7 @@ const App: React.FC = () => {
                       <button 
                         onClick={handleShare}
                         disabled={genState.isLoading}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Share2 size={18} />
                         Share
@@ -1002,7 +1323,7 @@ const App: React.FC = () => {
                       <button 
                         onClick={handleDownload}
                         disabled={genState.isLoading}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-[#0F172A] text-white rounded-xl hover:bg-slate-800 transition-colors font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3.5 bg-[#0F172A] text-white rounded-xl hover:bg-slate-800 transition-colors font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Download size={18} />
                         Download
@@ -1140,6 +1461,19 @@ const App: React.FC = () => {
                   {/* Expandable content */}
                   <div className={`overflow-hidden transition-all duration-300 ease-in-out ${quickLooksExpanded ? 'max-h-[200px] opacity-100 mt-3' : 'max-h-0 opacity-0'}`}>
                   <div id="quick-looks-scroll" className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+                    {/* Style Analyzer Button - Copy styles from reference photos */}
+                    <button
+                      onClick={() => setShowStyleAnalyzerModal(true)}
+                      disabled={genState.isLoading || surpriseMeActive}
+                      className={`
+                        flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5
+                        border-2 border-dashed border-slate-300 text-slate-600 hover:border-slate-400 hover:bg-slate-50
+                        ${surpriseMeActive || genState.isLoading ? 'cursor-not-allowed opacity-50' : ''}
+                      `}
+                    >
+                      <Wand2 size={14} />
+                      <span className="whitespace-nowrap">Copy a Look</span>
+                    </button>
                     {availablePresets.map(preset => (
                       <button
                         key={preset.id}
@@ -1197,11 +1531,11 @@ const App: React.FC = () => {
                       <div className="flex flex-wrap gap-1.5">
                         {activeSelections.length > 0 ? (
                           activeSelections.map((item, idx) => (
-                            <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-[#0F172A] text-white text-xs rounded-full animate-in fade-in zoom-in-95 duration-200">
+                            <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full animate-in fade-in zoom-in-95 duration-200">
                               {item.label}
                               {!genState.isLoading && (
-                                <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-700 rounded-full p-0.5">
-                                  <X size={10} className="text-white" />
+                                <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-200 rounded-full p-0.5">
+                                  <X size={10} className="text-slate-500" />
                                 </button>
                               )}
                             </span>
@@ -1227,7 +1561,7 @@ const App: React.FC = () => {
                   <button
                     onClick={handleReset}
                     disabled={genState.isLoading || selectionCount === 0}
-                    className="p-2.5 sm:p-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-3.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <RotateCcw size={18} className="sm:w-5 sm:h-5" />
                   </button>
@@ -1243,7 +1577,7 @@ const App: React.FC = () => {
                     onClick={handleSurpriseMeToggle}
                     disabled={genState.isLoading}
                     className={`
-                      p-2.5 sm:p-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                      px-4 py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
                       ${surpriseMeActive 
                         ? 'bg-violet-600 text-white ring-2 ring-violet-400 ring-offset-2 animate-pulse' 
                         : 'bg-violet-100 text-violet-700 hover:bg-violet-200'
@@ -1383,8 +1717,12 @@ const App: React.FC = () => {
         onClose={() => setShowFAQModal(false)}
       />
 
-      {/* Developer Toolbar - only visible for test user and admin */}
-      <DevToolbar />
+      {/* Style Analyzer Modal - Copy styles from reference photos */}
+      <StyleAnalyzerModal
+        isOpen={showStyleAnalyzerModal}
+        onClose={() => setShowStyleAnalyzerModal(false)}
+        onApplyStyles={handleApplyAnalyzedStyles}
+      />
     </div>
   );
 };

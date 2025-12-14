@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Coins, Sparkles, Unlock } from 'lucide-react';
+import { X, Coins, Sparkles, Unlock, Zap, Shield, Clock } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 interface PurchaseModalProps {
@@ -65,7 +65,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={(e) => {
           e.stopPropagation();
           onClose();
@@ -73,38 +73,45 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-gradient-to-b from-slate-900 to-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-700">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-full transition-colors z-10"
           aria-label="Close"
         >
           <X size={20} />
         </button>
 
-        {/* Header */}
-        <div className="px-8 pt-8 pb-4 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30">
-            <Coins size={28} className="text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900">
-            Get More GlamCoins
-          </h2>
-          <p className="text-slate-500 mt-1">
-            Power your style transformations
-          </p>
-          {user && (
-            <p className="text-sm text-slate-400 mt-2">
-              Current balance: <span className="font-semibold text-amber-600">{user.glamCoins} GlamCoins</span>
+        {/* Header with gradient accent */}
+        <div className="relative px-8 pt-8 pb-6 text-center">
+          {/* Decorative glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-amber-500/20 blur-3xl" />
+          
+          <div className="relative">
+            <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-xl shadow-amber-500/30 rotate-3 hover:rotate-0 transition-transform">
+              <Coins size={36} className="text-white drop-shadow-lg" />
+            </div>
+            <h2 className="text-2xl font-bold text-white">
+              Get More GlamCoins
+            </h2>
+            <p className="text-slate-400 mt-1">
+              Power your style transformations
             </p>
-          )}
+            {user && (
+              <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-slate-800/80 border border-slate-700 rounded-full">
+                <Coins size={16} className="text-amber-400" />
+                <span className="text-sm text-slate-300">Balance:</span>
+                <span className="font-bold text-amber-400">{user.glamCoins}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Test user indicator */}
         {isTestUser && (
-          <div className="mx-8 mb-4 px-4 py-2 bg-violet-50 border border-violet-200 rounded-lg text-center">
-            <span className="text-sm text-violet-700">
+          <div className="mx-6 mb-4 px-4 py-2 bg-violet-500/10 border border-violet-500/30 rounded-lg text-center">
+            <span className="text-sm text-violet-300">
               🧪 <strong>Test Mode:</strong> Purchases are simulated
             </span>
           </div>
@@ -112,16 +119,16 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
 
         {/* Unlock message for users who haven't purchased yet */}
         {!hasFullAccess && (
-          <div className="mx-8 mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+          <div className="mx-6 mb-4 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
                 <Unlock size={16} className="text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-emerald-800">
+                <p className="text-sm font-medium text-emerald-300">
                   Unlock all styles & options!
                 </p>
-                <p className="text-xs text-emerald-600 mt-0.5">
+                <p className="text-xs text-emerald-400/70 mt-0.5">
                   Your first purchase unlocks the full style library with premium looks.
                 </p>
               </div>
@@ -130,34 +137,38 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
         )}
 
         {/* Content */}
-        <div className="px-8 pb-8">
+        <div className="px-6 pb-6">
           {/* GlamCoin Packages */}
           <div className="grid grid-cols-3 gap-3">
             {GLAMCOIN_PACKAGES.map((pkg) => (
               <button
                 key={pkg.id}
                 onClick={() => handlePurchaseCoins(pkg)}
-                className={`relative p-4 rounded-xl border-2 transition-all hover:scale-105 ${
+                className={`relative p-4 rounded-xl border-2 transition-all hover:scale-105 hover:-translate-y-1 ${
                   pkg.popular 
-                    ? 'border-amber-400 bg-amber-50 shadow-lg shadow-amber-500/10' 
-                    : 'border-slate-200 bg-white hover:border-slate-300'
+                    ? 'border-amber-400 bg-gradient-to-b from-amber-500/20 to-amber-600/10 shadow-lg shadow-amber-500/20' 
+                    : 'border-slate-600 bg-slate-800/50 hover:border-slate-500 hover:bg-slate-700/50'
                 }`}
               >
                 {pkg.popular && (
-                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-amber-400 text-white text-xs font-bold rounded-full whitespace-nowrap flex items-center gap-1">
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold rounded-full whitespace-nowrap flex items-center gap-1 shadow-lg">
                     <Sparkles size={10} />
-                    BEST
+                    BEST VALUE
                   </div>
                 )}
                 <div className="flex flex-col items-center gap-2">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    pkg.popular ? 'bg-amber-400 text-white' : 'bg-slate-100 text-slate-600'
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                    pkg.popular 
+                      ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/30' 
+                      : 'bg-slate-700 text-slate-300'
                   }`}>
-                    <Coins size={20} />
+                    <Coins size={22} />
                   </div>
-                  <div className="font-bold text-lg text-slate-900">{pkg.coins}</div>
-                  <div className="text-xs text-slate-400">{pkg.pricePerCoin}/coin</div>
-                  <div className={`font-semibold ${pkg.popular ? 'text-amber-600' : 'text-slate-700'}`}>
+                  <div className={`font-bold text-2xl ${pkg.popular ? 'text-white' : 'text-slate-200'}`}>{pkg.coins}</div>
+                  <div className={`text-xs px-2 py-0.5 rounded-full ${
+                    pkg.popular ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-700 text-slate-400'
+                  }`}>{pkg.pricePerCoin}/coin</div>
+                  <div className={`font-bold text-lg mt-1 ${pkg.popular ? 'text-amber-400' : 'text-slate-300'}`}>
                     {pkg.price}
                   </div>
                 </div>
@@ -165,9 +176,25 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
             ))}
           </div>
 
+          {/* Benefits */}
+          <div className="mt-6 grid grid-cols-3 gap-2">
+            <div className="flex flex-col items-center gap-1 p-2">
+              <Zap size={16} className="text-amber-400" />
+              <span className="text-xs text-slate-400 text-center">Instant Delivery</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 p-2">
+              <Clock size={16} className="text-emerald-400" />
+              <span className="text-xs text-slate-400 text-center">Never Expire</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 p-2">
+              <Shield size={16} className="text-blue-400" />
+              <span className="text-xs text-slate-400 text-center">Secure Payment</span>
+            </div>
+          </div>
+
           {/* Footer note */}
-          <p className="text-center text-xs text-slate-400 mt-6">
-            1 GlamCoin = 1 AI transformation. GlamCoins never expire.
+          <p className="text-center text-xs text-slate-500 mt-4 pt-4 border-t border-slate-700">
+            1 GlamCoin = 1 AI transformation • Powered by Stripe
           </p>
         </div>
       </div>

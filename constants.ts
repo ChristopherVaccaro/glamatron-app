@@ -64,6 +64,13 @@ export const HAIR_OPTIONS: StyleOption[] = [
   { id: 'h_bangs', label: 'Straight Bangs', value: 'Hair with straight blunt bangs', category: StyleCategory.HAIR },
   { id: 'h_curtain', label: 'Curtain Bangs', value: 'Hair with trendy curtain bangs', category: StyleCategory.HAIR },
   { id: 'h_wispy', label: 'Wispy Bangs', value: 'Soft wispy bangs', category: StyleCategory.HAIR },
+  
+  // Natural Textures
+  { id: 'h_coils', label: 'Tight Coils', value: 'Natural tight coil pattern hair', category: StyleCategory.HAIR },
+  { id: 'h_twist_out', label: 'Twist Out', value: 'Defined twist out curls', category: StyleCategory.HAIR },
+  { id: 'h_wash_go', label: 'Wash & Go', value: 'Natural wash and go curls', category: StyleCategory.HAIR },
+  { id: 'h_silk_press', label: 'Silk Press', value: 'Sleek silk press straightened hair', category: StyleCategory.HAIR },
+  { id: 'h_finger_waves', label: 'Finger Waves', value: 'Vintage 1920s finger waves', category: StyleCategory.HAIR },
 ];
 
 // --- HAIR LENGTH ---
@@ -166,6 +173,7 @@ export const EXPRESSION_OPTIONS: StyleOption[] = [
 // --- ACCESSORIES (Broken down) ---
 
 export const GLASSES_OPTIONS: StyleOption[] = [
+  { id: 'a_remove_glasses', label: 'Remove Glasses', value: 'Remove any glasses or eyewear from the face, natural eyes visible', category: StyleCategory.ACCESSORIES },
   { id: 'a_aviator', label: 'Aviators', value: 'Aviator sunglasses', category: StyleCategory.ACCESSORIES },
   { id: 'a_wayfarer', label: 'Wayfarers', value: 'Classic black Wayfarer sunglasses', category: StyleCategory.ACCESSORIES },
   { id: 'a_round', label: 'Round Wire', value: 'Round wire-frame glasses', category: StyleCategory.ACCESSORIES },
@@ -332,10 +340,19 @@ export const LIP_OPTIONS: StyleOption[] = [
   { id: 'l_glitter', label: 'Glitter', value: 'Sparkling glitter lips', category: StyleCategory.LIPS },
   { id: 'l_blue', label: 'Blue', value: 'Bold blue lipstick', category: StyleCategory.LIPS },
   { id: 'l_green', label: 'Green', value: 'Dark forest green lipstick', category: StyleCategory.LIPS },
+  { id: 'l_berry', label: 'Berry', value: 'Rich berry colored lipstick', category: StyleCategory.LIPS },
+  { id: 'l_coral', label: 'Coral', value: 'Warm coral lipstick', category: StyleCategory.LIPS },
+  { id: 'l_mauve', label: 'Mauve', value: 'Dusty mauve lipstick', category: StyleCategory.LIPS },
+  { id: 'l_peach', label: 'Peach', value: 'Soft peach lip color', category: StyleCategory.LIPS },
+  { id: 'l_brown', label: 'Brown', value: '90s brown lipstick', category: StyleCategory.LIPS },
+  { id: 'l_orange', label: 'Orange', value: 'Bold orange lipstick', category: StyleCategory.LIPS },
+  { id: 'l_plum', label: 'Plum', value: 'Deep plum lipstick', category: StyleCategory.LIPS },
+  { id: 'l_tinted', label: 'Tinted Balm', value: 'Sheer tinted lip balm natural flush', category: StyleCategory.LIPS },
 ];
 
 // --- EYES ---
-export const EYE_OPTIONS: StyleOption[] = [
+// Eye Makeup options
+export const EYE_MAKEUP_OPTIONS: StyleOption[] = [
   { id: 'e_natural', label: 'Mascara Only', value: 'Natural lashes with mascara only', category: StyleCategory.EYES },
   { id: 'e_falsies', label: 'False Lashes', value: 'Dramatic long false eyelashes', category: StyleCategory.EYES },
   { id: 'e_smokey', label: 'Classic Smokey', value: 'Black and grey smokey eye', category: StyleCategory.EYES },
@@ -352,15 +369,32 @@ export const EYE_OPTIONS: StyleOption[] = [
   { id: 'e_glossy', label: 'Glossy Lids', value: 'Wet look glossy eyelids', category: StyleCategory.EYES },
   { id: 'e_white', label: 'White Liner', value: 'Trendy white graphic eyeliner', category: StyleCategory.EYES },
   { id: 'e_rhinestone', label: 'Rhinestone Eyes', value: 'Eyes embellished with rhinestones', category: StyleCategory.EYES },
+  { id: 'e_pink', label: 'Pink Shadow', value: 'Soft pink eyeshadow blend', category: StyleCategory.EYES },
+  { id: 'e_copper', label: 'Copper Glow', value: 'Warm copper metallic eyeshadow', category: StyleCategory.EYES },
+  { id: 'e_nude', label: 'Nude Tones', value: 'Neutral nude matte eyeshadow', category: StyleCategory.EYES },
+  { id: 'e_sunset', label: 'Sunset Eyes', value: 'Orange and pink sunset gradient eyeshadow', category: StyleCategory.EYES },
+];
+
+// Eye Color / Contacts options
+export const EYE_COLOR_OPTIONS: StyleOption[] = [
+  { id: 'e_contacts_brown', label: 'Brown Contacts', value: 'Natural warm brown colored contact lenses', category: StyleCategory.EYES },
+  { id: 'e_contacts_hazel', label: 'Hazel Contacts', value: 'Natural hazel colored contact lenses', category: StyleCategory.EYES },
+  { id: 'e_contacts_honey', label: 'Honey Contacts', value: 'Light honey brown colored contact lenses', category: StyleCategory.EYES },
+  { id: 'e_contacts_amber', label: 'Amber Contacts', value: 'Golden amber colored contact lenses', category: StyleCategory.EYES },
   { id: 'e_contacts_blue', label: 'Blue Contacts', value: 'Bright blue colored contact lenses', category: StyleCategory.EYES },
+  { id: 'e_contacts_grey', label: 'Grey Contacts', value: 'Stormy grey colored contact lenses', category: StyleCategory.EYES },
   { id: 'e_contacts_green', label: 'Green Contacts', value: 'Vivid green colored contact lenses', category: StyleCategory.EYES },
   { id: 'e_contacts_purple', label: 'Purple Contacts', value: 'Mystical purple contact lenses', category: StyleCategory.EYES },
   { id: 'e_contacts_red', label: 'Red Contacts', value: 'Vampire red contact lenses', category: StyleCategory.EYES },
   { id: 'e_contacts_white', label: 'Whiteout Eyes', value: 'Spooky whiteout contact lenses', category: StyleCategory.EYES },
   { id: 'e_contacts_cat', label: 'Cat Eyes', value: 'Vertical slit cat eye contacts', category: StyleCategory.EYES },
+  { id: 'e_contacts_heterochromia', label: 'Heterochromia', value: 'Two different colored eyes heterochromia', category: StyleCategory.EYES },
 ];
 
-// --- FACIAL HAIR (Fun for everyone!) ---
+// Combined for backward compatibility
+export const EYE_OPTIONS: StyleOption[] = [...EYE_MAKEUP_OPTIONS, ...EYE_COLOR_OPTIONS];
+
+// --- FACIAL HAIR ---
 export const FACIAL_HAIR_OPTIONS: StyleOption[] = [
   // Clean
   { id: 'fh_none', label: 'Clean Shaven', value: 'Completely clean shaven face', category: StyleCategory.FACIAL_HAIR },
