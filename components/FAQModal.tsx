@@ -122,13 +122,15 @@ const FAQModal: React.FC<FAQModalProps> = ({ isOpen, onClose }) => {
                     }`} 
                   />
                 </button>
+                {/* Fixed height answer container to prevent modal shifting */}
                 <div 
-                  className={`overflow-hidden transition-all duration-200 ${
-                    openIndex === index ? 'max-h-96' : 'max-h-0'
-                  }`}
+                  className="grid transition-all duration-200"
+                  style={{ gridTemplateRows: openIndex === index ? '1fr' : '0fr' }}
                 >
-                  <div className="px-4 pb-4 pt-1 text-sm text-slate-600 leading-relaxed border-t border-slate-100">
-                    {item.answer}
+                  <div className="overflow-hidden">
+                    <div className="px-4 pb-4 pt-1 text-sm text-slate-600 leading-relaxed border-t border-slate-100">
+                      {item.answer}
+                    </div>
                   </div>
                 </div>
               </div>

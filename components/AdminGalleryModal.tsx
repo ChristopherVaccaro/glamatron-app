@@ -288,7 +288,9 @@ const AdminGalleryModal: React.FC<AdminGalleryModalProps> = ({ isOpen, onClose }
                   <p className="text-slate-500">No users have created any transformations yet.</p>
                 </div>
               ) : (
-                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                <>
+                {/* Desktop Table View */}
+                <div className="hidden sm:block bg-white border border-slate-200 rounded-xl overflow-hidden">
                   <table className="w-full">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200">
@@ -360,6 +362,41 @@ const AdminGalleryModal: React.FC<AdminGalleryModalProps> = ({ isOpen, onClose }
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile Card View */}
+                <div className="sm:hidden space-y-3">
+                  {userSummaries.map((user) => (
+                    <div
+                      key={user.email}
+                      onClick={() => handleSelectUser(user.email)}
+                      className="bg-white border border-slate-200 rounded-xl p-4 cursor-pointer hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                          {user.email.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-slate-900 truncate">
+                            {user.name || user.email.split('@')[0]}
+                          </p>
+                          <p className="text-sm text-slate-500 truncate">{user.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center px-2.5 py-1 bg-slate-800 text-white rounded-full text-sm font-medium">
+                            {user.transformationCount}
+                          </span>
+                          <span className="text-xs text-slate-500">transformations</span>
+                        </div>
+                        <span className="text-xs text-slate-400">
+                          {formatRelativeTime(user.lastActivity)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                </>
               )}
             </div>
           ) : viewMode === 'gallery' ? (
