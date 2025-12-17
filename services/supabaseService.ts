@@ -777,6 +777,42 @@ export const GalleryService = {
   },
 
   /**
+   * Remove multiple gallery items and their images
+   */
+  async removeItems(ids: string[]): Promise<boolean> {
+    if (!supabase || ids.length === 0) return false;
+
+    try {
+      // Get all items first to get image URLs
+      const items = await Promise.all(ids.map(id => this.getItemById(id)));
+      const validItems = items.filter((item): item is DbGalleryItem => item !== null);
+
+      // Delete all from database
+      const { error } = await supabase
+        .from('gallery_items')
+        .delete()
+        .in('id', ids);
+
+      if (error) {
+        console.error('Error deleting gallery items:', error);
+        return false;
+      }
+
+      // Delete images from storage (don't fail if this fails)
+      const imageDeletePromises = validItems.flatMap(item => [
+        this.deleteImage(item.original_image_url),
+        this.deleteImage(item.result_image_url),
+      ]);
+      await Promise.all(imageDeletePromises).catch(console.error);
+
+      return true;
+    } catch (error) {
+      console.error('Error in removeItems:', error);
+      return false;
+    }
+  },
+
+  /**
    * Clear all gallery items for a user
    */
   async clearUserGallery(userId: string): Promise<boolean> {

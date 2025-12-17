@@ -59,7 +59,7 @@ export interface UserProfile {
 
 // Special email patterns for role detection
 export const SPECIAL_EMAILS = {
-  ADMIN: 'admin@glamatron.app',
+  ADMIN: 'admin@glamatron.com',
   TEST_USER: 'testuser@glamatron.app',
 } as const;
 

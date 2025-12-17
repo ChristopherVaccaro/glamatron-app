@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, Trash2, Heart, Download, Calendar, ChevronLeft, ChevronRight, ImageIcon, Filter, ArrowUpDown, Clock, Share2 } from 'lucide-react';
+import { X, Trash2, Heart, Download, Calendar, ChevronLeft, ChevronRight, ImageIcon, ArrowUpDown, Clock, Share2, CheckSquare, Square, XCircle } from 'lucide-react';
 import { useGallery } from '../contexts/GalleryContext';
 import { GalleryItem } from '../types';
 
@@ -14,11 +14,17 @@ interface GalleryModalProps {
 }
 
 const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) => {
-  const { getUserItems, removeItem, toggleFavorite } = useGallery();
+  const { getUserItems, removeItem, removeItems, toggleFavorite } = useGallery();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
+  
+  // Multi-select state
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const allItems = getUserItems(userId);
   
@@ -160,6 +166,47 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
     setSelectedItemId(items[newIndex].id);
   };
 
+  // Multi-select handlers
+  const toggleSelectMode = () => {
+    setIsSelectMode(!isSelectMode);
+    setSelectedIds(new Set());
+    setShowBulkDeleteConfirm(false);
+  };
+
+  const toggleItemSelection = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const selectAll = () => {
+    setSelectedIds(new Set(items.map(item => item.id)));
+  };
+
+  const deselectAll = () => {
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      await removeItems(Array.from(selectedIds));
+      setSelectedIds(new Set());
+      setShowBulkDeleteConfirm(false);
+      setIsSelectMode(false);
+    } catch (error) {
+      console.error('Error deleting items:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
@@ -184,72 +231,122 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
               <ImageIcon size={20} className="text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900">History</h2>
+              <h2 className="text-xl font-bold text-slate-900">
+                {isSelectMode ? `${selectedIds.size} Selected` : 'History'}
+              </h2>
               <p className="text-sm text-slate-500">
-                {timePeriod !== 'all' && items.length !== allItems.length 
-                  ? `${items.length} of ${allItems.length} transformations`
-                  : `${items.length} ${items.length === 1 ? 'transformation' : 'transformations'}`
-                }
-                {favoritesCount > 0 && (
-                  <span className="ml-2 text-rose-500">
-                    • {favoritesCount} <Heart size={10} className="inline fill-current" />
-                  </span>
+                {isSelectMode ? (
+                  `Select images to delete`
+                ) : (
+                  <>
+                    {timePeriod !== 'all' && items.length !== allItems.length 
+                      ? `${items.length} of ${allItems.length} transformations`
+                      : `${items.length} ${items.length === 1 ? 'transformation' : 'transformations'}`
+                    }
+                    {favoritesCount > 0 && (
+                      <span className="ml-2 text-rose-500">
+                        • {favoritesCount} <Heart size={10} className="inline fill-current" />
+                      </span>
+                    )}
+                  </>
                 )}
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Select Mode Toggle */}
+            {allItems.length > 0 && (
+              <button
+                onClick={toggleSelectMode}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isSelectMode
+                    ? 'bg-slate-800 text-white hover:bg-slate-700'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {isSelectMode ? <XCircle size={16} /> : <CheckSquare size={16} />}
+                {isSelectMode ? 'Cancel' : 'Select'}
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
-        {/* Filters Bar */}
+        {/* Filters Bar / Selection Controls */}
         {allItems.length > 0 && (
           <div className="px-6 py-3 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center gap-3">
-            {/* Time Period Filter */}
-            <div className="flex items-center gap-2">
-              <Clock size={14} className="text-slate-400" />
-              <select
-                value={timePeriod}
-                onChange={(e) => setTimePeriod(e.target.value as TimePeriod)}
-                className="text-sm bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-300"
-              >
-                <option value="all">All Time</option>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-              </select>
-            </div>
-            
-            {/* Sort Options */}
-            <div className="flex items-center gap-2">
-              <ArrowUpDown size={14} className="text-slate-400" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="text-sm bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-300"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="favorites">Favorites First</option>
-              </select>
-            </div>
-            
-            {/* Quick filter: Favorites only */}
-            <button
-              onClick={() => setSortBy(sortBy === 'favorites' ? 'newest' : 'favorites')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                sortBy === 'favorites'
-                  ? 'bg-rose-100 text-rose-600 border border-rose-200'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:border-rose-200 hover:text-rose-500'
-              }`}
-            >
-              <Heart size={14} className={sortBy === 'favorites' ? 'fill-current' : ''} />
-              Favorites
-            </button>
+            {isSelectMode ? (
+              <>
+                {/* Selection Controls */}
+                <button
+                  onClick={selectedIds.size === items.length ? deselectAll : selectAll}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition-colors"
+                >
+                  {selectedIds.size === items.length ? <Square size={14} /> : <CheckSquare size={14} />}
+                  {selectedIds.size === items.length ? 'Deselect All' : 'Select All'}
+                </button>
+                
+                {/* Delete Selected Button */}
+                {selectedIds.size > 0 && (
+                  <button
+                    onClick={() => setShowBulkDeleteConfirm(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-600 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                    Delete {selectedIds.size} {selectedIds.size === 1 ? 'Image' : 'Images'}
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Time Period Filter */}
+                <div className="flex items-center gap-2">
+                  <Clock size={14} className="text-slate-400" />
+                  <select
+                    value={timePeriod}
+                    onChange={(e) => setTimePeriod(e.target.value as TimePeriod)}
+                    className="text-sm bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-300"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                  </select>
+                </div>
+                
+                {/* Sort Options */}
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown size={14} className="text-slate-400" />
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    className="text-sm bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-300"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="favorites">Favorites First</option>
+                  </select>
+                </div>
+                
+                {/* Quick filter: Favorites only */}
+                <button
+                  onClick={() => setSortBy(sortBy === 'favorites' ? 'newest' : 'favorites')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    sortBy === 'favorites'
+                      ? 'bg-rose-100 text-rose-600 border border-rose-200'
+                      : 'bg-white text-slate-600 border border-slate-200 hover:border-rose-200 hover:text-rose-500'
+                  }`}
+                >
+                  <Heart size={14} className={sortBy === 'favorites' ? 'fill-current' : ''} />
+                  Favorites
+                </button>
+              </>
+            )}
           </div>
         )}
 
@@ -286,35 +383,65 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
           ) : (
             // Gallery grid
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 cursor-pointer hover:ring-2 hover:ring-rose-500 transition-all"
-                  onClick={() => setSelectedItemId(item.id)}
-                >
-                  <img
-                    src={item.resultImage}
-                    alt="Generated look"
-                    className="w-full h-full object-cover"
-                  />
-                  
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <p className="text-white text-xs truncate">
-                        {formatDate(item.createdAt)}
-                      </p>
-                    </div>
+              {items.map((item) => {
+                const isSelected = selectedIds.has(item.id);
+                return (
+                  <div
+                    key={item.id}
+                    className={`group relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 cursor-pointer transition-all ${
+                      isSelectMode && isSelected 
+                        ? 'ring-2 ring-rose-500 ring-offset-2' 
+                        : 'hover:ring-2 hover:ring-rose-500'
+                    }`}
+                    onClick={() => {
+                      if (isSelectMode) {
+                        toggleItemSelection(item.id);
+                      } else {
+                        setSelectedItemId(item.id);
+                      }
+                    }}
+                  >
+                    <img
+                      src={item.resultImage}
+                      alt="Generated look"
+                      className={`w-full h-full object-cover transition-opacity ${
+                        isSelectMode && isSelected ? 'opacity-80' : ''
+                      }`}
+                    />
+                    
+                    {/* Selection checkbox overlay */}
+                    {isSelectMode && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <div className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
+                          isSelected 
+                            ? 'bg-rose-500 text-white' 
+                            : 'bg-white/90 text-slate-400 border border-slate-300'
+                        }`}>
+                          {isSelected ? <CheckSquare size={16} /> : <Square size={16} />}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Hover overlay - only show when not in select mode */}
+                    {!isSelectMode && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <p className="text-white text-xs truncate">
+                            {formatDate(item.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Favorite badge */}
+                    {item.isFavorite && !isSelectMode && (
+                      <div className="absolute top-2 right-2">
+                        <Heart size={16} className="text-rose-500 fill-rose-500" />
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* Favorite badge */}
-                  {item.isFavorite && (
-                    <div className="absolute top-2 right-2">
-                      <Heart size={16} className="text-rose-500 fill-rose-500" />
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -438,6 +565,55 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
                     <Trash2 size={18} />
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/70"
+            onClick={() => !isDeleting && setShowBulkDeleteConfirm(false)}
+          />
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 size={28} className="text-red-500" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">
+                Delete {selectedIds.size} {selectedIds.size === 1 ? 'Image' : 'Images'}?
+              </h3>
+              <p className="text-slate-500 mb-6">
+                This action cannot be undone. The selected images will be permanently deleted from your gallery.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setShowBulkDeleteConfirm(false)}
+                  disabled={isDeleting}
+                  className="px-6 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={isDeleting}
+                  className="px-6 py-2.5 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={16} />
+                      Delete
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>

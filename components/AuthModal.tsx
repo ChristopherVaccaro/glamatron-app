@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, User, ArrowRight, Coins, FlaskConical, Shield, Loader2, Eye, EyeOff } from 'lucide-react';
+import { X, Mail, Lock, User, ArrowRight, Coins, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
-import { SPECIAL_EMAILS, UserProfile } from '../types';
+import { UserProfile } from '../types';
 import { Analytics } from '../utils/analytics';
 import { supabase, isSupabaseConfigured } from '../services/supabaseService';
 
@@ -42,12 +42,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
-  // Quick access buttons for dev emails
-  const quickAccessEmails = [
-    { email: SPECIAL_EMAILS.TEST_USER, label: 'Test User', icon: FlaskConical, color: 'violet' },
-    { email: SPECIAL_EMAILS.ADMIN, label: 'Admin', icon: Shield, color: 'red' },
-  ];
 
   if (!isOpen) return null;
 
@@ -173,20 +167,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
       onSignIn?.(userData);
       onClose();
     }
-  };
-
-  const handleQuickAccess = (quickEmail: string) => {
-    const userName = quickEmail.split('@')[0];
-    const userProfile = signIn(quickEmail, userName);
-    
-    const userData: UserData = {
-      id: userProfile.id,
-      email: userProfile.email,
-      name: userProfile.name,
-      provider: 'email',
-    };
-    onSignIn?.(userData);
-    onClose();
   };
 
   const handleGoogleSignIn = async () => {
@@ -423,28 +403,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
             </p>
           )}
 
-          {/* Developer Quick Access - Only show in development */}
-          {import.meta.env.DEV && (
-            <div className="mt-6 pt-4 border-t border-slate-200">
-              <p className="text-xs text-slate-400 mb-3 text-center">Developer Quick Access</p>
-              <div className="flex gap-2">
-                {quickAccessEmails.map(({ email: qEmail, label, icon: Icon, color }) => (
-                  <button
-                    key={qEmail}
-                    onClick={() => handleQuickAccess(qEmail)}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      color === 'violet' 
-                        ? 'bg-violet-100 text-violet-700 hover:bg-violet-200' 
-                        : 'bg-red-100 text-red-700 hover:bg-red-200'
-                    }`}
-                  >
-                    <Icon size={14} />
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
           </>
           )}
         </div>

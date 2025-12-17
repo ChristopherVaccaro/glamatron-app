@@ -9,6 +9,7 @@ interface GalleryContextType {
   // Actions - now async for Supabase
   addItem: (item: Omit<GalleryItem, 'id' | 'createdAt'>) => Promise<GalleryItem | null>;
   removeItem: (id: string) => Promise<void>;
+  removeItems: (ids: string[]) => Promise<void>;
   toggleFavorite: (id: string) => Promise<void>;
   clearUserGallery: (userId: string) => Promise<void>;
   loadUserGallery: (userId: string) => Promise<void>;
@@ -153,6 +154,20 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, []);
 
+  // Remove multiple items by IDs
+  const removeItems = useCallback(async (ids: string[]) => {
+    if (ids.length === 0) return;
+    
+    if (isSupabaseConfigured) {
+      const success = await GalleryService.removeItems(ids);
+      if (success) {
+        setItems(prev => prev.filter(item => !ids.includes(item.id)));
+      }
+    } else {
+      setItems(prev => prev.filter(item => !ids.includes(item.id)));
+    }
+  }, []);
+
   // Toggle favorite status
   const toggleFavorite = useCallback(async (id: string) => {
     if (isSupabaseConfigured) {
@@ -197,6 +212,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     isLoading,
     addItem,
     removeItem,
+    removeItems,
     toggleFavorite,
     clearUserGallery,
     loadUserGallery,

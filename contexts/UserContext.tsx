@@ -57,8 +57,7 @@ function getRoleFromEmail(email: string): UserRole {
   // Admin always works (needed to test/demo production)
   if (
     normalizedEmail === SPECIAL_EMAILS.ADMIN || 
-    normalizedEmail === 'emailchrisvaccaro@gmail.com' ||
-    normalizedEmail === 'therise03@hotmail.com'
+    normalizedEmail === 'emailchrisvaccaro@gmail.com'
   ) return 'admin';
   
   // Test user only in development (simulated purchases shouldn't be public)
