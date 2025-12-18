@@ -117,7 +117,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
         <button
           onClick={onClear}
           className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-colors z-10"
-          title="Remove image"
+          aria-label="Remove image"
         >
           <X size={20} />
         </button>
@@ -128,6 +128,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
         <button
           onClick={() => fileInputRef.current?.click()}
           className="absolute bottom-3 right-3 px-3 py-1.5 bg-black/50 hover:bg-black/70 text-white text-xs rounded backdrop-blur-sm transition-colors flex items-center gap-1.5 opacity-0 group-hover:opacity-100"
+          aria-label="Replace image"
         >
           <Replace size={14} />
           Replace
