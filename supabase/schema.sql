@@ -225,6 +225,7 @@ RETURNS TABLE(
   role TEXT,
   glam_coins INTEGER,
   is_subscribed BOOLEAN,
+  has_purchased BOOLEAN,
   subscription_tier TEXT,
   subscription_expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ
@@ -239,6 +240,7 @@ BEGIN
     p.role,
     p.glam_coins,
     p.is_subscribed,
+    p.has_purchased,
     p.subscription_tier,
     p.subscription_expires_at,
     p.created_at

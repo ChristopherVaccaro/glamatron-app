@@ -194,7 +194,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
 
           {/* Footer note */}
           <p className="text-center text-xs text-slate-500 mt-4 pt-4 border-t border-slate-700">
-            1 GlamCoin = 1 AI transformation • Powered by Stripe
+            1 GlamCoin = 1 transformation
           </p>
         </div>
       </div>
