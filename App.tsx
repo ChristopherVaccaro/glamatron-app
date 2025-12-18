@@ -542,6 +542,7 @@ const App: React.FC = () => {
   const [showAdminGalleryModal, setShowAdminGalleryModal] = useState(false);
   const [showFAQModal, setShowFAQModal] = useState(false);
   const [showStyleAnalyzerModal, setShowStyleAnalyzerModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
   
       
   const [selections, setSelections] = useState<UserSelections>({
@@ -564,7 +565,6 @@ const App: React.FC = () => {
 
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
-  const [showContactModal, setShowContactModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -1354,30 +1354,30 @@ const App: React.FC = () => {
                   {/* Normal upload */}
                   {!genState.isLoading && (
                     <ImageUploader 
-                      selectedImage={selectedImage}
-                      onImageSelected={(img, filename) => {
-                        setSelectedImage(img);
-                        setOriginalFilename(filename);
-                        setGenState(prev => ({ ...prev, resultImage: null, error: null }));
-                        setCurrentGalleryItemId(null);
-                      }}
-                      onClear={() => {
-                        setSelectedImage(null);
-                        setGenState(prev => ({ ...prev, resultImage: null, error: null }));
-                        setCurrentGalleryItemId(null);
-                        setSelections({
-                          [StyleCategory.HAIR]: null,
-                          [StyleCategory.HAIR_LENGTH]: null,
-                          [StyleCategory.HAIR_COLOR]: null,
-                          [StyleCategory.ACCESSORIES]: [],
-                          [StyleCategory.MAKEUP]: null,
-                          [StyleCategory.EXPRESSION]: null,
-                          [StyleCategory.EYES]: null,
-                          [StyleCategory.LIPS]: null,
-                          [StyleCategory.FACIAL_HAIR]: null,
-                        });
-                      }}
-                    />
+                        selectedImage={selectedImage}
+                        onImageSelected={(img, filename) => {
+                          setSelectedImage(img);
+                          setOriginalFilename(filename);
+                          setGenState(prev => ({ ...prev, resultImage: null, error: null }));
+                          setCurrentGalleryItemId(null);
+                        }}
+                        onClear={() => {
+                          setSelectedImage(null);
+                          setGenState(prev => ({ ...prev, resultImage: null, error: null }));
+                          setCurrentGalleryItemId(null);
+                          setSelections({
+                            [StyleCategory.HAIR]: null,
+                            [StyleCategory.HAIR_LENGTH]: null,
+                            [StyleCategory.HAIR_COLOR]: null,
+                            [StyleCategory.ACCESSORIES]: [],
+                            [StyleCategory.MAKEUP]: null,
+                            [StyleCategory.EXPRESSION]: null,
+                            [StyleCategory.EYES]: null,
+                            [StyleCategory.LIPS]: null,
+                            [StyleCategory.FACIAL_HAIR]: null,
+                          });
+                        }}
+                      />
                   )}
                   
                   {/* Error Message Display */}
