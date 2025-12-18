@@ -42,6 +42,9 @@ interface UserContextType {
   // Test user actions (only work for test user)
   simulatePurchase: (coins: number) => void;
   resetTestUser: () => void;
+  
+  // Profile refresh (for after payment returns)
+  refreshProfile: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -576,6 +579,28 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setPendingPasswordRecovery(false);
   }, []);
 
+  // Refresh profile from database (e.g., after payment returns)
+  const refreshProfile = useCallback(async () => {
+    if (!user || !isSupabaseConfigured) return;
+    
+    try {
+      console.log('Refreshing profile from database...');
+      const dbProfile = await ProfileService.getProfile(user.id);
+      
+      if (dbProfile) {
+        console.log('Profile refreshed:', dbProfile.glam_coins, 'coins, has_purchased:', dbProfile.has_purchased);
+        setUser(prev => prev ? {
+          ...prev,
+          glamCoins: dbProfile.glam_coins,
+          isSubscribed: dbProfile.is_subscribed,
+          hasPurchased: dbProfile.has_purchased,
+        } : null);
+      }
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
+    }
+  }, [user]);
+
   const value: UserContextType = {
     user,
     isAuthLoading: isLoading,
@@ -592,6 +617,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logGeneration,
     simulatePurchase,
     resetTestUser,
+    refreshProfile,
   };
 
   return (

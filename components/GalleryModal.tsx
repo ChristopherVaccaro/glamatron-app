@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { X, Trash2, Heart, Download, Calendar, ChevronLeft, ChevronRight, ImageIcon, ArrowUpDown, Clock, Share2, CheckSquare, Square, XCircle } from 'lucide-react';
 import { useGallery } from '../contexts/GalleryContext';
 import { GalleryItem } from '../types';
+import { triggerHeartBurst } from '../utils/confetti';
 
 // Time period filter options
 type TimePeriod = 'all' | 'today' | 'week' | 'month';
@@ -264,9 +265,6 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
-              <ImageIcon size={20} className="text-white" />
-            </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900">
                 {isSelectMode ? `${selectedIds.size} Selected` : 'History'}
@@ -555,14 +553,19 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
               
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => toggleFavorite(selectedItem.id)}
-                  className={`p-2 rounded-lg transition-colors ${
+                  onClick={(e) => {
+                    if (!selectedItem.isFavorite) {
+                      triggerHeartBurst(e.currentTarget);
+                    }
+                    toggleFavorite(selectedItem.id);
+                  }}
+                  className={`p-2 rounded-lg transition-colors duration-150 active:scale-95 ${
                     selectedItem.isFavorite 
                       ? 'bg-rose-100 text-rose-600' 
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
-                  <Heart size={18} className={selectedItem.isFavorite ? 'fill-current' : ''} />
+                  <Heart size={18} className={`transition-transform duration-150 ${selectedItem.isFavorite ? 'fill-current scale-110' : ''}`} />
                 </button>
                 
                 <button

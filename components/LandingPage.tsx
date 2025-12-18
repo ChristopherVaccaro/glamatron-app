@@ -48,9 +48,37 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
         <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl sm:text-2xl tracking-wide text-white" style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }}>
-                GLAMATRON
-              </h1>
+              {/* Holiday logo - alternating green/red letters with lights for Nov-Dec */}
+              {(() => {
+                const month = new Date().getMonth();
+                const isHoliday = month === 10 || month === 11; // November or December
+                if (isHoliday) {
+                  const letters = 'GLAMATRON'.split('');
+                  const lightColors = ['text-red-400', 'text-yellow-300', 'text-green-400', 'text-blue-400', 'text-pink-400'];
+                  return (
+                    <h1 className="relative">
+                      {/* Christmas lights above */}
+                      <span className="absolute -top-2.5 left-0 right-0 flex justify-between px-0.5 text-[10px] sm:text-xs">
+                        {letters.map((_, i) => (
+                          <span key={`landing-light-${i}`} className={`${lightColors[i % lightColors.length]} drop-shadow-sm`}>●</span>
+                        ))}
+                      </span>
+                      <span style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }} className="text-xl sm:text-2xl tracking-wide">
+                        {letters.map((letter, i) => (
+                          <span key={`landing-logo-${i}`} className={i % 2 === 0 ? 'text-green-400' : 'text-red-400'}>
+                            {letter}
+                          </span>
+                        ))}
+                      </span>
+                    </h1>
+                  );
+                }
+                return (
+                  <h1 className="text-xl sm:text-2xl tracking-wide text-white" style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }}>
+                    GLAMATRON
+                  </h1>
+                );
+              })()}
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => openAuth('signin')}

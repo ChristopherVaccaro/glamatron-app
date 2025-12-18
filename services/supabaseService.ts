@@ -169,6 +169,33 @@ export interface SubscriptionResult {
 
 export const ProfileService = {
   /**
+   * Update user's display name in Supabase
+   */
+  async updateName(userId: string, name: string): Promise<boolean> {
+    if (!supabase) {
+      console.warn('Supabase not configured, cannot update name');
+      return false;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ name, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+      
+      if (error) {
+        console.error('Error updating name:', error);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error in updateName:', error);
+      return false;
+    }
+  },
+
+  /**
    * Get user profile from Supabase
    */
   async getProfile(userId: string): Promise<DbProfile | null> {
