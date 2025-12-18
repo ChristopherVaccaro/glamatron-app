@@ -3,9 +3,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 // Initialize Supabase with service role key for admin operations
 const supabaseAdmin = createClient(
@@ -14,16 +12,13 @@ const supabaseAdmin = createClient(
 );
 
 // Map Stripe price IDs to coin amounts
-// You'll need to update these with your actual Stripe price IDs
+// Configure via environment variables, or fallback to amount-based detection
 const PRICE_TO_COINS: Record<string, number> = {
-  // Test mode prices
-  'price_test_5coins': 5,
-  'price_test_10coins': 10,
-  'price_test_25coins': 25,
-  // Live mode prices - update with actual IDs from Stripe
-  'price_live_5coins': 5,
-  'price_live_10coins': 10,
-  'price_live_25coins': 25,
+  // Add your actual Stripe price IDs here or via environment variables
+  // Format: 'price_1Qxxxxxxxxx': coinAmount
+  ...(process.env.STRIPE_PRICE_5_COINS ? { [process.env.STRIPE_PRICE_5_COINS]: 5 } : {}),
+  ...(process.env.STRIPE_PRICE_10_COINS ? { [process.env.STRIPE_PRICE_10_COINS]: 10 } : {}),
+  ...(process.env.STRIPE_PRICE_25_COINS ? { [process.env.STRIPE_PRICE_25_COINS]: 25 } : {}),
 };
 
 // Fallback: Map product names to coins (for Payment Links)

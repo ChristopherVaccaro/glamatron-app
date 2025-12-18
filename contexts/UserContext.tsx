@@ -121,7 +121,11 @@ function createProfileFromDbProfile(dbProfile: DbProfile, supabaseUser?: Supabas
 }
 
 // Async helper to fetch profile from DB and create UserProfile
-async function fetchAndCreateProfile(supabaseUser: SupabaseUser): Promise<UserProfile> {
+// If existingProfile is provided and fetch fails, returns null to indicate "keep existing"
+async function fetchAndCreateProfile(
+  supabaseUser: SupabaseUser, 
+  existingProfile?: UserProfile | null
+): Promise<UserProfile | null> {
   // Try to fetch from database first, with a timeout to prevent hanging
   try {
     console.log('Attempting to fetch profile from DB...');
@@ -142,8 +146,15 @@ async function fetchAndCreateProfile(supabaseUser: SupabaseUser): Promise<UserPr
     console.warn('Profile fetch failed or timed out:', error);
   }
   
-  // Fallback to basic profile if DB fetch fails or times out
-  console.log('Using basic profile (DB unavailable or timeout)');
+  // If we already have a profile for this user, DON'T overwrite with fallback defaults
+  // This prevents resetting coins to 5 when fetch fails but user is already logged in
+  if (existingProfile && existingProfile.id === supabaseUser.id) {
+    console.log('Keeping existing profile (fetch failed, user already logged in)');
+    return null; // Signal to keep existing state
+  }
+  
+  // Only use fallback for truly new sessions (no existing profile)
+  console.log('Using basic profile (DB unavailable or timeout, new session)');
   return createBasicProfileFromSupabaseUser(supabaseUser);
 }
 
@@ -183,7 +194,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('Error setting session from URL:', error);
           } else if (data.session?.user) {
             const profile = await fetchAndCreateProfile(data.session.user);
-            setUser(profile);
+            if (profile) {
+              setUser(profile);
+            }
             
             // Check if this is a password recovery flow
             if (type === 'recovery') {
@@ -198,7 +211,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { data: { session } } = await supabase.auth.getSession();
           if (session?.user) {
             const profile = await fetchAndCreateProfile(session.user);
-            setUser(profile);
+            if (profile) {
+              setUser(profile);
+            }
           }
         }
       } catch (error) {
@@ -211,61 +226,122 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
 
     // Listen for auth changes (sign in, sign out, token refresh, password recovery)
+    // IMPORTANT: We use a ref pattern via closure to access current user state
+    // because the listener captures stale state otherwise
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          try {
-            console.log('Fetching profile for user:', session.user.id);
-            const profile = await fetchAndCreateProfile(session.user);
-            console.log('Profile fetched:', profile.email, profile.glamCoins, 'coins');
-            setUser(profile);
-            setIsLoading(false); // Ensure loading is false after sign-in
-          } catch (error) {
-            console.error('Error fetching profile on sign-in:', error);
-            // Fallback to basic profile
-            const basicProfile = createBasicProfileFromSupabaseUser(session.user);
-            setUser(basicProfile);
-            setIsLoading(false);
-          }
+          // Use functional update to get current state
+          setUser(currentUser => {
+            // If we already have a user with the same ID, skip re-fetch
+            // This prevents overwrites on token refresh events
+            if (currentUser && currentUser.id === session.user!.id) {
+              console.log('SIGNED_IN: User already logged in, skipping re-fetch');
+              setIsLoading(false);
+              return currentUser; // Keep existing state
+            }
+            
+            // New user signing in - fetch profile asynchronously
+            console.log('SIGNED_IN: New sign-in, fetching profile...');
+            fetchAndCreateProfile(session.user!, currentUser)
+              .then(profile => {
+                if (profile) {
+                  console.log('Profile fetched:', profile.email, profile.glamCoins, 'coins');
+                  setUser(profile);
+                }
+                setIsLoading(false);
+              })
+              .catch(error => {
+                console.error('Error fetching profile on sign-in:', error);
+                // Only use fallback if we don't have an existing user
+                if (!currentUser) {
+                  const basicProfile = createBasicProfileFromSupabaseUser(session.user!);
+                  setUser(basicProfile);
+                }
+                setIsLoading(false);
+              });
+            
+            return currentUser; // Return current while async fetch runs
+          });
         } else if (event === 'PASSWORD_RECOVERY' && session?.user) {
           // User clicked password reset link
-          try {
-            const profile = await fetchAndCreateProfile(session.user);
-            setUser(profile);
-            setPendingPasswordRecovery(true);
-            setIsLoading(false);
-          } catch (error) {
-            console.error('Error fetching profile on password recovery:', error);
-            setIsLoading(false);
-          }
+          setUser(currentUser => {
+            fetchAndCreateProfile(session.user!, currentUser)
+              .then(profile => {
+                if (profile) {
+                  setUser(profile);
+                }
+                setPendingPasswordRecovery(true);
+                setIsLoading(false);
+              })
+              .catch(error => {
+                console.error('Error fetching profile on password recovery:', error);
+                setIsLoading(false);
+              });
+            return currentUser;
+          });
         } else if (event === 'USER_UPDATED' && session?.user) {
           // User updated (e.g., password changed)
-          try {
-            const profile = await fetchAndCreateProfile(session.user);
-            setUser(profile);
-          } catch (error) {
-            console.error('Error fetching profile on user update:', error);
-          }
+          // Only update metadata, don't re-fetch coins (they didn't change)
+          setUser(currentUser => {
+            if (currentUser && currentUser.id === session.user!.id) {
+              console.log('USER_UPDATED: Updating metadata only');
+              return {
+                ...currentUser,
+                name: session.user!.user_metadata?.full_name || 
+                      session.user!.user_metadata?.name || 
+                      currentUser.name,
+                avatar: session.user!.user_metadata?.avatar_url || 
+                        session.user!.user_metadata?.picture || 
+                        currentUser.avatar,
+              };
+            }
+            return currentUser;
+          });
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setPendingPasswordRecovery(false);
           setIsLoading(false);
+        } else if (event === 'TOKEN_REFRESHED') {
+          // Token was refreshed - DO NOT re-fetch profile
+          // This is the main cause of the coin reset bug
+          console.log('TOKEN_REFRESHED: Token refreshed, keeping current user state');
+          // No action needed - keep existing user state
         } else if (event === 'INITIAL_SESSION') {
           // Initial session check complete
           console.log('Initial session event, session:', session?.user?.email);
-          if (session?.user) {
-            try {
-              const profile = await fetchAndCreateProfile(session.user);
-              setUser(profile);
-            } catch (error) {
-              console.error('Error fetching profile on initial session:', error);
-              const basicProfile = createBasicProfileFromSupabaseUser(session.user);
-              setUser(basicProfile);
+          setUser(currentUser => {
+            // Skip if we already loaded the user (from initializeAuth)
+            if (currentUser && session?.user && currentUser.id === session.user.id) {
+              console.log('INITIAL_SESSION: User already loaded, skipping');
+              setIsLoading(false);
+              return currentUser;
             }
-          }
-          setIsLoading(false);
+            
+            if (session?.user) {
+              fetchAndCreateProfile(session.user, currentUser)
+                .then(profile => {
+                  if (profile) {
+                    setUser(profile);
+                  }
+                  setIsLoading(false);
+                })
+                .catch(error => {
+                  console.error('Error fetching profile on initial session:', error);
+                  if (!currentUser) {
+                    const basicProfile = createBasicProfileFromSupabaseUser(session.user!);
+                    setUser(basicProfile);
+                  }
+                  setIsLoading(false);
+                });
+              return currentUser;
+            }
+            
+            setIsLoading(false);
+            return currentUser;
+          });
         }
       }
     );
