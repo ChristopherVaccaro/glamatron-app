@@ -71,9 +71,6 @@ const FAQModal: React.FC<FAQModalProps> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
-              <HelpCircle size={20} className="text-white" />
-            </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900">Help & FAQ</h2>
               <p className="text-sm text-slate-500">Tips for the best transformations</p>

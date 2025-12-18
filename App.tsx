@@ -52,6 +52,7 @@ import CookieConsentBanner from './components/CookieConsentBanner';
 import { useGallery } from './contexts/GalleryContext';
 import { generateStyledImage } from './services/geminiService';
 import { Analytics } from './utils/analytics';
+import { triggerHeartBurst } from './utils/confetti';
 
 // Quick preset definitions
 export const QUICK_PRESETS = [
@@ -449,7 +450,7 @@ export const QUICK_PRESETS = [
   },
   {
     // Popularity: 7/10 - Y2K nostalgia
-    id: 'y2k',
+    id: 'y2k-baby',
     name: 'Y2K Baby',
     emoji: '💿',
     selections: {
@@ -519,7 +520,7 @@ export const QUICK_PRESETS = [
 
 const App: React.FC = () => {
   // User context for GlamCoins and subscription
-  const { user: contextUser, isAuthLoading, features, canGenerate, deductCoin, logGeneration, signOut, pendingPasswordRecovery } = useUser();
+  const { user: contextUser, isAuthLoading, features, canGenerate, deductCoin, logGeneration, signOut, pendingPasswordRecovery, refreshProfile } = useUser();
   
   // Gallery context for saving images
   const { addItem: addToGallery, items: galleryItems, toggleFavorite, getUserItems, loadUserGallery } = useGallery();
@@ -676,6 +677,12 @@ const App: React.FC = () => {
         ? `Payment successful! ${coinsAdded} GlamCoins have been added to your account.`
         : 'Payment successful! Your GlamCoins have been added.';
       setToast({ message, type: 'success' });
+      
+      // Refresh profile to get updated coin balance from database
+      // Small delay to allow webhook to complete processing
+      setTimeout(() => {
+        refreshProfile();
+      }, 1500);
       
       // Clean up the URL (remove query params)
       window.history.replaceState({}, '', window.location.pathname);
@@ -1154,8 +1161,12 @@ const App: React.FC = () => {
     return item?.isFavorite ?? false;
   }, [currentGalleryItemId, galleryItems]);
 
-  const handleToggleFavorite = () => {
+  const handleToggleFavorite = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (currentGalleryItemId) {
+      // Trigger heart burst effect when favoriting (not unfavoriting)
+      if (!currentItemIsFavorite) {
+        triggerHeartBurst(e.currentTarget);
+      }
       toggleFavorite(currentGalleryItemId);
     }
   };
@@ -1192,9 +1203,37 @@ const App: React.FC = () => {
             onClick={handleStartOver}
             className="flex items-center hover:opacity-80 transition-opacity"
           >
-            <span className="text-lg sm:text-xl tracking-wide text-slate-900" style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }}>
-              GLAMATRON
-            </span>
+            {/* Holiday logo - alternating green/red letters with lights for Nov-Dec */}
+            {(() => {
+              const month = new Date().getMonth();
+              const isHoliday = month === 10 || month === 11; // November or December
+              if (isHoliday) {
+                const letters = 'GLAMATRON'.split('');
+                const lightColors = ['text-red-400', 'text-yellow-300', 'text-green-400', 'text-blue-400', 'text-pink-400'];
+                return (
+                  <span className="relative">
+                    {/* Christmas lights above */}
+                    <span className="absolute -top-2 left-0 right-0 flex justify-between px-0.5 text-[8px] sm:text-[10px]">
+                      {letters.map((_, i) => (
+                        <span key={`light-${i}`} className={`${lightColors[i % lightColors.length]} drop-shadow-sm`}>●</span>
+                      ))}
+                    </span>
+                    <span style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }} className="text-lg sm:text-xl tracking-wide">
+                      {letters.map((letter, i) => (
+                        <span key={`logo-${i}`} className={i % 2 === 0 ? 'text-green-700' : 'text-red-600'}>
+                          {letter}
+                        </span>
+                      ))}
+                    </span>
+                  </span>
+                );
+              }
+              return (
+                <span className="text-lg sm:text-xl tracking-wide text-slate-900" style={{ fontFamily: "'Orbitron', sans-serif", fontWeight: 800 }}>
+                  GLAMATRON
+                </span>
+              );
+            })()}
           </button>
           <div className="flex items-center gap-3">
             {/* GlamCoin Display - only show when user is signed in */}
@@ -1303,14 +1342,14 @@ const App: React.FC = () => {
                         <button 
                           onClick={handleToggleFavorite}
                           disabled={genState.isLoading}
-                          className={`px-4 py-3.5 rounded-xl border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                          className={`flex items-center justify-center w-[52px] h-[52px] rounded-xl border transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 ${
                             currentItemIsFavorite 
                               ? 'bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100' 
                               : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-rose-400 hover:border-rose-200'
                           }`}
                           title={currentItemIsFavorite ? 'Remove from favorites' : 'Add to favorites'}
                         >
-                          <Heart size={18} className={currentItemIsFavorite ? 'fill-current' : ''} />
+                          <Heart size={18} className={`transition-transform duration-150 ${currentItemIsFavorite ? 'fill-current scale-110' : ''}`} />
                         </button>
                       )}
                       <button 

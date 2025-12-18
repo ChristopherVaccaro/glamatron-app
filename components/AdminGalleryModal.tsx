@@ -212,9 +212,6 @@ const AdminGalleryModal: React.FC<AdminGalleryModalProps> = ({ isOpen, onClose }
                 <ArrowLeft size={20} />
               </button>
             )}
-            <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
-              <Users size={20} className="text-white" />
-            </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900">
                 {viewMode === 'users' && 'Admin Gallery'}

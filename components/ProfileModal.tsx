@@ -3,7 +3,7 @@ import { X, User, Mail, Check, Trash2, AlertTriangle, Loader2 } from 'lucide-rea
 import { UserData } from './AuthModal';
 import { useGallery } from '../contexts/GalleryContext';
 import { useUser } from '../contexts/UserContext';
-import { AccountService } from '../services/supabaseService';
+import { AccountService, ProfileService } from '../services/supabaseService';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ interface ProfileModalProps {
 const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUpdateUser }) => {
   const [name, setName] = useState(user.name);
   const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -29,10 +30,22 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
-    onUpdateUser({ ...user, name });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    setIsSaving(true);
+    
+    // Persist to Supabase
+    const success = await ProfileService.updateName(user.id, name);
+    
+    if (success) {
+      // Update local state
+      onUpdateUser({ ...user, name });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } else {
+      console.error('Failed to save name to database');
+    }
+    
+    setIsSaving(false);
   };
 
   const handleDeleteAccount = async () => {
@@ -203,14 +216,19 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
             {/* Save button */}
             <button
               onClick={handleSave}
-              disabled={saved}
+              disabled={saved || isSaving}
               className={`w-full py-3 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 ${
                 saved 
                   ? 'bg-emerald-500 text-white' 
                   : 'bg-slate-900 text-white hover:bg-slate-800'
-              }`}
+              } disabled:opacity-70`}
             >
-              {saved ? (
+              {isSaving ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Saving...
+                </>
+              ) : saved ? (
                 <>
                   <Check size={18} />
                   Saved!

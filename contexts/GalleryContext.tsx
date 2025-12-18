@@ -168,19 +168,22 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, []);
 
-  // Toggle favorite status
+  // Toggle favorite status - optimistic update for instant feedback
   const toggleFavorite = useCallback(async (id: string) => {
+    // Optimistic update - change UI immediately
+    setItems(prev => prev.map(item => 
+      item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
+    ));
+    
+    // Then sync with server
     if (isSupabaseConfigured) {
       const success = await GalleryService.toggleFavorite(id);
-      if (success) {
+      if (!success) {
+        // Revert on failure
         setItems(prev => prev.map(item => 
           item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
         ));
       }
-    } else {
-      setItems(prev => prev.map(item => 
-        item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
-      ));
     }
   }, []);
 

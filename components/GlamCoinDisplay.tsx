@@ -1,5 +1,5 @@
 import React from 'react';
-import { Coins, Infinity, Sparkles } from 'lucide-react';
+import { Coins, Infinity, Crown } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 interface GlamCoinDisplayProps {
@@ -27,11 +27,10 @@ const GlamCoinDisplay: React.FC<GlamCoinDisplayProps> = ({ onClick }) => {
             : 'bg-slate-100 hover:bg-slate-200'
       }`}
     >
-      {/* Full access badge - only show if purchased but not admin (admin has unlimited) */}
+      {/* Pro badge - crown icon for users who have purchased (not admin) */}
       {hasFullAccess && !hasUnlimited && (
-        <div className="flex items-center gap-1 pr-2 border-r border-slate-300">
-          <Sparkles size={14} className="text-emerald-500" />
-          <span className="text-xs font-medium text-emerald-600">FULL</span>
+        <div className="flex items-center pr-2 border-r border-slate-300" title="Pro - Full Style Library">
+          <Crown size={16} className="text-amber-500" />
         </div>
       )}
       
