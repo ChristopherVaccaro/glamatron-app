@@ -79,6 +79,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const session = event.data.object as Stripe.Checkout.Session;
     
     console.log('Processing checkout.session.completed:', session.id);
+    console.log('Session metadata:', JSON.stringify({
+      client_reference_id: session.client_reference_id,
+      customer_email: session.customer_email,
+      amount_total: session.amount_total,
+      currency: session.currency,
+    }));
     
     // Get user ID from client_reference_id (we set this in PurchaseModal)
     const userId = session.client_reference_id;
@@ -90,26 +96,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Determine coin amount from the session
     let coinsToAdd = 0;
     
-    // Try to get from line items
-    if (session.line_items?.data?.[0]?.price?.id) {
-      const priceId = session.line_items.data[0].price.id;
-      coinsToAdd = PRICE_TO_COINS[priceId] || 0;
-    }
-    
-    // Fallback: Try to get from product name in line items
-    if (coinsToAdd === 0 && session.line_items?.data?.[0]?.description) {
-      const description = session.line_items.data[0].description;
-      for (const [name, coins] of Object.entries(PRODUCT_NAME_TO_COINS)) {
-        if (description.toLowerCase().includes(name.toLowerCase())) {
-          coinsToAdd = coins;
-          break;
+    // IMPORTANT: line_items are NOT included in webhook by default - fetch them
+    try {
+      const sessionWithLineItems = await stripe.checkout.sessions.retrieve(session.id, {
+        expand: ['line_items', 'line_items.data.price.product'],
+      });
+      
+      const lineItems = sessionWithLineItems.line_items?.data;
+      console.log('Retrieved line items:', JSON.stringify(lineItems?.map(li => ({
+        description: li.description,
+        price_id: li.price?.id,
+        product: typeof li.price?.product === 'object' && 'name' in li.price.product ? li.price.product.name : li.price?.product,
+      }))));
+      
+      if (lineItems?.[0]?.price?.id) {
+        const priceId = lineItems[0].price.id;
+        coinsToAdd = PRICE_TO_COINS[priceId] || 0;
+        console.log(`Price ID ${priceId} -> ${coinsToAdd} coins`);
+      }
+      
+      // Fallback: Try product name
+      if (coinsToAdd === 0 && lineItems?.[0]) {
+        const product = lineItems[0].price?.product;
+        const productName = typeof product === 'object' && product !== null && 'name' in product ? product.name : lineItems[0].description;
+        console.log('Checking product name:', productName);
+        
+        if (productName) {
+          for (const [name, coins] of Object.entries(PRODUCT_NAME_TO_COINS)) {
+            if (productName.toLowerCase().includes(name.toLowerCase())) {
+              coinsToAdd = coins;
+              console.log(`Product name "${productName}" matched "${name}" -> ${coins} coins`);
+              break;
+            }
+          }
         }
       }
+    } catch (lineItemError) {
+      console.error('Error fetching line items:', lineItemError);
     }
 
     // Fallback: Parse from amount (approximate)
     if (coinsToAdd === 0 && session.amount_total) {
       const amountCents = session.amount_total;
+      console.log('Using amount-based fallback:', amountCents, 'cents');
       if (amountCents === 299) coinsToAdd = 5;
       else if (amountCents === 499) coinsToAdd = 10;
       else if (amountCents === 999) coinsToAdd = 25;
