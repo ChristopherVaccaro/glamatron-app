@@ -1,6 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
+import NotFoundPage from './pages/NotFoundPage';
+import ErrorBoundary from './components/ErrorBoundary';
 import { UserProvider } from './contexts/UserContext';
 import { GalleryProvider } from './contexts/GalleryContext';
 import { initGA } from './utils/analytics';
@@ -16,10 +21,19 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <UserProvider>
-      <GalleryProvider>
-        <App />
-      </GalleryProvider>
-    </UserProvider>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <UserProvider>
+          <GalleryProvider>
+            <Routes>
+              <Route path="/privacy-policy" element={<PrivacyPage />} />
+              <Route path="/terms-of-service" element={<TermsPage />} />
+              <Route path="/404" element={<NotFoundPage />} />
+              <Route path="/*" element={<App />} />
+            </Routes>
+          </GalleryProvider>
+        </UserProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 );

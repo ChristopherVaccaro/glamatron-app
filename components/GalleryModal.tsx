@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { X, Trash2, Heart, Download, Calendar, ChevronLeft, ChevronRight, ImageIcon, ArrowUpDown, Clock, Share2, CheckSquare, Square, XCircle } from 'lucide-react';
 import { useGallery } from '../contexts/GalleryContext';
 import { GalleryItem } from '../types';
@@ -13,8 +13,17 @@ interface GalleryModalProps {
   userId: string;
 }
 
+// Skeleton loader component for gallery items
+const GallerySkeleton: React.FC = () => (
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    {Array.from({ length: 8 }).map((_, i) => (
+      <div key={i} className="aspect-[3/4] rounded-xl bg-slate-200 animate-pulse" />
+    ))}
+  </div>
+);
+
 const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) => {
-  const { getUserItems, removeItem, removeItems, toggleFavorite } = useGallery();
+  const { getUserItems, removeItem, removeItems, toggleFavorite, isLoading } = useGallery();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('all');
@@ -85,6 +94,34 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
   const favoritesCount = useMemo(() => 
     allItems.filter(item => item.isFavorite).length, 
   [allItems]);
+
+  // Keyboard navigation for detail view - must be before early return
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedItemId) return;
+      
+      const currentIndex = items.findIndex(i => i.id === selectedItemId);
+      if (currentIndex === -1) return;
+      
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const newIndex = (currentIndex - 1 + items.length) % items.length;
+        setSelectedItemId(items[newIndex].id);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const newIndex = (currentIndex + 1) % items.length;
+        setSelectedItemId(items[newIndex].id);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setSelectedItemId(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, selectedItemId, items]);
 
   if (!isOpen) return null;
 
@@ -352,7 +389,10 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(85vh-140px)]">
-          {items.length === 0 ? (
+          {isLoading ? (
+            // Loading skeleton
+            <GallerySkeleton />
+          ) : items.length === 0 ? (
             // Empty state - differentiate between no items at all vs no items matching filter
             <div className="text-center py-16">
               <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">

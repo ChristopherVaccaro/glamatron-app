@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Upload, X, Replace } from 'lucide-react';
+import { Upload, X, Replace, AlertCircle } from 'lucide-react';
 import { Analytics } from '../utils/analytics';
 
 interface ImageUploaderProps {
@@ -8,14 +8,51 @@ interface ImageUploaderProps {
   onClear: () => void;
 }
 
+// Validation constants
+const MAX_FILE_SIZE_MB = 10;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif'];
+
 // Fixed height for consistent container sizing - taller for professional look
 const CONTAINER_HEIGHT = 'h-[400px] sm:h-[500px] md:h-[65vh] lg:h-[70vh] md:max-h-[750px]';
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selectedImage, onClear }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const validateFile = (file: File): string | null => {
+    // Check file type
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (!ext || !ALLOWED_EXTENSIONS.includes(ext)) {
+        return `Invalid file type. Please upload a ${ALLOWED_EXTENSIONS.join(', ').toUpperCase()} image.`;
+      }
+    }
+    
+    // Check file size
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      return `File too large (${sizeMB}MB). Maximum size is ${MAX_FILE_SIZE_MB}MB.`;
+    }
+    
+    return null;
+  };
 
   const handleFile = (file: File) => {
+    // Clear any previous error
+    setValidationError(null);
+    
+    // Validate file
+    const error = validateFile(file);
+    if (error) {
+      setValidationError(error);
+      // Auto-clear error after 5 seconds
+      setTimeout(() => setValidationError(null), 5000);
+      return;
+    }
+    
     if (file && file.type.startsWith('image/')) {
       Analytics.photoUpload();
       const reader = new FileReader();
@@ -134,6 +171,23 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
       <p className="text-sm text-slate-500 max-w-xs mx-auto">
         Drag and drop or click to select a clear photo of a face.
       </p>
+      <p className="text-xs text-slate-400 mt-2">
+        JPG, PNG, WebP, HEIC • Max {MAX_FILE_SIZE_MB}MB
+      </p>
+      
+      {/* Validation Error */}
+      {validationError && (
+        <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm animate-in fade-in slide-in-from-bottom-2">
+          <AlertCircle size={18} className="flex-shrink-0" />
+          <span>{validationError}</span>
+          <button 
+            onClick={(e) => { e.stopPropagation(); setValidationError(null); }}
+            className="ml-auto p-1 hover:bg-red-100 rounded"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

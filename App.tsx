@@ -48,6 +48,7 @@ import Toast from './components/Toast';
 import StyleAnalyzerModal from './components/StyleAnalyzerModal';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import ResetPasswordModal from './components/ResetPasswordModal';
+import CookieConsentBanner from './components/CookieConsentBanner';
 import { useGallery } from './contexts/GalleryContext';
 import { generateStyledImage } from './services/geminiService';
 import { Analytics } from './utils/analytics';
@@ -541,6 +542,7 @@ const App: React.FC = () => {
   const [showAdminGalleryModal, setShowAdminGalleryModal] = useState(false);
   const [showFAQModal, setShowFAQModal] = useState(false);
   const [showStyleAnalyzerModal, setShowStyleAnalyzerModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
   
       
   const [selections, setSelections] = useState<UserSelections>({
@@ -563,7 +565,6 @@ const App: React.FC = () => {
 
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
-  const [showContactModal, setShowContactModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -1353,30 +1354,30 @@ const App: React.FC = () => {
                   {/* Normal upload */}
                   {!genState.isLoading && (
                     <ImageUploader 
-                      selectedImage={selectedImage}
-                      onImageSelected={(img, filename) => {
-                        setSelectedImage(img);
-                        setOriginalFilename(filename);
-                        setGenState(prev => ({ ...prev, resultImage: null, error: null }));
-                        setCurrentGalleryItemId(null);
-                      }}
-                      onClear={() => {
-                        setSelectedImage(null);
-                        setGenState(prev => ({ ...prev, resultImage: null, error: null }));
-                        setCurrentGalleryItemId(null);
-                        setSelections({
-                          [StyleCategory.HAIR]: null,
-                          [StyleCategory.HAIR_LENGTH]: null,
-                          [StyleCategory.HAIR_COLOR]: null,
-                          [StyleCategory.ACCESSORIES]: [],
-                          [StyleCategory.MAKEUP]: null,
-                          [StyleCategory.EXPRESSION]: null,
-                          [StyleCategory.EYES]: null,
-                          [StyleCategory.LIPS]: null,
-                          [StyleCategory.FACIAL_HAIR]: null,
-                        });
-                      }}
-                    />
+                        selectedImage={selectedImage}
+                        onImageSelected={(img, filename) => {
+                          setSelectedImage(img);
+                          setOriginalFilename(filename);
+                          setGenState(prev => ({ ...prev, resultImage: null, error: null }));
+                          setCurrentGalleryItemId(null);
+                        }}
+                        onClear={() => {
+                          setSelectedImage(null);
+                          setGenState(prev => ({ ...prev, resultImage: null, error: null }));
+                          setCurrentGalleryItemId(null);
+                          setSelections({
+                            [StyleCategory.HAIR]: null,
+                            [StyleCategory.HAIR_LENGTH]: null,
+                            [StyleCategory.HAIR_COLOR]: null,
+                            [StyleCategory.ACCESSORIES]: [],
+                            [StyleCategory.MAKEUP]: null,
+                            [StyleCategory.EXPRESSION]: null,
+                            [StyleCategory.EYES]: null,
+                            [StyleCategory.LIPS]: null,
+                            [StyleCategory.FACIAL_HAIR]: null,
+                          });
+                        }}
+                      />
                   )}
                   
                   {/* Error Message Display */}
@@ -1419,7 +1420,7 @@ const App: React.FC = () => {
                 <div className={`mb-4 ${surpriseMeActive || genState.isLoading ? 'opacity-50 pointer-events-none' : ''}`} style={genState.isLoading ? { cursor: 'not-allowed' } : undefined}>
                   <button
                     onClick={() => setQuickLooksExpanded(!quickLooksExpanded)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm"
+                    className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors shadow-sm"
                     disabled={surpriseMeActive || genState.isLoading}
                   >
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
@@ -1723,6 +1724,9 @@ const App: React.FC = () => {
         onClose={() => setShowStyleAnalyzerModal(false)}
         onApplyStyles={handleApplyAnalyzedStyles}
       />
+
+      {/* Cookie Consent Banner - GDPR/CCPA compliance */}
+      <CookieConsentBanner />
     </div>
   );
 };
