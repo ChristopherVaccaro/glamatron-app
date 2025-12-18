@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { X, Trash2, Heart, Download, Calendar, ChevronLeft, ChevronRight, ImageIcon, ArrowUpDown, Clock, Share2, CheckSquare, Square, XCircle } from 'lucide-react';
 import { useGallery } from '../contexts/GalleryContext';
 import { GalleryItem } from '../types';
@@ -85,6 +85,34 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
   const favoritesCount = useMemo(() => 
     allItems.filter(item => item.isFavorite).length, 
   [allItems]);
+
+  // Keyboard navigation for detail view - must be before early return
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedItemId) return;
+      
+      const currentIndex = items.findIndex(i => i.id === selectedItemId);
+      if (currentIndex === -1) return;
+      
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const newIndex = (currentIndex - 1 + items.length) % items.length;
+        setSelectedItemId(items[newIndex].id);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const newIndex = (currentIndex + 1) % items.length;
+        setSelectedItemId(items[newIndex].id);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setSelectedItemId(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, selectedItemId, items]);
 
   if (!isOpen) return null;
 

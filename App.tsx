@@ -48,6 +48,7 @@ import Toast from './components/Toast';
 import StyleAnalyzerModal from './components/StyleAnalyzerModal';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import ResetPasswordModal from './components/ResetPasswordModal';
+import CookieConsentBanner from './components/CookieConsentBanner';
 import { useGallery } from './contexts/GalleryContext';
 import { generateStyledImage } from './services/geminiService';
 import { Analytics } from './utils/analytics';
@@ -1419,7 +1420,7 @@ const App: React.FC = () => {
                 <div className={`mb-4 ${surpriseMeActive || genState.isLoading ? 'opacity-50 pointer-events-none' : ''}`} style={genState.isLoading ? { cursor: 'not-allowed' } : undefined}>
                   <button
                     onClick={() => setQuickLooksExpanded(!quickLooksExpanded)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm"
+                    className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors shadow-sm"
                     disabled={surpriseMeActive || genState.isLoading}
                   >
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
@@ -1723,6 +1724,9 @@ const App: React.FC = () => {
         onClose={() => setShowStyleAnalyzerModal(false)}
         onApplyStyles={handleApplyAnalyzedStyles}
       />
+
+      {/* Cookie Consent Banner - GDPR/CCPA compliance */}
+      <CookieConsentBanner />
     </div>
   );
 };
