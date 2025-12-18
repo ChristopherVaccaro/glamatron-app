@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X, Coins, Sparkles, Unlock, Zap, Shield, Clock } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
@@ -38,6 +38,47 @@ const GLAMCOIN_PACKAGES = [
 
 const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
   const { user, isTestUser, simulatePurchase, features } = useUser();
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  // Handle escape key and focus management
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    previousActiveElement.current = document.activeElement as HTMLElement;
+    modalRef.current?.focus();
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+      
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+      previousActiveElement.current?.focus();
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -73,7 +114,14 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
       />
       
       {/* Modal */}
-      <div className="relative bg-gradient-to-b from-slate-900 to-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-700">
+      <div 
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="purchase-modal-title"
+        tabIndex={-1}
+        className="relative bg-gradient-to-b from-slate-900 to-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-700 outline-none"
+      >
         {/* Close button */}
         <button
           onClick={onClose}
@@ -92,7 +140,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
             <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-xl shadow-amber-500/30 rotate-3 hover:rotate-0 transition-transform">
               <Coins size={36} className="text-white drop-shadow-lg" />
             </div>
-            <h2 className="text-2xl font-bold text-white">
+            <h2 id="purchase-modal-title" className="text-2xl font-bold text-white">
               Get More GlamCoins
             </h2>
             <p className="text-slate-400 mt-1">

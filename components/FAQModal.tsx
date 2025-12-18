@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, HelpCircle, ChevronDown } from 'lucide-react';
 
 interface FAQModalProps {
@@ -13,6 +13,47 @@ interface FAQItem {
 
 const FAQModal: React.FC<FAQModalProps> = ({ isOpen, onClose }) => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  // Handle escape key and focus management
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    previousActiveElement.current = document.activeElement as HTMLElement;
+    modalRef.current?.focus();
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+      
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+      previousActiveElement.current?.focus();
+    };
+  }, [isOpen, onClose]);
 
   const faqItems: FAQItem[] = [
     {
@@ -67,18 +108,26 @@ const FAQModal: React.FC<FAQModalProps> = ({ isOpen, onClose }) => {
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div 
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="faq-modal-title"
+        tabIndex={-1}
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 outline-none"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-3">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Help & FAQ</h2>
+              <h2 id="faq-modal-title" className="text-xl font-bold text-slate-900">Help & FAQ</h2>
               <p className="text-sm text-slate-500">Tips for the best transformations</p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors"
+            aria-label="Close"
           >
             <X size={20} />
           </button>
@@ -110,6 +159,8 @@ const FAQModal: React.FC<FAQModalProps> = ({ isOpen, onClose }) => {
                 <button
                   onClick={() => toggleAccordion(index)}
                   className="w-full flex items-center justify-between px-4 py-3 text-left bg-white hover:bg-slate-50 transition-colors"
+                  aria-expanded={openIndex === index}
+                  aria-controls={`faq-answer-${index}`}
                 >
                   <span className="font-medium text-slate-900 pr-4">{item.question}</span>
                   <ChevronDown 
@@ -125,7 +176,10 @@ const FAQModal: React.FC<FAQModalProps> = ({ isOpen, onClose }) => {
                   style={{ gridTemplateRows: openIndex === index ? '1fr' : '0fr' }}
                 >
                   <div className="overflow-hidden">
-                    <div className="px-4 pb-4 pt-1 text-sm text-slate-600 leading-relaxed border-t border-slate-100">
+                    <div 
+                      id={`faq-answer-${index}`}
+                      className="px-4 pb-4 pt-1 text-sm text-slate-600 leading-relaxed border-t border-slate-100"
+                    >
                       {item.answer}
                     </div>
                   </div>

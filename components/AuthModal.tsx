@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Mail, Lock, User, ArrowRight, Coins, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { UserProfile } from '../types';
@@ -30,6 +30,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
 
   // Update mode when defaultMode prop changes
   useEffect(() => {
@@ -37,6 +40,50 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
       setMode(defaultMode);
     }
   }, [isOpen, defaultMode]);
+
+  // Handle escape key and focus management
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    // Store the previously focused element
+    previousActiveElement.current = document.activeElement as HTMLElement;
+    
+    // Focus the modal
+    modalRef.current?.focus();
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+      
+      // Focus trap
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+      // Return focus to previously focused element
+      previousActiveElement.current?.focus();
+    };
+  }, [isOpen, onClose]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -209,7 +256,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div 
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        tabIndex={-1}
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 outline-none"
+      >
         {/* Close button */}
         <button
           onClick={onClose}
@@ -221,7 +275,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
 
         {/* Header - hide promotional text when showing confirmation */}
         <div className="px-8 pt-8 pb-6 text-center">
-          <h2 className="text-2xl font-bold text-slate-900">
+          <h2 id="auth-modal-title" className="text-2xl font-bold text-slate-900">
             {successMessage ? 'Almost there!' : (mode === 'signin' ? 'Welcome back' : 'Create account')}
           </h2>
           {!successMessage && (

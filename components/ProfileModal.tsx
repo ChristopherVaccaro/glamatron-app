@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, User, Mail, Check, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import { UserData } from './AuthModal';
 import { useGallery } from '../contexts/GalleryContext';
@@ -22,6 +22,47 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const { getUserItems } = useGallery();
   const { signOut } = useUser();
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  // Handle escape key and focus management
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    previousActiveElement.current = document.activeElement as HTMLElement;
+    modalRef.current?.focus();
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+      
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+      previousActiveElement.current?.focus();
+    };
+  }, [isOpen, onClose]);
   
   // Get actual stats from gallery
   const userGalleryItems = getUserItems(user.id);
@@ -118,7 +159,14 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div 
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-modal-title"
+        tabIndex={-1}
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 outline-none"
+      >
         {/* Close button */}
         <button
           onClick={onClose}
@@ -130,7 +178,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
 
         {/* Header with avatar */}
         <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 px-8 pt-8 pb-16">
-          <h2 className="text-2xl font-bold text-white">Your Profile</h2>
+          <h2 id="profile-modal-title" className="text-2xl font-bold text-white">Your Profile</h2>
           <p className="text-slate-400 mt-1">{getProviderLabel()}</p>
         </div>
 
@@ -185,7 +233,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
               <p className="text-xs text-slate-500 mt-1.5">
                 {user.provider !== 'email' 
                   ? `Email is managed by your ${user.provider === 'google' ? 'Google' : 'Apple'} account`
-                  : 'Email address cannot be changed'
+                  : 'Contact support@glamatron.com to change your email address.'
                 }
               </p>
             </div>

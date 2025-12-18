@@ -1601,7 +1601,7 @@ const App: React.FC = () => {
                   <button
                     onClick={handleReset}
                     disabled={genState.isLoading || selectionCount === 0}
-                    className="px-4 py-3.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-3 sm:py-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <RotateCcw size={18} className="sm:w-5 sm:h-5" />
                   </button>
@@ -1617,7 +1617,7 @@ const App: React.FC = () => {
                     onClick={handleSurpriseMeToggle}
                     disabled={genState.isLoading}
                     className={`
-                      px-4 py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                      px-4 py-3 sm:py-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
                       ${surpriseMeActive 
                         ? 'bg-violet-600 text-white ring-2 ring-violet-400 ring-offset-2 animate-pulse' 
                         : 'bg-violet-100 text-violet-700 hover:bg-violet-200'
