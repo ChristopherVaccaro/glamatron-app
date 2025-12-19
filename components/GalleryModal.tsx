@@ -396,7 +396,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
                   <select
                     value={timePeriod}
                     onChange={(e) => setTimePeriod(e.target.value as TimePeriod)}
-                    className="text-sm bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-300"
+                    className="text-sm bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 focus:border-[#0f172a]"
                   >
                     <option value="all">All Time</option>
                     <option value="today">Today</option>
@@ -411,7 +411,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className="text-sm bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-300"
+                    className="text-sm bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0f172a]/20 focus:border-[#0f172a]"
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
@@ -479,8 +479,8 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
                     key={item.id}
                     className={`group relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 cursor-pointer transition-all ${
                       isSelectMode && isSelected 
-                        ? 'ring-2 ring-rose-500 ring-offset-2' 
-                        : 'hover:ring-2 hover:ring-rose-500'
+                        ? 'ring-2 ring-[#0f172a] ring-offset-2' 
+                        : 'hover:ring-2 hover:ring-[#0f172a]'
                     }`}
                     onClick={() => {
                       if (isSelectMode) {

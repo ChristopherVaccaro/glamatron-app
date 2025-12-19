@@ -88,7 +88,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
   if (selectedImage) {
     return (
       <div 
-        className={`relative group rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-slate-50 ${CONTAINER_HEIGHT} ${isDragging ? 'ring-2 ring-rose-500 ring-offset-2' : ''}`}
+        className={`relative group rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-slate-50 ${CONTAINER_HEIGHT} ${isDragging ? 'ring-2 ring-[#0f172a] ring-offset-2' : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -139,10 +139,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={() => fileInputRef.current?.click()}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInputRef.current?.click();
+        }
+      }}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      aria-label="Upload a photo. Drag and drop or click to select a clear photo of a face."
       className={`
         relative flex flex-col items-center justify-center text-center p-8
         rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300
@@ -150,7 +159,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
         ${CONTAINER_HEIGHT}
         ${isDragging 
           ? 'border-rose-500 bg-rose-50 scale-[1.02]' 
-          : 'hover:bg-slate-50 hover:border-slate-400'
+          : 'hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f172a] focus:ring-offset-2 focus:border-[#0f172a]'
         }
       `}
     >

@@ -139,6 +139,18 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
     onPanelOpenChange?.(activeCategory !== null);
   }, [activeCategory, onPanelOpenChange]);
 
+  // Prevent body scroll when panel is open
+  useEffect(() => {
+    if (activeCategory) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [activeCategory]);
+
   // Reset scroll position when category changes
   useEffect(() => {
     if (activeCategory && scrollContainerRef.current) {
@@ -245,13 +257,16 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
       </div>
 
       {/* Slide-out Panel - Matches toolbar style, works on all screen sizes */}
+      {/* Animation: starts from behind sidebar (left-0) and slides out to its final position */}
       <div 
         ref={panelRef}
         className={`
-          fixed left-[48px] sm:left-[60px] xl:left-[calc(max(48px,calc((100vw-72rem)/2+60px)))] top-20 bottom-4 z-30 w-[calc(100vw-64px)] sm:w-80
+          fixed top-20 bottom-4 w-[calc(100vw-64px)] sm:w-80
           bg-white border border-slate-200 rounded-2xl shadow-xl
           transition-all duration-300 ease-out overflow-hidden
-          ${activeCategory ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}
+          ${activeCategory 
+            ? 'left-[48px] sm:left-[60px] xl:left-[calc(max(48px,calc((100vw-72rem)/2+60px)))] z-30 opacity-100' 
+            : 'left-0 xl:left-[max(0px,calc((100vw-72rem)/2))] z-30 opacity-0 pointer-events-none'}
         `}
       >
         {/* Panel Header */}

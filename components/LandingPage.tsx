@@ -48,10 +48,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
         <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
-              {/* Holiday logo - alternating green/red letters with lights for Nov-Dec */}
+              {/* Holiday logo - alternating green/red letters with lights for Dec 1-25 only, every other day */}
               {(() => {
-                const month = new Date().getMonth();
-                const isHoliday = month === 10 || month === 11; // November or December
+                const now = new Date();
+                const month = now.getMonth();
+                const day = now.getDate();
+                // Show holiday branding Dec 1-25 only, on odd days (1, 3, 5, etc.)
+                const isHoliday = month === 11 && day <= 25 && day % 2 === 1;
                 if (isHoliday) {
                   const letters = 'GLAMATRON'.split('');
                   const lightColors = ['text-red-400', 'text-yellow-300', 'text-green-400', 'text-blue-400', 'text-pink-400'];

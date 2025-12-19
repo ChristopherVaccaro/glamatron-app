@@ -71,6 +71,7 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({
               className={`
                 relative min-h-[44px] px-3 py-2.5 rounded-xl text-left transition-all duration-150 
                 flex items-center active:scale-[0.97]
+                focus:outline-none
                 ${isLocked ? 'premium-locked cursor-pointer' : ''}
                 ${active 
                   ? 'bg-slate-100' 

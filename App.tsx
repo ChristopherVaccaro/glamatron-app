@@ -1203,10 +1203,13 @@ const App: React.FC = () => {
             onClick={handleStartOver}
             className="flex items-center hover:opacity-80 transition-opacity"
           >
-            {/* Holiday logo - alternating green/red letters with lights for Nov-Dec */}
+            {/* Holiday logo - alternating green/red letters with lights for Dec 1-25 only, every other day */}
             {(() => {
-              const month = new Date().getMonth();
-              const isHoliday = month === 10 || month === 11; // November or December
+              const now = new Date();
+              const month = now.getMonth();
+              const day = now.getDate();
+              // Show holiday branding Dec 1-25 only, on odd days (1, 3, 5, etc.)
+              const isHoliday = month === 11 && day <= 25 && day % 2 === 1;
               if (isHoliday) {
                 const letters = 'GLAMATRON'.split('');
                 const lightColors = ['text-red-400', 'text-yellow-300', 'text-green-400', 'text-blue-400', 'text-pink-400'];
@@ -1526,10 +1529,10 @@ const App: React.FC = () => {
                         }}
                         disabled={genState.isLoading || surpriseMeActive}
                         className={`
-                          flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 shadow-sm relative
+                          flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 relative
                           ${preset.isLocked 
-                            ? 'bg-slate-50 border border-slate-200 text-slate-400 hover:border-amber-300 hover:bg-amber-50' 
-                            : 'bg-white border border-slate-200 text-slate-700 hover:border-rose-300 hover:bg-rose-50'
+                            ? 'bg-transparent border border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-500' 
+                            : 'bg-transparent border border-slate-200 text-slate-700 hover:border-slate-900 hover:text-slate-900'
                           }
                           ${surpriseMeActive || genState.isLoading ? 'cursor-not-allowed' : ''}
                         `}
@@ -1601,7 +1604,7 @@ const App: React.FC = () => {
                   <button
                     onClick={handleReset}
                     disabled={genState.isLoading || selectionCount === 0}
-                    className="px-4 py-3 sm:py-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="w-[52px] h-[52px] sm:w-[60px] sm:h-[60px] flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <RotateCcw size={18} className="sm:w-5 sm:h-5" />
                   </button>
@@ -1617,7 +1620,7 @@ const App: React.FC = () => {
                     onClick={handleSurpriseMeToggle}
                     disabled={genState.isLoading}
                     className={`
-                      px-4 py-3 sm:py-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                      w-[52px] h-[52px] sm:w-[60px] sm:h-[60px] flex items-center justify-center rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
                       ${surpriseMeActive 
                         ? 'bg-violet-600 text-white ring-2 ring-violet-400 ring-offset-2 animate-pulse' 
                         : 'bg-violet-100 text-violet-700 hover:bg-violet-200'
@@ -1635,7 +1638,7 @@ const App: React.FC = () => {
                   onClick={handleGenerateClick}
                   disabled={genState.isLoading || (!surpriseMeActive && selectionCount === 0)}
                   className={`
-                    group relative flex-1 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg
+                    group relative flex-1 h-[52px] sm:h-[60px] rounded-xl font-bold text-base sm:text-lg
                     flex items-center justify-center gap-2 sm:gap-3 transition-all duration-300 overflow-hidden
                     ${genState.isLoading || (!surpriseMeActive && selectionCount === 0)
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 

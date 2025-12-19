@@ -100,11 +100,11 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ originalImage, generate
         </button>
       )}
 
-      {/* Labels */}
-      <div className="absolute bottom-4 left-4 bg-black/60 text-white px-2 py-1 rounded text-xs pointer-events-none backdrop-blur-sm z-20">
+      {/* Labels - z-10 to stay below loading overlay (z-40) */}
+      <div className="absolute bottom-4 left-4 bg-black/60 text-white px-2 py-1 rounded text-xs pointer-events-none backdrop-blur-sm z-10">
         Before
       </div>
-      <div className="absolute bottom-4 right-4 bg-black/60 text-white px-2 py-1 rounded text-xs pointer-events-none backdrop-blur-sm z-20">
+      <div className="absolute bottom-4 right-4 bg-black/60 text-white px-2 py-1 rounded text-xs pointer-events-none backdrop-blur-sm z-10">
         After
       </div>
     </div>
