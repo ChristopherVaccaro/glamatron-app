@@ -1,7 +1,7 @@
 import React from 'react';
 
 const TermsOfServiceContent: React.FC = () => {
-  const lastUpdated = "December 4, 2025";
+  const lastUpdated = "December 21, 2025";
 
   return (
     <div className="space-y-6 text-slate-700">
@@ -113,10 +113,35 @@ const TermsOfServiceContent: React.FC = () => {
 
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">10. Third-Party Services</h3>
+        <p className="mb-3">
+          Glamatron uses Google's Gemini AI API for image processing and Google Sign-In for authentication. 
+          By using our Service, you also agree to comply with Google's Terms of Service and Acceptable Use Policies. 
+          We are not responsible for third-party services or their actions.
+        </p>
+        <p className="mb-2"><strong>Google Sign-In:</strong></p>
+        <ul className="list-disc list-inside space-y-1 ml-2 mb-3">
+          <li>When you sign in with Google, we access your email, name, and profile picture.</li>
+          <li>This data is used solely for account authentication and personalization.</li>
+          <li>We do not sell, share, or use your Google data for advertising purposes.</li>
+          <li>You can revoke access at any time via your{' '}
+            <a 
+              href="https://myaccount.google.com/permissions" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-slate-700 hover:text-slate-900 underline"
+            >
+              Google Account settings
+            </a>.
+          </li>
+        </ul>
         <p>
-          Glamatron uses Google's Gemini AI API. By using our Service, you also agree to comply 
-          with Google's Terms of Service and Acceptable Use Policies. We are not responsible for 
-          third-party services or their actions.
+          For complete details on how we handle Google user data, please see our{' '}
+          <a 
+            href="/privacy-policy" 
+            className="text-slate-700 hover:text-slate-900 underline"
+          >
+            Privacy Policy
+          </a>.
         </p>
       </section>
 

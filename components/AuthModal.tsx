@@ -457,6 +457,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
             </p>
           )}
 
+          {/* Privacy Policy Notice */}
+          <p className="text-center text-xs text-slate-400 mt-4">
+            By signing in, you agree to our{' '}
+            <a href="/terms-of-service" className="text-slate-500 hover:text-slate-700 underline">
+              Terms of Service
+            </a>{' '}
+            and{' '}
+            <a href="/privacy-policy" className="text-slate-500 hover:text-slate-700 underline">
+              Privacy Policy
+            </a>.
+          </p>
+
           </>
           )}
         </div>
