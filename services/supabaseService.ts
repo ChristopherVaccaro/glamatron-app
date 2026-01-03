@@ -319,7 +319,7 @@ export const ProfileService = {
 
   /**
    * Complete a GlamCoin purchase - adds coins and marks user as having purchased
-   * This unlocks the full style library
+   * Note: style library gating is currently disabled; purchase impacts GlamCoins only.
    */
   async completePurchase(
     userId: string,

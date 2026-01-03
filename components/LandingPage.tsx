@@ -155,7 +155,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
                   <div className="relative">
                     <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden">
                       <img 
-                        src="/images/hero-before.png" 
+                        src="/images/hero-1-before.jpg" 
                         alt="Before transformation" 
                         className="w-full h-full object-cover"
                       />
@@ -170,7 +170,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onSignIn, user 
                   <div className="relative">
                     <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-slate-700 to-rose-900/30 overflow-hidden border border-rose-500/20">
                       <img 
-                        src="/images/hero-after.jpg" 
+                        src="/images/hero-1-after.jpg" 
                         alt="After AI transformation" 
                         className="w-full h-full object-cover"
                       />

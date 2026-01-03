@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Wrench, Coins, Unlock, RotateCcw, ChevronUp, ChevronDown, Plus, Minus, Shield, FlaskConical } from 'lucide-react';
+import { Wrench, Coins, RotateCcw, ChevronUp, ChevronDown, Plus, Minus, Shield, FlaskConical } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 const DevToolbar: React.FC = () => {
-  const { user, isTestUser, isAdmin, simulatePurchase, resetTestUser, features } = useUser();
+  const { user, isTestUser, isAdmin, simulatePurchase, resetTestUser } = useUser();
   const [isExpanded, setIsExpanded] = useState(true);
 
   // Only show for test user or admin
@@ -65,11 +65,6 @@ const DevToolbar: React.FC = () => {
               `}>
                 {user.role.toUpperCase()}
               </span>
-              {user.isSubscribed && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400">
-                  PRO
-                </span>
-              )}
             </div>
           </div>
 
@@ -85,12 +80,11 @@ const DevToolbar: React.FC = () => {
               </div>
             </div>
             <div className="p-3 bg-slate-800 rounded-lg">
-              <div className="flex items-center gap-2 text-emerald-400 mb-1">
-                <Unlock size={14} />
-                <span className="text-xs">Full Access</span>
+              <div className="flex items-center gap-2 text-slate-300 mb-1">
+                <span className="text-xs">Status</span>
               </div>
               <div className="text-lg font-bold text-white">
-                {user.hasPurchased ? 'Unlocked' : 'Locked'}
+                Ready
               </div>
             </div>
           </div>

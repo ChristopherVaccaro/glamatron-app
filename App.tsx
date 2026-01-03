@@ -1289,7 +1289,6 @@ const App: React.FC = () => {
         onSelect={handleSelection}
         optionsMap={optionsMap}
         disabled={!selectedImage || surpriseMeActive || genState.isLoading}
-        onPremiumClick={() => setShowPurchaseModal(true)}
         onPanelOpenChange={setIsSidebarPanelOpen}
       />
 

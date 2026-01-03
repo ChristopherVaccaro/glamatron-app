@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { X, Coins, Sparkles, Unlock, Zap, Shield, Clock } from 'lucide-react';
+import { X, Coins, Sparkles, Zap, Shield, Clock } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 interface PurchaseModalProps {
@@ -37,7 +37,7 @@ const GLAMCOIN_PACKAGES = [
 ];
 
 const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
-  const { user, isTestUser, simulatePurchase, features } = useUser();
+  const { user, isTestUser, simulatePurchase } = useUser();
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
 
@@ -99,9 +99,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  // Check if user has full access (has purchased before)
-  const hasFullAccess = features.fullStyleLibrary;
-
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
@@ -162,25 +159,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
             <span className="text-sm text-violet-300">
               🧪 <strong>Test Mode:</strong> Purchases are simulated
             </span>
-          </div>
-        )}
-
-        {/* Unlock message for users who haven't purchased yet */}
-        {!hasFullAccess && (
-          <div className="mx-6 mb-4 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Unlock size={16} className="text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-emerald-300">
-                  Unlock all styles & options!
-                </p>
-                <p className="text-xs text-emerald-400/70 mt-0.5">
-                  Your first purchase unlocks the full style library with premium looks.
-                </p>
-              </div>
-            </div>
           </div>
         )}
 

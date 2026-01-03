@@ -1,5 +1,5 @@
 import React from 'react';
-import { Coins, Infinity, Crown } from 'lucide-react';
+import { Coins, Infinity } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 interface GlamCoinDisplayProps {
@@ -12,7 +12,6 @@ const GlamCoinDisplay: React.FC<GlamCoinDisplayProps> = ({ onClick }) => {
   if (!user) return null;
 
   const hasUnlimited = features.unlimitedGenerations;
-  const hasFullAccess = features.fullStyleLibrary;
   const isLowCoins = !hasUnlimited && user.glamCoins <= 2 && user.glamCoins > 0;
   const isEmpty = !hasUnlimited && user.glamCoins === 0;
 
@@ -27,13 +26,6 @@ const GlamCoinDisplay: React.FC<GlamCoinDisplayProps> = ({ onClick }) => {
             : 'bg-slate-100 hover:bg-slate-200'
       }`}
     >
-      {/* Pro badge - crown icon for users who have purchased (not admin) */}
-      {hasFullAccess && !hasUnlimited && (
-        <div className="flex items-center pr-2 border-r border-slate-300" title="Pro - Full Style Library">
-          <Crown size={16} className="text-amber-500" />
-        </div>
-      )}
-      
       {/* GlamCoin display */}
       <div className="flex items-center gap-1.5">
         <div className={`w-5 h-5 rounded-full flex items-center justify-center shadow-sm ${

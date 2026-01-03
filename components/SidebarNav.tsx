@@ -117,11 +117,10 @@ interface SidebarNavProps {
     FACIAL_HAIR: StyleOption[];
   };
   disabled?: boolean;
-  onPremiumClick?: () => void;
   onPanelOpenChange?: (isOpen: boolean) => void;
 }
 
-const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMap, disabled = false, onPremiumClick, onPanelOpenChange }) => {
+const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMap, disabled = false, onPanelOpenChange }) => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);

@@ -82,7 +82,7 @@ const FAQModal: React.FC<FAQModalProps> = ({ isOpen, onClose }) => {
     },
     {
       question: "How do I get more GlamCoins?",
-      answer: "You can purchase GlamCoin packs from the coin balance area in the header. We offer various pack sizes to suit your needs. Your first purchase also unlocks the full style library!",
+      answer: "You can purchase GlamCoin packs from the coin balance area in the header. We offer various pack sizes to suit your needs.",
     },
   ];
 

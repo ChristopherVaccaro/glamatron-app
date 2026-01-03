@@ -379,7 +379,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isTestUser = user?.role === 'test';
 
   // Determine feature access based on role and purchase status
-  // Full styles unlock after any GlamCoin purchase
+  // Note: style library gating is currently disabled; purchases are for GlamCoins.
   const features = useMemo((): SubscriptionFeatures => {
     if (!user) return SUBSCRIPTION_TIERS.free;
     if (user.role === 'admin') return SUBSCRIPTION_TIERS.admin;
@@ -501,7 +501,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]);
 
   // Complete a GlamCoin purchase - adds coins and marks user as having purchased
-  // This unlocks the full style library
+  // Note: style library gating is currently disabled; purchase impacts GlamCoins only.
   const completePurchase = useCallback(async (
     coins: number,
     stripePaymentId?: string,

@@ -21,7 +21,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: "How much does it cost?",
-    answer: "You get 5 free GlamCoins when you sign up—each generation uses 1 coin. Need more? Purchase additional GlamCoins anytime, and they never expire! Once you make your first purchase, you also unlock our full style library."
+    answer: "You get 5 free GlamCoins when you sign up—each generation uses 1 coin. Need more? Purchase additional GlamCoins anytime, and they never expire!"
   }
 ];
 
