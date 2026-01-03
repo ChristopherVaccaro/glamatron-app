@@ -132,16 +132,41 @@ const AdminGalleryModal: React.FC<AdminGalleryModalProps> = ({ isOpen, onClose }
     try {
       const response = await fetch(item.result_image_url);
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const filename = `glamatron-${item.user_email.split('@')[0]}-${item.id}.jpg`;
       
+      // Check if we're on iOS/mobile and Web Share API is available
+      // This opens the native share sheet where users can tap "Save Image"
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if ((isIOS || isMobile) && navigator.share && navigator.canShare) {
+        const file = new File([blob], filename, { 
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        });
+        
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+          });
+          return;
+        }
+      }
+      
+      // Desktop fallback: traditional download
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `glamatron-${item.user_email.split('@')[0]}-${item.id}.jpg`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
+      // User cancelled share or error occurred
+      if ((err as Error).name === 'AbortError') {
+        return; // User cancelled, not an error
+      }
       console.error('Download error:', err);
       window.open(item.result_image_url, '_blank');
     }

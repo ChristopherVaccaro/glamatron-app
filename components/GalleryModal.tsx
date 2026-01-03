@@ -175,8 +175,28 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
       // Fetch the image and create a blob for proper download
       const response = await fetch(item.resultImage);
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
       
+      // Check if we're on iOS/mobile and Web Share API is available
+      // This opens the native share sheet where users can tap "Save Image"
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if ((isIOS || isMobile) && navigator.share && navigator.canShare) {
+        const file = new File([blob], `glamatron-${item.id}.jpg`, { 
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        });
+        
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+          });
+          return;
+        }
+      }
+      
+      // Desktop fallback: traditional download
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `glamatron-${item.id}.jpg`;
@@ -185,6 +205,10 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
+      // User cancelled share or error occurred
+      if ((err as Error).name === 'AbortError') {
+        return; // User cancelled, not an error
+      }
       // Fallback for CORS issues - open in new tab
       console.error('Download error:', err);
       window.open(item.resultImage, '_blank');

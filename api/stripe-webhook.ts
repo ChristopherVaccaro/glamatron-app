@@ -174,7 +174,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .from('profiles')
         .update({
           glam_coins: newBalance,
-          has_purchased: true, // Unlocks full style library
+          has_purchased: true,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId);

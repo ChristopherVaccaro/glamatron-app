@@ -47,7 +47,7 @@ export interface UserProfile {
   role: UserRole;
   glamCoins: number;
   isSubscribed: boolean;
-  hasPurchased: boolean; // Whether user has ever purchased GlamCoins (unlocks full styles)
+  hasPurchased: boolean; // Whether user has ever purchased GlamCoins
   createdAt: Date;
   // For test user only - stores the initial state to reset to
   _testUserDefaults?: {
@@ -73,16 +73,19 @@ export interface SubscriptionFeatures {
   priorityProcessing: boolean;
 }
 
-// Feature tiers - 'purchased' tier unlocks full styles after any GlamCoin purchase
+export const STYLE_LIBRARY_GATING_ENABLED = false;
+
+// Feature tiers - all users get full style library access
+// GlamCoins are the only restriction (consumable currency)
 export const SUBSCRIPTION_TIERS: Record<'free' | 'purchased' | 'admin', SubscriptionFeatures> = {
   free: {
     unlimitedGenerations: false,
-    fullStyleLibrary: false,
+    fullStyleLibrary: !STYLE_LIBRARY_GATING_ENABLED,
     priorityProcessing: false,
   },
   purchased: {
     unlimitedGenerations: false, // Still uses GlamCoins
-    fullStyleLibrary: true,      // Full styles unlocked after purchase
+    fullStyleLibrary: true,
     priorityProcessing: false,
   },
   admin: {

@@ -1,12 +1,11 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User, Coins, Lock, Heart, AlertTriangle } from 'lucide-react';
+import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User, Coins, Heart, AlertTriangle } from 'lucide-react';
 import { 
   StyleCategory, 
   UserSelections, 
   GenerationState
 } from './types';
 import { useUser } from './contexts/UserContext';
-import { filterStyleOptions, getAvailablePresets } from './utils/styleAccess';
 import { 
   HAIR_OPTIONS,
   HAIR_LENGTH_OPTIONS,
@@ -834,23 +833,13 @@ const App: React.FC = () => {
     // Helper to maybe get an item (X% chance)
     const maybeGet = <T extends { value: string }>(arr: T[], chance: number = 0.5) => Math.random() < chance ? getRandom(arr) : null;
 
-    // Use filtered options based on subscription
-    const filteredHair = filterStyleOptions(HAIR_OPTIONS, features.fullStyleLibrary);
-    const filteredHairLength = filterStyleOptions(HAIR_LENGTH_OPTIONS, features.fullStyleLibrary);
-    const filteredHairColor = filterStyleOptions(HAIR_COLOR_OPTIONS, features.fullStyleLibrary);
-    const filteredMakeup = filterStyleOptions(MAKEUP_OPTIONS, features.fullStyleLibrary);
-    const filteredExpression = filterStyleOptions(EXPRESSION_OPTIONS, features.fullStyleLibrary);
-    const filteredEyes = filterStyleOptions(EYE_OPTIONS, features.fullStyleLibrary);
-    const filteredLips = filterStyleOptions(LIP_OPTIONS, features.fullStyleLibrary);
-    const filteredFacialHair = filterStyleOptions(FACIAL_HAIR_OPTIONS, features.fullStyleLibrary);
-
-    // Collect all filtered accessories
+    // Collect all accessories
     const allAccessories = [
-      ...filterStyleOptions(GLASSES_OPTIONS, features.fullStyleLibrary),
-      ...filterStyleOptions(PIERCING_OPTIONS, features.fullStyleLibrary),
-      ...filterStyleOptions(HEADWEAR_OPTIONS, features.fullStyleLibrary),
-      ...filterStyleOptions(JEWELRY_OPTIONS, features.fullStyleLibrary),
-      ...filterStyleOptions(FACE_EXTRAS_OPTIONS, features.fullStyleLibrary)
+      ...GLASSES_OPTIONS,
+      ...PIERCING_OPTIONS,
+      ...HEADWEAR_OPTIONS,
+      ...JEWELRY_OPTIONS,
+      ...FACE_EXTRAS_OPTIONS
     ];
 
     // Pick 1 to 3 random accessories
@@ -871,15 +860,15 @@ const App: React.FC = () => {
     }
 
     return {
-      [StyleCategory.HAIR]: maybeGet(filteredHair, 0.7), 
-      [StyleCategory.HAIR_LENGTH]: maybeGet(filteredHairLength, 0.4),
-      [StyleCategory.HAIR_COLOR]: maybeGet(filteredHairColor, 0.5),
-      [StyleCategory.MAKEUP]: maybeGet(filteredMakeup, 0.6),
-      [StyleCategory.EXPRESSION]: maybeGet(filteredExpression, 0.5),
-      [StyleCategory.EYES]: maybeGet(filteredEyes, 0.5),
-      [StyleCategory.LIPS]: maybeGet(filteredLips, 0.5),
+      [StyleCategory.HAIR]: maybeGet(HAIR_OPTIONS, 0.7), 
+      [StyleCategory.HAIR_LENGTH]: maybeGet(HAIR_LENGTH_OPTIONS, 0.4),
+      [StyleCategory.HAIR_COLOR]: maybeGet(HAIR_COLOR_OPTIONS, 0.5),
+      [StyleCategory.MAKEUP]: maybeGet(MAKEUP_OPTIONS, 0.6),
+      [StyleCategory.EXPRESSION]: maybeGet(EXPRESSION_OPTIONS, 0.5),
+      [StyleCategory.EYES]: maybeGet(EYE_OPTIONS, 0.5),
+      [StyleCategory.LIPS]: maybeGet(LIP_OPTIONS, 0.5),
       [StyleCategory.ACCESSORIES]: randomAccessories,
-      [StyleCategory.FACIAL_HAIR]: maybeGet(filteredFacialHair, 0.25),
+      [StyleCategory.FACIAL_HAIR]: maybeGet(FACIAL_HAIR_OPTIONS, 0.25),
     };
   };
 
@@ -919,6 +908,26 @@ const App: React.FC = () => {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
       const filename = `${originalFilename}_styled_${timestamp}.jpg`;
       
+      // Check if we're on iOS/mobile and Web Share API is available
+      // This opens the native share sheet where users can tap "Save Image"
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if ((isIOS || isMobile) && navigator.share && navigator.canShare) {
+        const file = new File([blob], filename, { 
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        });
+        
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+          });
+          return;
+        }
+      }
+      
+      // Desktop fallback: traditional download
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -928,6 +937,10 @@ const App: React.FC = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
+      // User cancelled share or error occurred
+      if ((err as Error).name === 'AbortError') {
+        return; // User cancelled, not an error
+      }
       console.error('Download error:', err);
       // Fallback to direct download
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -1128,31 +1141,27 @@ const App: React.FC = () => {
     handleSelection(category, category === StyleCategory.ACCESSORIES ? value : '');
   };
 
-  // Options map for SidebarNav - filtered based on subscription
-  const hasFullAccess = features.fullStyleLibrary;
-  
+  // Options map for SidebarNav - all styles available
   const optionsMap = useMemo(() => ({
-    HAIR: filterStyleOptions(HAIR_OPTIONS, hasFullAccess),
-    HAIR_LENGTH: filterStyleOptions(HAIR_LENGTH_OPTIONS, hasFullAccess),
-    HAIR_COLOR: filterStyleOptions(HAIR_COLOR_OPTIONS, hasFullAccess),
-    EXPRESSION: filterStyleOptions(EXPRESSION_OPTIONS, hasFullAccess),
-    MAKEUP: filterStyleOptions(MAKEUP_OPTIONS, hasFullAccess),
-    EYES: filterStyleOptions(EYE_OPTIONS, hasFullAccess),
-    EYE_MAKEUP: filterStyleOptions(EYE_MAKEUP_OPTIONS, hasFullAccess),
-    EYE_COLOR: filterStyleOptions(EYE_COLOR_OPTIONS, hasFullAccess),
-    LIPS: filterStyleOptions(LIP_OPTIONS, hasFullAccess),
-    GLASSES: filterStyleOptions(GLASSES_OPTIONS, hasFullAccess),
-    PIERCINGS: filterStyleOptions(PIERCING_OPTIONS, hasFullAccess),
-    HEADWEAR: filterStyleOptions(HEADWEAR_OPTIONS, hasFullAccess),
-    JEWELRY: filterStyleOptions(JEWELRY_OPTIONS, hasFullAccess),
-    FACE_EXTRAS: filterStyleOptions(FACE_EXTRAS_OPTIONS, hasFullAccess),
-    FACIAL_HAIR: filterStyleOptions(FACIAL_HAIR_OPTIONS, hasFullAccess),
-  }), [hasFullAccess]);
+    HAIR: HAIR_OPTIONS,
+    HAIR_LENGTH: HAIR_LENGTH_OPTIONS,
+    HAIR_COLOR: HAIR_COLOR_OPTIONS,
+    EXPRESSION: EXPRESSION_OPTIONS,
+    MAKEUP: MAKEUP_OPTIONS,
+    EYES: EYE_OPTIONS,
+    EYE_MAKEUP: EYE_MAKEUP_OPTIONS,
+    EYE_COLOR: EYE_COLOR_OPTIONS,
+    LIPS: LIP_OPTIONS,
+    GLASSES: GLASSES_OPTIONS,
+    PIERCINGS: PIERCING_OPTIONS,
+    HEADWEAR: HEADWEAR_OPTIONS,
+    JEWELRY: JEWELRY_OPTIONS,
+    FACE_EXTRAS: FACE_EXTRAS_OPTIONS,
+    FACIAL_HAIR: FACIAL_HAIR_OPTIONS,
+  }), []);
 
-  // Quick presets with premium flags
-  const availablePresets = useMemo(() => 
-    getAvailablePresets(QUICK_PRESETS, hasFullAccess),
-  [hasFullAccess]);
+  // Quick presets - all available
+  const availablePresets = QUICK_PRESETS;
 
   // Check if current gallery item is favorited
   const currentItemIsFavorite = useMemo(() => {
@@ -1280,7 +1289,6 @@ const App: React.FC = () => {
         onSelect={handleSelection}
         optionsMap={optionsMap}
         disabled={!selectedImage || surpriseMeActive || genState.isLoading}
-        onPremiumClick={() => setShowPurchaseModal(true)}
         onPanelOpenChange={setIsSidebarPanelOpen}
       />
 
@@ -1520,30 +1528,16 @@ const App: React.FC = () => {
                     {availablePresets.map(preset => (
                       <button
                         key={preset.id}
-                        onClick={() => {
-                          if (preset.isLocked) {
-                            setShowPurchaseModal(true);
-                          } else {
-                            handlePresetSelect(preset);
-                          }
-                        }}
+                        onClick={() => handlePresetSelect(preset)}
                         disabled={genState.isLoading || surpriseMeActive}
                         className={`
                           flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 relative
-                          ${preset.isLocked 
-                            ? 'bg-transparent border border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-500' 
-                            : 'bg-transparent border border-slate-200 text-slate-700 hover:border-slate-900 hover:text-slate-900'
-                          }
+                          bg-transparent border border-slate-200 text-slate-700 hover:border-slate-900 hover:text-slate-900
                           ${surpriseMeActive || genState.isLoading ? 'cursor-not-allowed' : ''}
                         `}
                       >
                         <span>{preset.emoji}</span>
                         <span className="whitespace-nowrap">{preset.name}</span>
-                        {preset.isLocked && (
-                          <span className="ml-1 text-slate-400">
-                            <Lock size={12} />
-                          </span>
-                        )}
                       </button>
                     ))}
                   </div>
