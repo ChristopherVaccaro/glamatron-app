@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { StyleCategory, StyleOption, UserSelections } from '../types';
 import StyleSelector from './StyleSelector';
-import { ExtendedStyleOption } from '../utils/styleAccess';
 
 // Category configuration with icons and labels
 const CATEGORY_CONFIG = [
@@ -101,19 +100,21 @@ interface SidebarNavProps {
   selections: UserSelections;
   onSelect: (category: StyleCategory, value: string, singleSelect?: boolean) => void;
   optionsMap: {
-    HAIR: ExtendedStyleOption[];
-    HAIR_LENGTH: ExtendedStyleOption[];
-    HAIR_COLOR: ExtendedStyleOption[];
-    EXPRESSION: ExtendedStyleOption[];
-    MAKEUP: ExtendedStyleOption[];
-    EYES: ExtendedStyleOption[];
-    LIPS: ExtendedStyleOption[];
-    GLASSES: ExtendedStyleOption[];
-    PIERCINGS: ExtendedStyleOption[];
-    HEADWEAR: ExtendedStyleOption[];
-    JEWELRY: ExtendedStyleOption[];
-    FACE_EXTRAS: ExtendedStyleOption[];
-    FACIAL_HAIR: ExtendedStyleOption[];
+    HAIR: StyleOption[];
+    HAIR_LENGTH: StyleOption[];
+    HAIR_COLOR: StyleOption[];
+    EXPRESSION: StyleOption[];
+    MAKEUP: StyleOption[];
+    EYES: StyleOption[];
+    EYE_MAKEUP: StyleOption[];
+    EYE_COLOR: StyleOption[];
+    LIPS: StyleOption[];
+    GLASSES: StyleOption[];
+    PIERCINGS: StyleOption[];
+    HEADWEAR: StyleOption[];
+    JEWELRY: StyleOption[];
+    FACE_EXTRAS: StyleOption[];
+    FACIAL_HAIR: StyleOption[];
   };
   disabled?: boolean;
   onPremiumClick?: () => void;
@@ -306,7 +307,6 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
                     selections={selections}
                     onSelect={handleSelect}
                     multiSelect={isMultiSelect}
-                    onPremiumClick={onPremiumClick}
                   />
                 );
               })}
