@@ -58,7 +58,7 @@ const GlamCoinDisplay: React.FC<GlamCoinDisplayProps> = ({ onClick }) => {
 
       {/* Add more indicator */}
       {!hasUnlimited && (
-        <span className="text-xs text-slate-400 group-hover:text-slate-600 transition-colors">
+        <span className="text-xs text-slate-500 group-hover:text-slate-600 transition-colors">
           +
         </span>
       )}
