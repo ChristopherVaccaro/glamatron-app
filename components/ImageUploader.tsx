@@ -171,7 +171,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
         className="hidden"
       />
       
-      <div className={`p-4 rounded-full mb-4 ${isDragging ? 'bg-rose-100 text-rose-500' : 'bg-white text-slate-400 shadow-sm'}`}>
+      <div className={`p-4 rounded-full mb-4 ${isDragging ? 'bg-rose-100 text-rose-500' : 'bg-white text-slate-500 shadow-sm'}`}>
         <Upload size={32} />
       </div>
       
@@ -181,7 +181,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
       <p className="text-sm text-slate-500 max-w-xs mx-auto">
         Drag and drop or click to select a clear photo of a face.
       </p>
-      <p className="text-xs text-slate-400 mt-2">
+      <p className="text-xs text-slate-500 mt-2">
         JPG, PNG, WebP, HEIC • Max {MAX_FILE_SIZE_MB}MB
       </p>
       

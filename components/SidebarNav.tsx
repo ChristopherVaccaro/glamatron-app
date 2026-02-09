@@ -183,6 +183,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
   // Get selection count for a category
   const getSelectionCount = (configItem: typeof CATEGORY_CONFIG[0]) => {
     let count = 0;
+    const countedCategories = new Set<StyleCategory>();
     configItem.categories.forEach(cat => {
       if (cat.category === StyleCategory.ACCESSORIES) {
         // Count accessories that match this category's options
@@ -191,7 +192,11 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
         const accessoryValues = options.map(o => o.value);
         count += (selections[StyleCategory.ACCESSORIES] as string[]).filter(v => accessoryValues.includes(v)).length;
       } else {
-        if (selections[cat.category]) count++;
+        // Avoid double-counting when multiple sub-sections share the same category (e.g. EYE_MAKEUP + EYE_COLOR both use StyleCategory.EYES)
+        if (!countedCategories.has(cat.category) && selections[cat.category]) {
+          count++;
+          countedCategories.add(cat.category);
+        }
       }
     });
     return count;
@@ -205,7 +210,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
       {/* On xl+ screens, align with max-w-6xl container start instead of viewport edge */}
       <div 
         ref={sidebarRef}
-        className="fixed left-0 xl:left-[max(0px,calc((100vw-72rem)/2))] top-20 z-40 flex flex-col gap-0 sm:gap-1 bg-white border border-slate-200 xl:border-l xl:rounded-l-2xl rounded-r-2xl shadow-lg py-2 sm:py-3 px-1 sm:px-2"
+        className="fixed left-0 xl:left-[max(0px,calc((100vw-72rem)/2))] top-20 z-40 flex flex-col gap-0.5 bg-white border border-slate-200 xl:border-l xl:rounded-l-2xl rounded-r-2xl shadow-lg py-2 px-1.5"
       >
         {CATEGORY_CONFIG.map((config) => {
           const Icon = config.icon;
@@ -222,12 +227,12 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
                 disabled={disabled}
                 style={disabled ? { cursor: 'not-allowed' } : undefined}
                 className={`
-                  relative w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center sm:rounded-xl transition-all duration-200
+                  relative w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-200
                   ${disabled
                     ? 'text-slate-300'
                     : isActive 
-                      ? 'bg-[#0F172A] text-white shadow-md rounded-lg' 
-                      : 'text-slate-600 hover:text-slate-900 sm:bg-white sm:hover:bg-slate-100'
+                      ? 'bg-[#0F172A] text-white shadow-md' 
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }
                 `}
                 aria-label={config.label}
@@ -236,7 +241,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
                 
                 {/* Selection count badge */}
                 {count > 0 && !isActive && !disabled && (
-                  <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-4 h-4 sm:w-5 sm:h-5 bg-[#0F172A] text-white text-[9px] sm:text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#0F172A] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                     {count}
                   </span>
                 )}
@@ -276,7 +281,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
               <h3 className="font-bold text-slate-900">{activeCategoryConfig.label}</h3>
               <button
                 onClick={() => setActiveCategory(null)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                className="w-11 h-11 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                 aria-label="Close panel"
               >
                 <X size={18} />

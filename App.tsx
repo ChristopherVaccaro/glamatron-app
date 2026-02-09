@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, ChevronDown, Zap, ChevronLeft, ChevronRight, User, Coins, Heart, AlertTriangle } from 'lucide-react';
+import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, Zap, ChevronLeft, ChevronRight, User, Coins, Heart, AlertTriangle } from 'lucide-react';
 import { 
   StyleCategory, 
   UserSelections, 
@@ -697,8 +697,6 @@ const App: React.FC = () => {
   // Surprise Me mode - when active, disables style options and enables generate button
   const [surpriseMeActive, setSurpriseMeActive] = useState(false);
   
-  // Quick Looks collapsed state - collapsed by default
-  const [quickLooksExpanded, setQuickLooksExpanded] = useState(false);
 
   const handleSelection = useCallback((category: StyleCategory, value: string, singleSelect?: boolean) => {
     setSelections(prev => {
@@ -1336,51 +1334,6 @@ const App: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  
-                  {/* Action Buttons - disabled during loading */}
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                    <button
-                      onClick={() => setGenState(prev => ({ ...prev, resultImage: null }))}
-                      disabled={genState.isLoading}
-                      className="flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <RotateCcw size={18} />
-                      Edit & Regenerate
-                    </button>
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      {/* Favorite Button - only show when user is signed in */}
-                      {user && currentGalleryItemId && (
-                        <button 
-                          onClick={handleToggleFavorite}
-                          disabled={genState.isLoading}
-                          className={`flex items-center justify-center w-[52px] h-[52px] rounded-xl border transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 ${
-                            currentItemIsFavorite 
-                              ? 'bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100' 
-                              : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-rose-400 hover:border-rose-200'
-                          }`}
-                          title={currentItemIsFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                        >
-                          <Heart size={18} className={`transition-transform duration-150 ${currentItemIsFavorite ? 'fill-current scale-110' : ''}`} />
-                        </button>
-                      )}
-                      <button 
-                        onClick={handleShare}
-                        disabled={genState.isLoading}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Share2 size={18} />
-                        Share
-                      </button>
-                      <button 
-                        onClick={handleDownload}
-                        disabled={genState.isLoading}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-3.5 bg-[#0F172A] text-white rounded-xl hover:bg-slate-800 transition-colors font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Download size={18} />
-                        Download
-                      </button>
-                    </div>
-                  </div>
                 </div>
               ) : (
                 <>
@@ -1463,151 +1416,10 @@ const App: React.FC = () => {
                 </>
               )}
             </section>
-            {/* Style Selectors */}
+
+            {/* Primary CTA Row - Generate New Look + Surprise Me - Always visible below image */}
             {selectedImage && (
-              <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {/* Quick Looks - Collapsible container */}
-                <div className={`mb-4 ${surpriseMeActive || genState.isLoading ? 'opacity-50 pointer-events-none' : ''}`} style={genState.isLoading ? { cursor: 'not-allowed' } : undefined}>
-                  <button
-                    onClick={() => setQuickLooksExpanded(!quickLooksExpanded)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors shadow-sm"
-                    disabled={surpriseMeActive || genState.isLoading}
-                  >
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                      <Zap size={12} className="text-amber-500" />
-                      Quick Looks
-                      <span className="text-slate-400 font-normal normal-case">• {availablePresets.length} presets</span>
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      {quickLooksExpanded && (
-                        <div className="hidden lg:flex items-center gap-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const container = document.getElementById('quick-looks-scroll');
-                              if (container) container.scrollBy({ left: -600, behavior: 'smooth' });
-                            }}
-                            className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                            aria-label="Scroll left"
-                          >
-                            <ChevronLeft size={16} />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const container = document.getElementById('quick-looks-scroll');
-                              if (container) container.scrollBy({ left: 600, behavior: 'smooth' });
-                            }}
-                            className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                            aria-label="Scroll right"
-                          >
-                            <ChevronRight size={16} />
-                          </button>
-                        </div>
-                      )}
-                      <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${quickLooksExpanded ? 'rotate-180' : ''}`} />
-                    </div>
-                  </button>
-                  
-                  {/* Expandable content */}
-                  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${quickLooksExpanded ? 'max-h-[200px] opacity-100 mt-3' : 'max-h-0 opacity-0'}`}>
-                  <div id="quick-looks-scroll" className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-                    {/* Style Analyzer Button - Copy styles from reference photos */}
-                    <button
-                      onClick={() => setShowStyleAnalyzerModal(true)}
-                      disabled={genState.isLoading || surpriseMeActive}
-                      className={`
-                        flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5
-                        border-2 border-dashed border-slate-300 text-slate-600 hover:border-slate-400 hover:bg-slate-50
-                        ${surpriseMeActive || genState.isLoading ? 'cursor-not-allowed opacity-50' : ''}
-                      `}
-                    >
-                      <Wand2 size={14} />
-                      <span className="whitespace-nowrap">Copy a Look</span>
-                    </button>
-                    {availablePresets.map(preset => (
-                      <button
-                        key={preset.id}
-                        onClick={() => handlePresetSelect(preset)}
-                        disabled={genState.isLoading || surpriseMeActive}
-                        className={`
-                          flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 relative
-                          bg-transparent border border-slate-200 text-slate-700 hover:border-slate-900 hover:text-slate-900
-                          ${surpriseMeActive || genState.isLoading ? 'cursor-not-allowed' : ''}
-                        `}
-                      >
-                        <span>{preset.emoji}</span>
-                        <span className="whitespace-nowrap">{preset.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                  </div>
-                </div>
-
-                {/* Selection Summary Chips - Always visible, content animates in */}
-                <div className={`mb-4 p-3 rounded-xl border sticky top-16 sm:top-20 z-40 shadow-md transition-all ${
-                  surpriseMeActive 
-                    ? 'bg-violet-50 border-violet-200' 
-                    : 'bg-white border-slate-200'
-                }`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`text-xs font-semibold uppercase tracking-wider ${surpriseMeActive ? 'text-violet-600' : 'text-slate-500'}`}>
-                      {surpriseMeActive ? 'Surprise Me Active' : 'Your Look'}
-                    </span>
-                    {activeSelections.length > 0 && !surpriseMeActive && !genState.isLoading && (
-                      <button onClick={handleReset} className="text-xs text-slate-500 hover:text-rose-500 flex items-center gap-1 transition-opacity">
-                        <RotateCcw size={10} />
-                        Clear All
-                      </button>
-                    )}
-                  </div>
-                  <div className="min-h-[28px]">
-                    {surpriseMeActive ? (
-                      <span className="text-xs text-violet-600">Generate a random look</span>
-                    ) : (
-                      <div className="flex flex-wrap gap-1.5">
-                        {activeSelections.length > 0 ? (
-                          activeSelections.map((item, idx) => (
-                            <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full animate-in fade-in zoom-in-95 duration-200">
-                              {item.label}
-                              {!genState.isLoading && (
-                                <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-200 rounded-full p-0.5">
-                                  <X size={10} className="text-slate-500" />
-                                </button>
-                              )}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-xs text-slate-400 italic">
-                            Click sidebar icons to select styles
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-              </section>
-            )}
-
-            {/* Action Buttons - Visible on all screen sizes when image is selected */}
-            {selectedImage && (
-              <div className="flex items-center gap-2 sm:gap-3">
-                {/* Clear All Selections Button with Tooltip */}
-                <div className="relative group">
-                  <button
-                    onClick={handleReset}
-                    disabled={genState.isLoading || selectionCount === 0}
-                    className="w-[52px] h-[52px] sm:w-[60px] sm:h-[60px] flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <RotateCcw size={18} className="sm:w-5 sm:h-5" />
-                  </button>
-                  <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#0F172A] text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    Clear all selections
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#0F172A]" />
-                  </div>
-                </div>
-                
+              <div className="flex items-center gap-2 sm:gap-3 mt-4">
                 {/* Surprise Me Button with Tooltip - Toggle mode */}
                 <div className="relative group">
                   <button
@@ -1651,6 +1463,155 @@ const App: React.FC = () => {
                 </button>
               </div>
             )}
+
+            {/* Secondary Actions Row - Download, Share, Favorite - Only after generation */}
+            {selectedImage && genState.resultImage && (
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* Favorite Button - only show when user is signed in */}
+                {user && currentGalleryItemId && (
+                  <button 
+                    onClick={handleToggleFavorite}
+                    disabled={genState.isLoading}
+                    className={`flex items-center justify-center w-[52px] h-[52px] sm:w-[60px] sm:h-[60px] rounded-xl border transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 ${
+                      currentItemIsFavorite 
+                        ? 'bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100' 
+                        : 'border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-rose-400 hover:border-rose-200'
+                    }`}
+                    title={currentItemIsFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                  >
+                    <Heart size={18} className={`transition-transform duration-150 ${currentItemIsFavorite ? 'fill-current scale-110' : ''}`} />
+                  </button>
+                )}
+                <button 
+                  onClick={handleShare}
+                  disabled={genState.isLoading}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  <Share2 size={16} />
+                  Share
+                </button>
+                <button 
+                  onClick={handleDownload}
+                  disabled={genState.isLoading}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  <Download size={16} />
+                  Download
+                </button>
+              </div>
+            )}
+
+            {/* Style Selectors */}
+            {selectedImage && (
+              <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Selection Summary Chips - Always visible, content animates in */}
+                <div className={`mb-3 p-3 rounded-xl border sticky top-16 sm:top-20 z-40 shadow-md transition-all ${
+                  surpriseMeActive 
+                    ? 'bg-violet-50 border-violet-200' 
+                    : 'bg-white border-slate-200'
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-xs font-semibold uppercase tracking-wider ${surpriseMeActive ? 'text-violet-600' : 'text-slate-500'}`}>
+                      {surpriseMeActive ? 'Surprise Me Active' : 'Your Look'}
+                    </span>
+                    {activeSelections.length > 0 && !surpriseMeActive && !genState.isLoading && (
+                      <button onClick={handleReset} className="text-xs text-slate-500 hover:text-rose-500 flex items-center gap-1 transition-opacity">
+                        <RotateCcw size={10} />
+                        Clear All
+                      </button>
+                    )}
+                  </div>
+                  <div className="min-h-[28px]">
+                    {surpriseMeActive ? (
+                      <span className="text-xs text-violet-600">Generate a random look</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {activeSelections.length > 0 ? (
+                          activeSelections.map((item, idx) => (
+                            <span key={`${item.category}-${idx}`} className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full animate-in fade-in zoom-in-95 duration-200">
+                              {item.label}
+                              {!genState.isLoading && (
+                                <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-200 rounded-full p-0.5">
+                                  <X size={10} className="text-slate-500" />
+                                </button>
+                              )}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-slate-500 italic">
+                            Click sidebar icons to select styles
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Looks - Always-visible inline strip */}
+                <div className={`mb-3 ${surpriseMeActive || genState.isLoading ? 'opacity-50 pointer-events-none' : ''}`} style={genState.isLoading ? { cursor: 'not-allowed' } : undefined}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                      <Zap size={12} className="text-amber-500" />
+                      Quick Looks
+                    </h3>
+                    <div className="hidden lg:flex items-center gap-1 ml-auto">
+                      <button
+                        onClick={() => {
+                          const container = document.getElementById('quick-looks-scroll');
+                          if (container) container.scrollBy({ left: -600, behavior: 'smooth' });
+                        }}
+                        className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+                        aria-label="Scroll left"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          const container = document.getElementById('quick-looks-scroll');
+                          if (container) container.scrollBy({ left: 600, behavior: 'smooth' });
+                        }}
+                        className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+                        aria-label="Scroll right"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <div id="quick-looks-scroll" className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+                    {/* Style Analyzer Button - Copy styles from reference photos */}
+                    <button
+                      onClick={() => setShowStyleAnalyzerModal(true)}
+                      disabled={genState.isLoading || surpriseMeActive}
+                      className={`
+                        flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5
+                        border-2 border-dashed border-slate-300 text-slate-600 hover:border-slate-400 hover:bg-slate-50
+                        ${surpriseMeActive || genState.isLoading ? 'cursor-not-allowed opacity-50' : ''}
+                      `}
+                    >
+                      <Wand2 size={14} />
+                      <span className="whitespace-nowrap">Copy a Look</span>
+                    </button>
+                    {availablePresets.map(preset => (
+                      <button
+                        key={preset.id}
+                        onClick={() => handlePresetSelect(preset)}
+                        disabled={genState.isLoading || surpriseMeActive}
+                        className={`
+                          flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 relative
+                          bg-transparent border border-slate-200 text-slate-700 hover:border-slate-900 hover:text-slate-900
+                          ${surpriseMeActive || genState.isLoading ? 'cursor-not-allowed' : ''}
+                        `}
+                      >
+                        <span>{preset.emoji}</span>
+                        <span className="whitespace-nowrap">{preset.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+              </section>
+            )}
+
         </div>
       </main>
 
