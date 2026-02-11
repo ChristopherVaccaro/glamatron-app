@@ -380,7 +380,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
             )}
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+              className="p-2 text-slate-600 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
             >
               <X size={20} />
             </button>
@@ -416,7 +416,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
               <>
                 {/* Time Period Filter */}
                 <div className="flex items-center gap-2">
-                  <Clock size={14} className="text-slate-400" />
+                  <Clock size={14} className="text-slate-600" />
                   <select
                     value={timePeriod}
                     onChange={(e) => setTimePeriod(e.target.value as TimePeriod)}
@@ -431,7 +431,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
                 
                 {/* Sort Options */}
                 <div className="flex items-center gap-2">
-                  <ArrowUpDown size={14} className="text-slate-400" />
+                  <ArrowUpDown size={14} className="text-slate-600" />
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortOption)}
@@ -469,7 +469,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
             // Empty state - differentiate between no items at all vs no items matching filter
             <div className="text-center py-16">
               <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-                <ImageIcon size={32} className="text-slate-400" />
+                <ImageIcon size={32} className="text-slate-600" />
               </div>
               {allItems.length === 0 ? (
                 <>
@@ -528,7 +528,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
                         <div className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
                           isSelected 
                             ? 'bg-rose-500 text-white' 
-                            : 'bg-white/90 text-slate-400 border border-slate-300'
+                            : 'bg-white/90 text-slate-600 border border-slate-300'
                         }`}>
                           {isSelected ? <CheckSquare size={16} /> : <Square size={16} />}
                         </div>

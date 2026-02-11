@@ -49,7 +49,7 @@ import ForgotPasswordModal from './components/ForgotPasswordModal';
 import ResetPasswordModal from './components/ResetPasswordModal';
 import CookieConsentBanner from './components/CookieConsentBanner';
 import { useGallery } from './contexts/GalleryContext';
-import { generateStyledImage } from './services/geminiService';
+import { generateStyledImage, AVAILABLE_MODELS, GeminiModelId, DEFAULT_MODEL } from './services/geminiService';
 import { Analytics } from './utils/analytics';
 import { triggerHeartBurst } from './utils/confetti';
 
@@ -515,17 +515,180 @@ export const QUICK_PRESETS = [
       [StyleCategory.FACIAL_HAIR]: null,
     }
   },
+  {
+    id: 'mob_wife',
+    name: 'Mob Wife',
+    emoji: '🦁',
+    selections: {
+      [StyleCategory.HAIR]: 'Voluminous salon blowout',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Rich chestnut brown',
+      [StyleCategory.MAKEUP]: 'Heavy contour and highlight full glam',
+      [StyleCategory.EXPRESSION]: 'Confident asymmetrical smirk',
+      [StyleCategory.EYES]: 'Black and grey smokey eye',
+      [StyleCategory.LIPS]: 'Matte nude lipstick',
+      [StyleCategory.ACCESSORIES]: ['Large gold hoop earrings', 'Oversized designer sunglasses'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'cottagecore',
+    name: 'Cottagecore',
+    emoji: '🌾',
+    selections: {
+      [StyleCategory.HAIR]: 'Two braided pigtails',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Warm honey blonde',
+      [StyleCategory.MAKEUP]: 'Minimal "clean girl" aesthetic makeup',
+      [StyleCategory.EXPRESSION]: 'Peaceful content expression',
+      [StyleCategory.EYES]: 'Natural lashes with mascara only',
+      [StyleCategory.LIPS]: 'Soft pink tinted lip balm',
+      [StyleCategory.ACCESSORIES]: ['Bohemian flower crown', 'Dusted with natural freckles'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'ice_queen',
+    name: 'Ice Queen',
+    emoji: '❄️',
+    selections: {
+      [StyleCategory.HAIR]: 'Long sleek straight hair',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Icy platinum blonde',
+      [StyleCategory.MAKEUP]: 'Intense highlighter strobing effect',
+      [StyleCategory.EXPRESSION]: 'Calm neutral expression',
+      [StyleCategory.EYES]: 'Pastel shimmer eyeshadow',
+      [StyleCategory.LIPS]: 'High shine clear lip gloss',
+      [StyleCategory.ACCESSORIES]: ['Crystal chandelier earrings'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'sunset_glow',
+    name: 'Sunset Glow',
+    emoji: '🌅',
+    selections: {
+      [StyleCategory.HAIR]: 'Loose beachy waves',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Copper penny red',
+      [StyleCategory.MAKEUP]: 'Heavy bronzer sun-kissed look',
+      [StyleCategory.EXPRESSION]: 'Radiant beaming smile',
+      [StyleCategory.EYES]: 'Warm copper metallic eyeshadow',
+      [StyleCategory.LIPS]: 'Warm peach coral lipstick',
+      [StyleCategory.ACCESSORIES]: ['Layered gold chain necklaces'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'ethereal',
+    name: 'Ethereal Angel',
+    emoji: '🕊️',
+    selections: {
+      [StyleCategory.HAIR]: 'Long flowing wavy hair',
+      [StyleCategory.HAIR_LENGTH]: 'Very long waist length',
+      [StyleCategory.HAIR_COLOR]: 'Icy platinum blonde',
+      [StyleCategory.MAKEUP]: 'Dewy glass skin high-shine base',
+      [StyleCategory.EXPRESSION]: 'Dreamy distant gaze',
+      [StyleCategory.EYES]: 'Pastel shimmer eyeshadow',
+      [StyleCategory.LIPS]: 'High shine clear lip gloss',
+      [StyleCategory.ACCESSORIES]: ['Cute heart shaped faux freckles'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'tomato_girl',
+    name: 'Tomato Girl',
+    emoji: '🍅',
+    selections: {
+      [StyleCategory.HAIR]: 'Casual messy textured updo with loose strands',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.MAKEUP]: 'Heavy bronzer sun-kissed look',
+      [StyleCategory.EXPRESSION]: 'Bright genuine smile',
+      [StyleCategory.EYES]: 'Natural lashes with mascara only',
+      [StyleCategory.LIPS]: 'Warm peach coral lipstick',
+      [StyleCategory.ACCESSORIES]: ['Small huggie hoop earrings', 'Dusted with natural freckles'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'witchy',
+    name: 'Witch Aesthetic',
+    emoji: '🔮',
+    selections: {
+      [StyleCategory.HAIR]: 'Long flowing wavy hair',
+      [StyleCategory.HAIR_LENGTH]: 'Very long waist length',
+      [StyleCategory.HAIR_COLOR]: 'Jet black',
+      [StyleCategory.MAKEUP]: 'Dark pale goth makeup',
+      [StyleCategory.EXPRESSION]: 'Mysterious knowing smile',
+      [StyleCategory.EYES]: 'Black and grey smokey eye',
+      [StyleCategory.LIPS]: 'Dark plum lipstick',
+      [StyleCategory.ACCESSORIES]: ['Antique gold monocle'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'coastal_cowgirl',
+    name: 'Coastal Cowgirl',
+    emoji: '🤠',
+    selections: {
+      [StyleCategory.HAIR]: 'Loose beachy waves',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'Sun-kissed balayage highlights',
+      [StyleCategory.MAKEUP]: 'Heavy bronzer sun-kissed look',
+      [StyleCategory.EXPRESSION]: 'Playful winking expression',
+      [StyleCategory.EYES]: 'Natural lashes with mascara only',
+      [StyleCategory.LIPS]: 'Matte nude lipstick',
+      [StyleCategory.ACCESSORIES]: ['Classic western cowboy hat', 'Layered gold chain necklaces'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'ballet_core',
+    name: 'Balletcore',
+    emoji: '🩰',
+    selections: {
+      [StyleCategory.HAIR]: 'Slicked back tight bun',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.MAKEUP]: 'Igari style heavy blush under eyes',
+      [StyleCategory.EXPRESSION]: 'Peaceful content expression',
+      [StyleCategory.EYES]: 'Natural lashes with mascara only',
+      [StyleCategory.LIPS]: 'Soft pink tinted lip balm',
+      [StyleCategory.ACCESSORIES]: ['Satin hair ribbon bow', 'Classic pearl stud earrings'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
+  {
+    id: 'disco_diva',
+    name: 'Disco Diva',
+    emoji: '🪩',
+    selections: {
+      [StyleCategory.HAIR]: 'Long voluminous curly hair',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: null,
+      [StyleCategory.MAKEUP]: 'Intense highlighter strobing effect',
+      [StyleCategory.EXPRESSION]: 'Radiant beaming smile',
+      [StyleCategory.EYES]: 'Heavy gold glitter on lids',
+      [StyleCategory.LIPS]: 'Sparkling glitter lips',
+      [StyleCategory.ACCESSORIES]: ['Crystal chandelier earrings', 'Rhinestone face gems'],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
 ];
 
 const App: React.FC = () => {
   // User context for GlamCoins and subscription
-  const { user: contextUser, isAuthLoading, features, canGenerate, deductCoin, logGeneration, signOut, pendingPasswordRecovery, refreshProfile } = useUser();
+  const { user: contextUser, isAuthLoading, isAdmin, features, canGenerate, deductCoin, logGeneration, signOut, pendingPasswordRecovery, refreshProfile } = useUser();
   
   // Gallery context for saving images
   const { addItem: addToGallery, items: galleryItems, toggleFavorite, getUserItems, loadUserGallery } = useGallery();
   
   // Track the current gallery item ID for the generated result
   const [currentGalleryItemId, setCurrentGalleryItemId] = useState<string | null>(null);
+  
+  // Admin-only: AI model selection
+  const [selectedModel, setSelectedModel] = useState<GeminiModelId>(DEFAULT_MODEL);
   
   // Password gate removed - site is open
   const [showLanding, setShowLanding] = useState(true);
@@ -746,7 +909,7 @@ const App: React.FC = () => {
     setGenState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const result = await generateStyledImage(selectedImage, activeSelections);
+      const result = await generateStyledImage(selectedImage, activeSelections, 0, selectedModel);
       
       // Deduct coin on successful generation (async - calls Supabase)
       const coinDeducted = await deductCoin();
@@ -866,7 +1029,7 @@ const App: React.FC = () => {
       [StyleCategory.EYES]: maybeGet(EYE_OPTIONS, 0.5),
       [StyleCategory.LIPS]: maybeGet(LIP_OPTIONS, 0.5),
       [StyleCategory.ACCESSORIES]: randomAccessories,
-      [StyleCategory.FACIAL_HAIR]: maybeGet(FACIAL_HAIR_OPTIONS, 0.25),
+      [StyleCategory.FACIAL_HAIR]: null,
     };
   };
 
@@ -1290,7 +1453,7 @@ const App: React.FC = () => {
         onPanelOpenChange={setIsSidebarPanelOpen}
       />
 
-      <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 sm:pl-20 lg:pl-24 py-6 flex-grow">
+      <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 sm:pl-24 lg:pl-28 py-6 flex-grow">
         <div className="space-y-6">
             
             {/* Upload/Result Section - Same on all screen sizes */}
@@ -1417,6 +1580,29 @@ const App: React.FC = () => {
               )}
             </section>
 
+            {/* Admin-only: Model Toggle */}
+            {selectedImage && isAdmin && (
+              <div className="flex items-center gap-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
+                <span className="text-xs font-semibold text-amber-700 uppercase tracking-wider">Model</span>
+                <div className="flex items-center gap-2">
+                  {AVAILABLE_MODELS.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => setSelectedModel(m.id)}
+                      disabled={genState.isLoading}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors disabled:opacity-50 ${
+                        selectedModel === m.id
+                          ? 'bg-amber-600 text-white shadow-sm'
+                          : 'bg-white text-amber-700 border border-amber-300 hover:bg-amber-100'
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Primary CTA Row - Generate New Look + Surprise Me - Always visible below image */}
             {selectedImage && (
               <div className="flex items-center gap-2 sm:gap-3 mt-4">
@@ -1485,7 +1671,7 @@ const App: React.FC = () => {
                 <button 
                   onClick={handleShare}
                   disabled={genState.isLoading}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 h-[52px] sm:h-[60px] border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   <Share2 size={16} />
                   Share
@@ -1493,7 +1679,7 @@ const App: React.FC = () => {
                 <button 
                   onClick={handleDownload}
                   disabled={genState.isLoading}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 h-[52px] sm:h-[60px] border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   <Download size={16} />
                   Download
@@ -1505,18 +1691,18 @@ const App: React.FC = () => {
             {selectedImage && (
               <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Selection Summary Chips - Always visible, content animates in */}
-                <div className={`mb-3 p-3 rounded-xl border sticky top-16 sm:top-20 z-40 shadow-md transition-all ${
+                <div className={`mb-5 p-3 rounded-xl border sticky top-16 sm:top-20 z-40 shadow-md transition-all ${
                   surpriseMeActive 
                     ? 'bg-violet-50 border-violet-200' 
                     : 'bg-white border-slate-200'
                 }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className={`text-xs font-semibold uppercase tracking-wider ${surpriseMeActive ? 'text-violet-600' : 'text-slate-500'}`}>
+                    <span className={`text-xs font-semibold uppercase tracking-wider ${surpriseMeActive ? 'text-violet-600' : 'text-slate-600'}`}>
                       {surpriseMeActive ? 'Surprise Me Active' : 'Your Look'}
                     </span>
                     {activeSelections.length > 0 && !surpriseMeActive && !genState.isLoading && (
-                      <button onClick={handleReset} className="text-xs text-slate-500 hover:text-rose-500 flex items-center gap-1 transition-opacity">
-                        <RotateCcw size={10} />
+                      <button onClick={handleReset} className="text-xs font-semibold text-rose-500 hover:text-rose-700 hover:bg-rose-50 flex items-center gap-1 px-2 py-1 rounded-md transition-colors">
+                        <RotateCcw size={12} />
                         Clear All
                       </button>
                     )}
@@ -1532,13 +1718,13 @@ const App: React.FC = () => {
                               {item.label}
                               {!genState.isLoading && (
                                 <button onClick={() => removeSelection(item.category, item.value)} className="hover:bg-slate-200 rounded-full p-0.5">
-                                  <X size={10} className="text-slate-500" />
+                                  <X size={10} className="text-slate-600" />
                                 </button>
                               )}
                             </span>
                           ))
                         ) : (
-                          <span className="text-xs text-slate-500 italic">
+                          <span className="text-xs text-slate-600 italic">
                             Click sidebar icons to select styles
                           </span>
                         )}
@@ -1550,7 +1736,7 @@ const App: React.FC = () => {
                 {/* Quick Looks - Always-visible inline strip */}
                 <div className={`mb-3 ${surpriseMeActive || genState.isLoading ? 'opacity-50 pointer-events-none' : ''}`} style={genState.isLoading ? { cursor: 'not-allowed' } : undefined}>
                   <div className="flex items-center gap-2 mb-1.5">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
                       <Zap size={12} className="text-amber-500" />
                       Quick Looks
                     </h3>
@@ -1560,7 +1746,7 @@ const App: React.FC = () => {
                           const container = document.getElementById('quick-looks-scroll');
                           if (container) container.scrollBy({ left: -600, behavior: 'smooth' });
                         }}
-                        className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+                        className="p-1.5 rounded-md hover:bg-slate-100 text-slate-600 hover:text-slate-700 transition-colors"
                         aria-label="Scroll left"
                       >
                         <ChevronLeft size={16} />
@@ -1570,7 +1756,7 @@ const App: React.FC = () => {
                           const container = document.getElementById('quick-looks-scroll');
                           if (container) container.scrollBy({ left: 600, behavior: 'smooth' });
                         }}
-                        className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+                        className="p-1.5 rounded-md hover:bg-slate-100 text-slate-600 hover:text-slate-700 transition-colors"
                         aria-label="Scroll right"
                       >
                         <ChevronRight size={16} />

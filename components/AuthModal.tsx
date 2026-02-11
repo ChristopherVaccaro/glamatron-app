@@ -267,7 +267,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
+          className="absolute top-4 right-4 p-2 text-slate-600 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
           aria-label="Close"
         >
           <X size={20} />
@@ -348,7 +348,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
               <div className="w-full border-t border-slate-200"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-slate-400">or continue with email</span>
+              <span className="px-4 bg-white text-slate-600">or continue with email</span>
             </div>
           </div>
 
@@ -356,7 +356,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                 <input
                   type="text"
                   placeholder="Full name"
@@ -368,7 +368,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
             )}
             
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
               <input
                 type="email"
                 placeholder="Email address"
@@ -379,7 +379,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
@@ -390,7 +390,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-600 transition-colors"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -398,7 +398,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
 
             {mode === 'signup' && (
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Confirm password"
@@ -458,7 +458,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSignIn, defaul
           )}
 
           {/* Privacy Policy Notice */}
-          <p className="text-center text-xs text-slate-400 mt-4">
+          <p className="text-center text-xs text-slate-600 mt-4">
             By signing in, you agree to our{' '}
             <a href="/terms-of-service" className="text-slate-500 hover:text-slate-700 underline">
               Terms of Service

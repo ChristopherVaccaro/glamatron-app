@@ -255,7 +255,7 @@ const AdminGalleryModal: React.FC<AdminGalleryModalProps> = ({ isOpen, onClose }
               <button
                 onClick={loadAllItems}
                 disabled={isLoading}
-                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors disabled:opacity-50"
+                className="p-2 text-slate-600 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors disabled:opacity-50"
                 title="Refresh"
               >
                 <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
@@ -263,7 +263,7 @@ const AdminGalleryModal: React.FC<AdminGalleryModalProps> = ({ isOpen, onClose }
             )}
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors"
+              className="p-2 text-slate-600 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors"
             >
               <X size={20} />
             </button>
@@ -286,7 +286,7 @@ const AdminGalleryModal: React.FC<AdminGalleryModalProps> = ({ isOpen, onClose }
                   Click on a user to view their transformations
                 </p>
                 <div className="flex items-center gap-2">
-                  <ArrowUpDown size={14} className="text-slate-400" />
+                  <ArrowUpDown size={14} className="text-slate-600" />
                   <select
                     value={userSortBy}
                     onChange={(e) => setUserSortBy(e.target.value as UserSortOption)}
@@ -304,7 +304,7 @@ const AdminGalleryModal: React.FC<AdminGalleryModalProps> = ({ isOpen, onClose }
               {userSummaries.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-                    <Users size={32} className="text-slate-400" />
+                    <Users size={32} className="text-slate-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-slate-900 mb-2">No users yet</h3>
                   <p className="text-slate-500">No users have created any transformations yet.</p>
@@ -411,7 +411,7 @@ const AdminGalleryModal: React.FC<AdminGalleryModalProps> = ({ isOpen, onClose }
                           </span>
                           <span className="text-xs text-slate-500">transformations</span>
                         </div>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-slate-600">
                           {formatRelativeTime(user.lastActivity)}
                         </span>
                       </div>
@@ -427,7 +427,7 @@ const AdminGalleryModal: React.FC<AdminGalleryModalProps> = ({ isOpen, onClose }
               {userItems.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-                    <Users size={32} className="text-slate-400" />
+                    <Users size={32} className="text-slate-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-slate-900 mb-2">No transformations</h3>
                   <p className="text-slate-500">This user hasn't created any transformations.</p>
@@ -510,7 +510,7 @@ const AdminGalleryModal: React.FC<AdminGalleryModalProps> = ({ isOpen, onClose }
                 <div className="flex items-center justify-between p-4 border-t border-slate-200">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                      <Mail size={14} className="text-slate-400" />
+                      <Mail size={14} className="text-slate-600" />
                       <span>{selectedItem.user_email}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-500">

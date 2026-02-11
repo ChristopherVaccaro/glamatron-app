@@ -87,7 +87,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
+          className="absolute top-4 right-4 p-2 text-slate-600 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
           aria-label="Close"
         >
           <X size={20} />
@@ -135,7 +135,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               {/* Email Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                   <input
                     type="email"
                     placeholder="Email address"

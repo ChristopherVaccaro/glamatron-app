@@ -94,10 +94,20 @@ const getSystemPrompt = (selections: UserSelections): string => {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+export const AVAILABLE_MODELS = [
+  { id: 'gemini-2.5-flash-image', label: 'Nano Banana' },
+  { id: 'gemini-3-pro-image-preview', label: 'Nano Banana Pro' },
+] as const;
+
+export type GeminiModelId = typeof AVAILABLE_MODELS[number]['id'];
+
+export const DEFAULT_MODEL: GeminiModelId = 'gemini-2.5-flash-image';
+
 export const generateStyledImage = async (
   imageBase64: string,
   selections: UserSelections,
-  retryCount = 0
+  retryCount = 0,
+  model: GeminiModelId = DEFAULT_MODEL
 ): Promise<string> => {
   const MAX_RETRIES = 2;
   
@@ -112,10 +122,10 @@ export const generateStyledImage = async (
 
   try {
     const prompt = getSystemPrompt(selections);
-    console.log("Attempt", retryCount + 1, "- Sending request to Gemini...");
+    console.log("Attempt", retryCount + 1, `- Sending request to ${model}...`);
     
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+      model,
       contents: {
         parts: [
           {
@@ -220,7 +230,7 @@ export const generateStyledImage = async (
     if (isRetryable && retryCount < MAX_RETRIES) {
       console.log(`Retrying in ${(retryCount + 1) * 1000}ms...`);
       await delay((retryCount + 1) * 1000);
-      return generateStyledImage(imageBase64, selections, retryCount + 1);
+      return generateStyledImage(imageBase64, selections, retryCount + 1, model);
     }
     
     throw error;

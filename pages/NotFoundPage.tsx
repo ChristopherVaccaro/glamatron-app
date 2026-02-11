@@ -18,7 +18,7 @@ const NotFoundPage: React.FC = () => {
 
         {/* Icon */}
         <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Search size={32} className="text-slate-400" />
+          <Search size={32} className="text-slate-600" />
         </div>
 
         {/* Title */}
