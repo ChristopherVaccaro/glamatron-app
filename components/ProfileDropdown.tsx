@@ -72,7 +72,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onSignOut, onOp
         </div>
         <ChevronDown 
           size={16} 
-          className={`text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+          className={`text-slate-600 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
         />
       </button>
 
@@ -91,7 +91,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onSignOut, onOp
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-slate-900 truncate">{user.name}</p>
-                <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                <p className="text-xs text-slate-600 truncate">{user.email}</p>
               </div>
             </div>
           </div>
@@ -105,7 +105,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onSignOut, onOp
               }}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition-colors"
             >
-              <User size={18} className="text-slate-500" />
+              <User size={18} className="text-slate-600" />
               <span className="font-medium">Profile</span>
             </button>
             
@@ -116,7 +116,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onSignOut, onOp
               }}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition-colors"
             >
-              <ImageIcon size={18} className="text-slate-500" />
+              <ImageIcon size={18} className="text-slate-600" />
               <span className="font-medium">History</span>
             </button>
             
@@ -129,7 +129,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onSignOut, onOp
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition-colors"
               >
-                <Users size={18} className="text-slate-500" />
+                <Users size={18} className="text-slate-600" />
                 <span className="font-medium">All Users Gallery</span>
               </button>
             )}
@@ -145,7 +145,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onSignOut, onOp
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition-colors"
               >
-                <HelpCircle size={18} className="text-slate-500" />
+                <HelpCircle size={18} className="text-slate-600" />
                 <span className="font-medium">Help & FAQ</span>
               </button>
             )}

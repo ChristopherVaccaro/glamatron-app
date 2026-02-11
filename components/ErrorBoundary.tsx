@@ -97,7 +97,7 @@ class ErrorBoundary extends Component<Props, State> {
             </div>
 
             {/* Support link */}
-            <p className="mt-6 text-sm text-slate-400">
+            <p className="mt-6 text-sm text-slate-600">
               If this keeps happening, please{' '}
               <a 
                 href="mailto:support@glamatron.com" 

@@ -170,7 +170,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
+          className="absolute top-4 right-4 p-2 text-slate-600 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
           aria-label="Close"
         >
           <X size={20} />
@@ -179,7 +179,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
         {/* Header with avatar */}
         <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 px-8 pt-8 pb-16">
           <h2 id="profile-modal-title" className="text-2xl font-bold text-white">Your Profile</h2>
-          <p className="text-slate-400 mt-1">{getProviderLabel()}</p>
+          <p className="text-slate-600 mt-1">{getProviderLabel()}</p>
         </div>
 
         {/* Avatar - overlapping header and content */}
@@ -204,7 +204,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
                 Display Name
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                 <input
                   type="text"
                   value={name}
@@ -221,7 +221,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, user, onUp
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                 <input
                   type="email"
                   value={user.email}

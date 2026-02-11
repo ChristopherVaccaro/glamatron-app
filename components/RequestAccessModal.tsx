@@ -35,7 +35,7 @@ const RequestAccessModal: React.FC<RequestAccessModalProps> = ({
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
+          className="absolute top-4 right-4 p-2 text-slate-600 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
           aria-label="Close"
         >
           <X size={20} />
@@ -75,7 +75,7 @@ const RequestAccessModal: React.FC<RequestAccessModalProps> = ({
               <div className="w-full border-t border-slate-200"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-slate-400">or</span>
+              <span className="px-4 bg-white text-slate-600">or</span>
             </div>
           </div>
 
@@ -89,7 +89,7 @@ const RequestAccessModal: React.FC<RequestAccessModalProps> = ({
             <ArrowRight size={18} className="ml-auto" />
           </button>
 
-          <p className="text-center text-xs text-slate-400 mt-4">
+          <p className="text-center text-xs text-slate-600 mt-4">
             We're currently in limited access. Request an invite and we'll get back to you shortly.
           </p>
         </div>

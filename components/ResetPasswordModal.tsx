@@ -96,7 +96,7 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
         {success && (
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
+            className="absolute top-4 right-4 p-2 text-slate-600 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
             aria-label="Close"
           >
             <X size={20} />
@@ -144,7 +144,7 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
               {/* Password Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="New password"
@@ -156,14 +156,14 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-600 transition-colors"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
 
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Confirm new password"

@@ -122,7 +122,6 @@ interface SidebarNavProps {
 
 const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMap, disabled = false, onPanelOpenChange }) => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -210,24 +209,21 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
       {/* On xl+ screens, align with max-w-6xl container start instead of viewport edge */}
       <div 
         ref={sidebarRef}
-        className="fixed left-0 xl:left-[max(0px,calc((100vw-72rem)/2))] top-20 z-40 flex flex-col gap-0.5 bg-white border border-slate-200 xl:border-l xl:rounded-l-2xl rounded-r-2xl shadow-lg py-2 px-1.5"
+        className="fixed left-0 xl:left-[max(0px,calc((100vw-72rem)/2))] top-20 z-40 flex flex-col gap-1 bg-white border border-slate-200 xl:border-l xl:rounded-l-2xl rounded-r-2xl shadow-lg py-2 px-1"
       >
         {CATEGORY_CONFIG.map((config) => {
           const Icon = config.icon;
           const isActive = activeCategory === config.id;
-          const isHovered = hoveredCategory === config.id;
           const count = getSelectionCount(config);
           
           return (
             <div key={config.id} className="relative">
               <button
                 onClick={() => !disabled && setActiveCategory(isActive ? null : config.id)}
-                onMouseEnter={() => setHoveredCategory(config.id)}
-                onMouseLeave={() => setHoveredCategory(null)}
                 disabled={disabled}
                 style={disabled ? { cursor: 'not-allowed' } : undefined}
                 className={`
-                  relative w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-200
+                  relative w-14 min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-xl transition-all duration-200 px-1 py-2.5
                   ${disabled
                     ? 'text-slate-300'
                     : isActive 
@@ -237,7 +233,10 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
                 `}
                 aria-label={config.label}
               >
-                <Icon size={18} className="sm:w-5 sm:h-5" strokeWidth={isActive ? 2.5 : 2} />
+                <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                <span className={`text-[10px] leading-tight font-semibold ${disabled ? 'text-slate-300' : isActive ? 'text-white' : 'text-slate-600'}`}>
+                  {config.label}
+                </span>
                 
                 {/* Selection count badge */}
                 {count > 0 && !isActive && !disabled && (
@@ -246,16 +245,6 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
                   </span>
                 )}
               </button>
-              
-              {/* Tooltip - Hidden on mobile */}
-              {isHovered && !isActive && (
-                <div className={`hidden sm:block absolute left-full ml-3 top-1/2 -translate-y-1/2 ${disabled ? 'bg-slate-600' : 'bg-[#0F172A]'} text-white text-sm font-medium px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg z-50 pointer-events-none animate-in fade-in slide-in-from-left-2 duration-150`}>
-                  {disabled ? 'Upload a photo first' : config.label}
-                  {count > 0 && !disabled && <span className="ml-1.5 opacity-70">({count})</span>}
-                  {/* Arrow */}
-                  <div className={`absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent ${disabled ? 'border-r-slate-600' : 'border-r-[#0F172A]'}`} />
-                </div>
-              )}
             </div>
           );
         })}
@@ -266,11 +255,11 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ selections, onSelect, optionsMa
       <div 
         ref={panelRef}
         className={`
-          fixed top-20 bottom-4 w-[calc(100vw-64px)] sm:w-80
+          fixed top-20 bottom-4 w-[calc(100vw-72px)] sm:w-80
           bg-white border border-slate-200 rounded-2xl shadow-xl
           transition-all duration-300 ease-out overflow-hidden
           ${activeCategory 
-            ? 'left-[48px] sm:left-[60px] xl:left-[calc(max(48px,calc((100vw-72rem)/2+60px)))] z-30 opacity-100' 
+            ? 'left-[64px] sm:left-[68px] xl:left-[calc(max(64px,calc((100vw-72rem)/2+68px)))] z-30 opacity-100' 
             : 'left-0 xl:left-[max(0px,calc((100vw-72rem)/2))] z-30 opacity-0 pointer-events-none'}
         `}
       >

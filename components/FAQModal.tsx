@@ -126,7 +126,7 @@ const FAQModal: React.FC<FAQModalProps> = ({ isOpen, onClose }) => {
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors"
+            className="p-2 text-slate-600 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors"
             aria-label="Close"
           >
             <X size={20} />
@@ -141,7 +141,7 @@ const FAQModal: React.FC<FAQModalProps> = ({ isOpen, onClose }) => {
             <ul className="space-y-2">
               {tips.map((tip, index) => (
                 <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
-                  <span className="text-slate-400 mt-0.5">•</span>
+                  <span className="text-slate-600 mt-0.5">•</span>
                   {tip}
                 </li>
               ))}
@@ -165,7 +165,7 @@ const FAQModal: React.FC<FAQModalProps> = ({ isOpen, onClose }) => {
                   <span className="font-medium text-slate-900 pr-4">{item.question}</span>
                   <ChevronDown 
                     size={18} 
-                    className={`text-slate-400 flex-shrink-0 transition-transform duration-200 ${
+                    className={`text-slate-600 flex-shrink-0 transition-transform duration-200 ${
                       openIndex === index ? 'rotate-180' : ''
                     }`} 
                   />

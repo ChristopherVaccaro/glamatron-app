@@ -93,7 +93,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ originalImage, generate
             e.stopPropagation();
             onClear();
           }}
-          className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-colors z-30 cursor-pointer"
+          className="absolute top-3 right-3 p-2 bg-black/70 hover:bg-black/90 text-white rounded-full backdrop-blur-sm transition-colors z-30 cursor-pointer"
           title="Upload new image"
         >
           <X size={20} />
@@ -101,10 +101,10 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({ originalImage, generate
       )}
 
       {/* Labels - z-10 to stay below loading overlay (z-40) */}
-      <div className="absolute bottom-4 left-4 bg-black/60 text-white px-2 py-1 rounded text-xs pointer-events-none backdrop-blur-sm z-10">
+      <div className="absolute bottom-4 left-4 bg-black/80 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold pointer-events-none backdrop-blur-sm border border-white/20 z-10">
         Before
       </div>
-      <div className="absolute bottom-4 right-4 bg-black/60 text-white px-2 py-1 rounded text-xs pointer-events-none backdrop-blur-sm z-10">
+      <div className="absolute bottom-4 right-4 bg-black/80 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold pointer-events-none backdrop-blur-sm border border-white/20 z-10">
         After
       </div>
     </div>

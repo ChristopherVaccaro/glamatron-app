@@ -57,7 +57,7 @@ const Toast: React.FC<ToastProps> = ({ message, type = 'success', duration = 400
           setIsVisible(false);
           setTimeout(onClose, 300);
         }}
-        className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+        className="p-1 text-slate-600 hover:text-slate-600 transition-colors"
       >
         <X size={16} />
       </button>

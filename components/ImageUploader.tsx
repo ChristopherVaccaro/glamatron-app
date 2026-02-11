@@ -116,18 +116,18 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, selected
         )}
         <button
           onClick={onClear}
-          className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm transition-colors z-10"
+          className="absolute top-3 right-3 p-2 bg-black/70 hover:bg-black/90 text-white rounded-full backdrop-blur-sm transition-colors z-10"
           aria-label="Remove image"
         >
           <X size={20} />
         </button>
-        <div className="absolute bottom-3 left-3 bg-black/50 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+        <div className="absolute bottom-3 left-3 bg-black/80 text-white text-sm font-bold px-2.5 py-1.5 rounded-lg backdrop-blur-sm border border-white/20">
           Original Image
         </div>
         {/* Replace hint on hover */}
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="absolute bottom-3 right-3 px-3 py-1.5 bg-black/50 hover:bg-black/70 text-white text-xs rounded backdrop-blur-sm transition-colors flex items-center gap-1.5 opacity-0 group-hover:opacity-100"
+          className="absolute bottom-3 right-3 px-3 py-1.5 bg-black/70 hover:bg-black/90 text-white text-xs rounded backdrop-blur-sm transition-colors flex items-center gap-1.5 opacity-0 group-hover:opacity-100"
           aria-label="Replace image"
         >
           <Replace size={14} />
