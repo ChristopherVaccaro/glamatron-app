@@ -117,7 +117,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
         aria-modal="true"
         aria-labelledby="purchase-modal-title"
         tabIndex={-1}
-        className="relative bg-gradient-to-b from-slate-900 to-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-700 outline-none"
+        className="relative bg-gradient-to-b from-slate-900 to-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-700 outline-none"
       >
         {/* Close button */}
         <button
@@ -129,7 +129,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
         </button>
 
         {/* Header with gradient accent */}
-        <div className="relative px-8 pt-8 pb-6 text-center">
+        <div className="relative px-10 pt-10 pb-8 text-center">
           {/* Decorative glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-amber-500/20 blur-3xl" />
           
@@ -163,9 +163,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
         )}
 
         {/* Content */}
-        <div className="px-6 pb-6">
+        <div className="px-8 pb-8">
           {/* GlamCoin Packages */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             {GLAMCOIN_PACKAGES.map((pkg) => (
               <button
                 key={pkg.id}
@@ -203,23 +203,23 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Benefits */}
-          <div className="mt-6 grid grid-cols-3 gap-2">
-            <div className="flex flex-col items-center gap-1 p-2">
+          <div className="mt-8 grid grid-cols-3 gap-3">
+            <div className="flex flex-col items-center gap-1.5 p-3">
               <Zap size={16} className="text-amber-400" />
               <span className="text-xs text-slate-400 text-center">Instant Delivery</span>
             </div>
-            <div className="flex flex-col items-center gap-1 p-2">
+            <div className="flex flex-col items-center gap-1.5 p-3">
               <Clock size={16} className="text-emerald-400" />
               <span className="text-xs text-slate-400 text-center">Never Expire</span>
             </div>
-            <div className="flex flex-col items-center gap-1 p-2">
+            <div className="flex flex-col items-center gap-1.5 p-3">
               <Shield size={16} className="text-blue-400" />
               <span className="text-xs text-slate-400 text-center">Secure Payment</span>
             </div>
           </div>
 
           {/* Footer note */}
-          <p className="text-center text-xs text-slate-500 mt-4 pt-4 border-t border-slate-700">
+          <p className="text-center text-xs text-slate-500 mt-6 pt-5 border-t border-slate-700">
             1 GlamCoin = 1 transformation
           </p>
         </div>

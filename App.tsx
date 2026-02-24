@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, Zap, ChevronLeft, ChevronRight, User, Coins, Heart, AlertTriangle } from 'lucide-react';
+import { Sparkles, Download, RefreshCw, Wand2, ArrowRight, Dices, X, Share2, RotateCcw, Zap, ChevronLeft, ChevronRight, User, Coins, Heart, AlertTriangle, Film } from 'lucide-react';
 import { 
   StyleCategory, 
   UserSelections, 
@@ -44,7 +44,6 @@ import GalleryModal from './components/GalleryModal';
 import AdminGalleryModal from './components/AdminGalleryModal';
 import FAQModal from './components/FAQModal';
 import Toast from './components/Toast';
-import StyleAnalyzerModal from './components/StyleAnalyzerModal';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import ResetPasswordModal from './components/ResetPasswordModal';
 import CookieConsentBanner from './components/CookieConsentBanner';
@@ -55,6 +54,22 @@ import { triggerHeartBurst } from './utils/confetti';
 
 // Quick preset definitions
 export const QUICK_PRESETS = [
+  {
+    id: 'gold_medal_glam',
+    name: 'Gold Medal Glam',
+    emoji: '🥇',
+    selections: {
+      [StyleCategory.HAIR]: 'Long layered hair with blunt straight bangs, face-framing pieces, and smooth blowout finish with horizontal alternating color rings/bands cascading down through the hair (halo hair effect)',
+      [StyleCategory.HAIR_LENGTH]: null,
+      [StyleCategory.HAIR_COLOR]: 'High-contrast halo hair: alternating horizontal bands of deep dark brown/black and bold platinum blonde cascading down the hair — lighter platinum blonde crown/halo at top, then dark band, then blonde band, repeating in distinct horizontal stripes (not blended, not vertical — clear horizontal color separation like rings)',
+      [StyleCategory.MAKEUP]: 'Sporty-glam makeup: natural smooth base, rosy blush, subtle contour, soft highlight (photoreal, no face reshaping)',
+      [StyleCategory.EXPRESSION]: 'Big joyful smile',
+      [StyleCategory.EYES]: 'Crisp black winged eyeliner with defined upper lashes (keep eye shape identical)',
+      [StyleCategory.LIPS]: 'Bright cherry red satin lipstick (clean edges, photoreal)',
+      [StyleCategory.ACCESSORIES]: [],
+      [StyleCategory.FACIAL_HAIR]: null,
+    }
+  },
   {
     id: 'natural',
     name: 'Soft Natural',
@@ -704,7 +719,6 @@ const App: React.FC = () => {
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [showAdminGalleryModal, setShowAdminGalleryModal] = useState(false);
   const [showFAQModal, setShowFAQModal] = useState(false);
-  const [showStyleAnalyzerModal, setShowStyleAnalyzerModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   
       
@@ -815,6 +829,16 @@ const App: React.FC = () => {
 
   // Toast notification state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // Listen for favorites errors dispatched by FavoritesContext
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const msg = (e as CustomEvent<{ message: string }>).detail?.message;
+      if (msg) setToast({ message: msg, type: 'error' });
+    };
+    window.addEventListener('favorites-error', handler);
+    return () => window.removeEventListener('favorites-error', handler);
+  }, []);
 
   // Show toast for email confirmation and payment success
   useEffect(() => {
@@ -1179,6 +1203,45 @@ const App: React.FC = () => {
     }
   };
 
+  // Reel export state
+  const [isExportingReel, setIsExportingReel] = useState(false);
+  const [reelProgress, setReelProgress] = useState(0);
+
+  const handleExportReel = async () => {
+    if (!selectedImage || !genState.resultImage) return;
+    
+    setIsExportingReel(true);
+    setReelProgress(0);
+
+    try {
+      const { exportCrossDissolveReel, downloadBlob, shareBlob } = await import('./utils/reelExport');
+      
+      const blob = await exportCrossDissolveReel({
+        originalImage: selectedImage,
+        resultImage: genState.resultImage,
+        width: 720,
+        duration: 3000,
+        holdDuration: 800,
+        fps: 30,
+        onProgress: setReelProgress,
+      });
+
+      const filename = `glamatron-reel-${Date.now()}.webm`;
+      
+      // Try share first on mobile, fall back to download
+      const shared = await shareBlob(blob, filename);
+      if (!shared) {
+        downloadBlob(blob, filename);
+      }
+    } catch (err: any) {
+      console.error('Reel export error:', err);
+      setToast({ message: err.message || 'Failed to export reel', type: 'error' });
+    } finally {
+      setIsExportingReel(false);
+      setReelProgress(0);
+    }
+  };
+
   const handleReset = () => {
     setSelections({
       [StyleCategory.HAIR]: null,
@@ -1197,29 +1260,6 @@ const App: React.FC = () => {
     setSelections(preset.selections as UserSelections);
   };
 
-  // Handle applying styles from Style Analyzer
-  const handleApplyAnalyzedStyles = (analyzedSelections: Partial<UserSelections>) => {
-    setSelections(prev => {
-      const newSelections = { ...prev };
-      
-      // Apply each analyzed selection
-      Object.entries(analyzedSelections).forEach(([key, value]) => {
-        if (key === StyleCategory.ACCESSORIES && Array.isArray(value)) {
-          // Merge accessories instead of replacing
-          const currentAccessories = prev[StyleCategory.ACCESSORIES] || [];
-          const newAccessories = [...new Set([...currentAccessories, ...value])];
-          newSelections[StyleCategory.ACCESSORIES] = newAccessories;
-        } else if (value !== null && value !== undefined) {
-          (newSelections as any)[key] = value;
-        }
-      });
-      
-      return newSelections;
-    });
-    
-    // Disable Surprise Me if it was active
-    setSurpriseMeActive(false);
-  };
 
   const handleStartOver = () => {
     // If user is logged in, just reset the tool state (don't go to landing page)
@@ -1451,6 +1491,7 @@ const App: React.FC = () => {
         optionsMap={optionsMap}
         disabled={!selectedImage || surpriseMeActive || genState.isLoading}
         onPanelOpenChange={setIsSidebarPanelOpen}
+        user={user}
       />
 
       <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 sm:pl-24 lg:pl-28 py-6 flex-grow">
@@ -1643,7 +1684,7 @@ const App: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
                   )}
                   <span className="relative z-10 flex items-center gap-2 sm:gap-3">
-                    {genState.isLoading ? 'Processing...' : 'Generate New Look'}
+                    {genState.isLoading ? 'Processing...' : 'Glam Me Up'}
                     {!genState.isLoading && <Sparkles size={18} className="sm:w-5 sm:h-5 group-hover:animate-pulse" />}
                   </span>
                 </button>
@@ -1675,6 +1716,23 @@ const App: React.FC = () => {
                 >
                   <Share2 size={16} />
                   Share
+                </button>
+                <button 
+                  onClick={handleExportReel}
+                  disabled={genState.isLoading || isExportingReel}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 h-[52px] sm:h-[60px] border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm relative overflow-hidden"
+                  title="Export before/after reel"
+                >
+                  {isExportingReel && (
+                    <div 
+                      className="absolute inset-0 bg-slate-100 transition-all duration-200"
+                      style={{ width: `${reelProgress * 100}%` }}
+                    />
+                  )}
+                  <span className="relative flex items-center gap-2">
+                    <Film size={16} className={isExportingReel ? 'animate-pulse' : ''} />
+                    {isExportingReel ? `${Math.round(reelProgress * 100)}%` : 'Reel'}
+                  </span>
                 </button>
                 <button 
                   onClick={handleDownload}
@@ -1764,19 +1822,6 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div id="quick-looks-scroll" className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
-                    {/* Style Analyzer Button - Copy styles from reference photos */}
-                    <button
-                      onClick={() => setShowStyleAnalyzerModal(true)}
-                      disabled={genState.isLoading || surpriseMeActive}
-                      className={`
-                        flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5
-                        border-2 border-dashed border-slate-300 text-slate-600 hover:border-slate-400 hover:bg-slate-50
-                        ${surpriseMeActive || genState.isLoading ? 'cursor-not-allowed opacity-50' : ''}
-                      `}
-                    >
-                      <Wand2 size={14} />
-                      <span className="whitespace-nowrap">Copy a Look</span>
-                    </button>
                     {availablePresets.map(preset => (
                       <button
                         key={preset.id}
@@ -1901,12 +1946,6 @@ const App: React.FC = () => {
         onClose={() => setShowFAQModal(false)}
       />
 
-      {/* Style Analyzer Modal - Copy styles from reference photos */}
-      <StyleAnalyzerModal
-        isOpen={showStyleAnalyzerModal}
-        onClose={() => setShowStyleAnalyzerModal(false)}
-        onApplyStyles={handleApplyAnalyzedStyles}
-      />
 
       {/* Cookie Consent Banner - GDPR/CCPA compliance */}
       <CookieConsentBanner />

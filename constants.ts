@@ -59,6 +59,7 @@ export const HAIR_OPTIONS: StyleOption[] = [
   { id: 'h_long_curly', label: 'Long Curly', value: 'Long voluminous curly hair', category: StyleCategory.HAIR },
   { id: 'h_beachwaves', label: 'Beach Waves', value: 'Loose beachy waves', category: StyleCategory.HAIR },
   { id: 'h_layers', label: 'Face Framing', value: 'Long hair with face-framing layers', category: StyleCategory.HAIR },
+  { id: 'h_split_dye_panels', label: 'Halo Split-Dye', value: 'Long layered hair with blunt straight bangs, face-framing pieces, and smooth blowout finish with horizontal alternating color rings/bands cascading down through the hair (halo hair effect — lighter color crown at top alternating with darker base in distinct horizontal stripes)', category: StyleCategory.HAIR },
 
   // Updos & buns
   { id: 'h_updo', label: 'Elegant Updo', value: 'Elegant formal updo', category: StyleCategory.HAIR },
