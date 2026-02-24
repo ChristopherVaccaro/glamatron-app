@@ -335,7 +335,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
         aria-modal="true"
         aria-labelledby="gallery-modal-title"
         tabIndex={-1}
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 outline-none"
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200 outline-none"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
@@ -461,7 +461,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
         )}
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(85vh-140px)]">
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
           {isLoading ? (
             // Loading skeleton
             <GallerySkeleton />
@@ -568,7 +568,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
             onClick={() => setSelectedItemId(null)}
           />
           
-          <div className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-hidden">
             {/* Navigation arrows */}
             {items.length > 1 && (
               <>
@@ -595,25 +595,25 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ isOpen, onClose, userId }) 
               <X size={20} className="text-slate-700" />
             </button>
             
-            {/* Image comparison */}
-            <div className="grid grid-cols-2 gap-1 bg-slate-200">
-              <div className="relative aspect-[3/4] bg-slate-100">
+            {/* Image comparison - large side by side */}
+            <div className="grid grid-cols-2 gap-px bg-slate-900">
+              <div className="relative bg-slate-100" style={{ maxHeight: 'calc(95vh - 80px)' }}>
                 <img
                   src={selectedItem.originalImage}
                   alt="Original"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
-                <div className="absolute top-3 left-3 px-2 py-1 bg-black/50 backdrop-blur-sm rounded text-xs text-white font-medium">
+                <div className="absolute top-3 left-3 px-2.5 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg text-xs text-white font-semibold">
                   Original
                 </div>
               </div>
-              <div className="relative aspect-[3/4] bg-slate-100">
+              <div className="relative bg-slate-100" style={{ maxHeight: 'calc(95vh - 80px)' }}>
                 <img
                   src={selectedItem.resultImage}
                   alt="Transformed"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
-                <div className="absolute top-3 left-3 px-2 py-1 bg-rose-500/80 backdrop-blur-sm rounded text-xs text-white font-medium">
+                <div className="absolute top-3 left-3 px-2.5 py-1.5 bg-rose-500/80 backdrop-blur-sm rounded-lg text-xs text-white font-semibold">
                   Transformed
                 </div>
               </div>
